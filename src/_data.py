@@ -106,6 +106,9 @@ class SSCFile():
     # TODO: Make basic stats dict
     pass
 
+  '''
+    Parsing
+  '''
   def __parse_file_sections(self, lines):
     '''
       Delineated by #NOTEDATA:;
@@ -132,6 +135,7 @@ class SSCFile():
     for stepchart in stepcharts:
       [header, notes] = stepchart.split(delim)[:2]
       attributes = self.__parse_attributes(header)
+      stepchart_nm = self.__stepchart_name(attributes)
       notes = self.__parse_notes()
     # TODO: Aggregate attribute and notes across stepcharts and return something
     return
@@ -156,6 +160,22 @@ class SSCFile():
 
   def __parse_notes(self):
     '''
+      TODO
     '''
 
     return
+
+  '''
+   Support
+  '''
+  def __stepchart_name(self, atts):
+    '''
+    '''
+    getter = lambda q: atts[q] if q in atts else ''
+    stepstype = getter('STEPSTYPE')
+    level = getter('METER')
+    desc = getter('DESCRIPTION')
+    chartname = getter('CHARTNAME')
+    name = f'{stepstype} {level} {desc} {chartname}'
+    return name
+

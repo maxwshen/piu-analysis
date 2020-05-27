@@ -17,7 +17,17 @@ util.ensure_dir_exists(out_dir)
 ##
 def format_data(ssc_fn):
 
+  return
 
+
+def import_all_sscs():
+  df = _data.datasets['all']
+  print(f'Importing {len(df)} .ssc files ...')
+  timer = util.Timer(total = len(df))
+  for idx, row in df.iterrows():
+    ssc_fn = row['Files']
+    sc = _data.SSCFile(ssc_fn)
+    timer.update()
   return
 
 
@@ -64,7 +74,8 @@ def main():
   test_ssc_fn = '/mnt/c/Users/maxws/Downloads/StepF2/Songs/19-XX/(00) 1608 - MAX - I Want U/1608 - MAX - I Want U.ssc'
   sc = _data.SSCFile(test_ssc_fn)
 
-  # Function calls
+  # import_all_sscs()
+
   format_data(
     ssc_fn = _config.SRC_DIR + 'timeforthemoonnight-s18.ssc'
   )

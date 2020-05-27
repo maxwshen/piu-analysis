@@ -1,0 +1,49 @@
+%YAML 1.2
+---
+name : piu-ssc
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - ssc
+scope: piu.ssc
+
+contexts:
+  main:
+  - match: '0|,'
+    scope: comment.block.source.piu
+    comment: 'empty'
+
+  - match: '1'
+    scope: entity.control.piu
+    comment: 'step'
+
+  - match: '2'
+    scope: string.quoted.source.piu
+    comment: 'hold_start'
+
+  - match: '3'
+    scope: string.quoted.source.piu
+    comment: 'hold_end'
+
+  - match: '#'
+    scope: punctuation.definition.comment.piu
+    push: line_header
+    comment: 'annotations'
+
+  - match: '//'
+    scope: punctuation.definition.comment.piu
+    push: line_comment
+    comment: 'comment'
+
+  line_header:
+    # - meta_scope: comment.line.piu
+    # - meta_scope: entity.control.piu
+    - meta_scope: constant.numeric.source.piu
+    - match: $
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line.piu
+    # - meta_scope: entity.control.piu
+    # - meta_scope: constant.numeric.source.piu
+    - match: $
+      pop: true
