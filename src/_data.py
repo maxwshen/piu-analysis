@@ -5,22 +5,22 @@ import numpy as np, pandas as pd
 import os
 from typing import List, Dict, Set, Tuple
 
-stepf2_fold = '/mnt/c/Users/maxws/Downloads/StepF2/Songs/'
+step_fold = '/mnt/c/Users/maxws/Downloads/StepP1/Songs/'
 
 '''
   Crawling
 '''
 def crawl_all_ssc():
   '''
-    Find all .ssc files in child folders of stepf2_fold
-    /stepf2_fold/18-PRIME 2/15A2 - Start on Red/15A2 - Start On Red - Nato.ssc
+    Find all .ssc files in child folders of step_fold
+    /step_fold/18-PRIME 2/15A2 - Start on Red/15A2 - Start On Red - Nato.ssc
   '''
-  print(f'Crawling local .sscs in {stepf2_fold} ...')
+  print(f'Crawling local .sscs in {step_fold} ...')
   get_sub_folds = lambda f: [os.path.join(f, s) for s in os.listdir(f) if os.path.isdir(os.path.join(f, s))]
   ssc_matcher = '.ssc'
   get_ssc = lambda f: [os.path.join(f, s) for s in os.listdir(f) if s[-len(ssc_matcher):] == ssc_matcher]
 
-  sfolds = get_sub_folds(stepf2_fold)
+  sfolds = get_sub_folds(step_fold)
   dd = defaultdict(list)
   for sfold in sfolds:
     print(sfold,)
