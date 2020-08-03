@@ -15,7 +15,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def get_all_stepcharts_df() -> pd.DataFrame:
+def get_all_stepcharts_df() -> None:
   '''
     Loads and filters stepcharts from .ssc files
     Outputs
@@ -26,6 +26,7 @@ def get_all_stepcharts_df() -> pd.DataFrame:
   print(f'Importing {len(df)} .ssc files ...')
   mdf = pd.DataFrame()
   all_notes = []
+  all_bpms = []
   timer = util.Timer(total = len(df))
   for idx, row in df.iterrows():
     ssc_fn = row['Files']
@@ -38,7 +39,11 @@ def get_all_stepcharts_df() -> pd.DataFrame:
     sc_notes = sc.get_stepchart_notes()
     all_notes += sc_notes
 
+    bpms = sc.get_bpms()
+    all_bpms += bpms
+
     timer.update()
+
   mdf['Stepchart index'] = mdf.index
   print(f'Found {len(mdf)} total stepcharts ...')
 
@@ -71,6 +76,15 @@ def get_all_stepcharts_df() -> pd.DataFrame:
   # Filter special
   print(f'Filtering special stepcharts...')
   crit = (mdf['SONGTYPE'] != 'SPECIAL')
+  mdf = mdf[crit].reset_index(drop = True)
+  print(f'... retained {len(mdf)} stepcharts ...')
+
+  # Filter time signatures other than 4/4
+  print(f'Filtering time signatures other than 4/4 ...')
+  bad_sigs = [s for s in mdf['TIMESIGNATURES'] if ',' in s]
+  bad_sigs += [s for s in mdf['TIMESIGNATURES'] if s[-3:] != '4=4']
+  bad_sigs = set(bad_sigs)
+  crit = (~mdf['TIMESIGNATURES'].isin(bad_sigs))
   mdf = mdf[crit].reset_index(drop = True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
@@ -116,7 +130,19 @@ def get_all_stepcharts_df() -> pd.DataFrame:
   with open(out_dir + f'notes.pkl', 'wb') as f:
     pickle.dump(all_notes_d, f)
 
-  return mdf
+  # Handle bpms -- filter, then convert to dict
+  all_bpms_d = {}
+  print(f'Filtering bpms ...')
+  timer = util.Timer(total = len(mdf))
+  for idx, row in mdf.iterrows():
+    bpms = all_bpms[row['Stepchart index']]
+    all_bpms_d[row['Name (unique)']] = bpms
+    timer.update()
+
+  with open(out_dir + f'bpms.pkl', 'wb') as f:
+    pickle.dump(all_bpms_d, f)
+
+  return
 
 
 ##

@@ -1,52 +1,18 @@
 #
 import _config
+import _crawl
 from collections import defaultdict
 import numpy as np, pandas as pd
 import os
 from typing import List, Dict, Set, Tuple
 
-step_fold = '/mnt/c/Users/maxws/Downloads/StepP1/Songs/'
-
-'''
-  Crawling
-'''
-def crawl_all_ssc():
-  '''
-    Find all .ssc files in child folders of step_fold
-    /step_fold/18-PRIME 2/15A2 - Start on Red/15A2 - Start On Red - Nato.ssc
-  '''
-  print(f'Crawling local .sscs in {step_fold} ...')
-  get_sub_folds = lambda f: [os.path.join(f, s) for s in os.listdir(f) if os.path.isdir(os.path.join(f, s))]
-  ssc_matcher = '.ssc'
-  get_ssc = lambda f: [os.path.join(f, s) for s in os.listdir(f) if s[-len(ssc_matcher):] == ssc_matcher]
-
-  sfolds = get_sub_folds(step_fold)
-  dd = defaultdict(list)
-  for sfold in sfolds:
-    print(sfold,)
-    pack_nm = sfold.split('/')[-1].split('-')[-1]
-    ssfolds = get_sub_folds(sfold)
-
-    fns = []
-    for ssfold in ssfolds:
-      sscs = get_ssc(ssfold)
-      fns += sscs
-
-    dd['Pack'] += [pack_nm] * len(fns)
-    dd['Files'] += fns
-    dd['Song name'] += [s.split('/')[-2].split(' - ')[-1] for s in fns]
-    print(f'\tFound {len(fns)} .sscs')
-
-  df = pd.DataFrame(dd)
-  df.to_csv(_config.DATA_DIR + f'local_stepf2_files.csv')
-  return df
 
 '''
   StepF2 DataFrame
 '''
 stepf2_df_fn = _config.DATA_DIR + f'local_stepf2_files.csv'
 if not os.path.isfile(stepf2_df_fn):
-  crawl_all_ssc()
+  _crawl.crawl_all_ssc()
 stepf2_df = pd.read_csv(stepf2_df_fn, index_col = 0)
 
 standard_packs = [
@@ -90,9 +56,16 @@ datasets = {
 '''
 class SSCFile():
   '''
-    .ssc file format
+    Parses .ssc file format
     https://github.com/stepmania/stepmania/wiki/ssc
     https://github.com/stepmania/stepmania/wiki/sm
+
+    global_attributes: Song attributes
+
+    For each stepchart (e.g., S7, S13, D19, etc),
+    - stepchart attributes as dict
+    - stepchart bpms as string
+    - stepchart notes as string
   '''
   def __init__(self, ssc_fn, pack = ''):
     self.ssc_fn = ssc_fn
@@ -101,7 +74,9 @@ class SSCFile():
 
     self.global_attributes = self.__parse_attributes(sections['global_header'])
     self.global_attributes['Pack'] = pack
-    self.sc_attributes, self.sc_notes = self.__parse_stepcharts(sections['stepcharts'])
+    res = self.__parse_stepcharts(sections['stepcharts'])
+    self.sc_attributes = res[0]
+    self.sc_notes = res[1]
     pass
 
 
@@ -130,7 +105,10 @@ class SSCFile():
     }
 
 
-  def __parse_stepcharts(self, stepcharts: list) -> list:
+  def __parse_stepcharts(self, stepcharts: list):
+    '''
+      Parse stepcharts into stepchart attributes and notes
+    '''
     delim = '#NOTES:\n'
     sc_atts = []
     all_notes = []
@@ -225,6 +203,9 @@ class SSCFile():
     Public
   '''
   def get_stepchart_info(self) -> pd.DataFrame:
+    '''
+      Output df: Each row is a stepchart. Columns are stepchart-specific attributes and global attributes
+    '''
     cols = [
       'Name',
       'Steptype simple',
@@ -252,9 +233,6 @@ class SSCFile():
       'DISPLAYBPM',
       'First BPM',
     ]
-    '''
-      Each row is a stepchart. Columns are stepchart-specific attributes and global attributes
-    '''
     dd = defaultdict(list)
     for sc_att in self.sc_attributes:
       for key in cols:
@@ -267,7 +245,22 @@ class SSCFile():
     df = pd.DataFrame(dd)
     return df
 
+
   def get_stepchart_notes(self) -> List[str]:
     '''
+      Get all stepchart notes as a list of strings
     '''
     return self.sc_notes
+
+
+  def get_bpms(self) -> List[str]:
+    '''
+      Get all stepchart bpms as a list of strings
+    '''
+    all_bpms = []
+    for scatt in self.sc_attributes:
+      bpms = ''
+      if 'BPMS' in scatt:
+        bpms = scatt['BPMS']
+      all_bpms.append(bpms)
+    return all_bpms
