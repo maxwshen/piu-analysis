@@ -37,6 +37,9 @@ class SinglesStances():
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
 
     self.limb_panel_to_footpos = self.__init_panel_to_footpos()
+
+    self.nm_to_heel_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - heel'])}
+    self.nm_to_toe_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - toe'])}
     pass
 
 
@@ -80,7 +83,14 @@ class SinglesStances():
       footpos = set.intersection(*[self.limb_panel_to_footpos[limb][panel] for panel in panels])
       if len(footpos) == 0:
         return False, None
-    return True, dict(limb_to_panels)
+
+    # Enforce use of exactly 2 or 4 limbs
+    if len(limb_to_panels.keys()) not in [2, 4]:
+      return False, None
+
+    # Enforce that dict is ordered by self.all_limbs
+    l_to_p = {limb: limb_to_panels[limb] for limb in self.all_limbs if limb in limb_to_panels}
+    return True, l_to_p
 
 
   def get_limb_assignments(self, panel_constraints: str) -> List[dict]:
@@ -127,7 +137,7 @@ class SinglesStances():
   def get_stance_strs(self, limb_to_footpos: dict) -> List[str]:
     '''
       Creates a stance string, delimiter = ','
-      Implicit order:
+      limb_to_footpos assumed to follow order:
       - Left foot
       - Right foot
       - Left hand (optional)
@@ -167,9 +177,11 @@ class SinglesStances():
 
       panel_to_part = defaultdict(list)
       for idx, pos in enumerate(poss):
-        design_row = self.df[self.df['Name'] == pos].iloc[0]
-        heel_panel = design_row['Panel - heel']
-        toe_panel = design_row['Panel - toe']
+        # design_row = self.df[self.df['Name'] == pos].iloc[0]
+        # heel_panel = design_row['Panel - heel']
+        # toe_panel = design_row['Panel - toe']
+        heel_panel = self.nm_to_heel_panel[pos]
+        toe_panel = self.nm_to_toe_panel[pos]
         if heel_panel in self.arrow_panels:
           panel_to_part[heel_panel].append((idx, 'heel'))
         if toe_panel in self.arrow_panels:
@@ -226,28 +238,57 @@ class SinglesStances():
   '''
     Primary
   '''
-  def get_stanceactions(self, panel_constraints: str) -> List[str]:
+  def get_stanceactions(self, panel_constraints: str, verbose = False) -> List[str]:
     '''
       panel_constraints: '10002'
+
+      stance_action: example 15,53;1-,-1
+      <limb positions>;<limb actions>
+      For each subgroup, comma-delimited position names for limbs in [Left foot, Right foot, Left hand, Right hand].
+
+      stance_actions are unique and represent nodes in the graph.
     '''
     # Assign limbs to each panel
     las = self.get_limb_assignments(panel_constraints)
+    if verbose: print(las)
 
     # Expand limb-panel tuples to all foot positions
     stances = self.expand_to_footpos(las)
+    if verbose: print(stances)
+    # import code; code.interact(local=dict(globals(), **locals()))
 
     # Annotate all possible actions
     stance_actions = self.annotate_actions(panel_constraints, stances)
+    if verbose: print(stance_actions)
 
-    # print(stance_actions)
     return stance_actions
 
 
 
 def test():
   stance = SinglesStances()
-  stance.get_stanceactions('10001')
-  # stance.get_stanceactions('01110')
+  print(f'Running tests ...')
+  # pattern = '10001'
+  # pattern = '01110'
+
+  '''
+    Test with '11111' pattern: Check that all righthand positions proposed are concordant with design
+  '''
+
+  pattern = '11111'
+  print(f'Running {pattern} ...')
+  print(f'... checking that proposed hand positions are concordant with design')
+  stance_actions = stance.get_stanceactions(pattern, verbose = False)
+  found_righthand_pos = set([s.split(';')[0].split(',')[-1] for s in stance_actions])
+  df = stance.df
+  expected_rh_pos = set(df[df['Right hand'] == True]['Name'])
+  for idx, row in stance.df.iterrows():
+    if row['Right hand']:
+      assert row['Name'] in found_righthand_pos, f'{row["Name"]} not found'
+    else:
+      assert row['Name'] not in found_righthand_pos
+  print('Passed')
+
   return
 
 if __name__ == '__main__':
