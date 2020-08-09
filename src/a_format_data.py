@@ -167,7 +167,7 @@ def gen_qsubs():
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append('qsub -V -wd %s %s' % (_config.SRC_DIR, sh_fn))
+    qsub_commands.append('qsub -j y -V -wd %s %s' % (_config.SRC_DIR, sh_fn))
 
   # Save commands
   with open(qsubs_dir + '_commands.txt', 'w') as f:

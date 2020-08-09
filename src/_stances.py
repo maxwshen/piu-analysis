@@ -13,26 +13,39 @@ doubles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_doubles.csv', index_
   Foot positions
 '''
 
-class SinglesStances():
+class Stances():
   '''
     Intended usage: From an input set of constraints (panels to hit), return all stances that satisfy constraints as a set of nodes
 
     Also used for hands
   '''
-  def __init__(self):
-    self.df = singles_pos_df
-    self.idx_to_panel = {
-      0: 'p1,1',
-      1: 'p1,7',
-      2: 'p1,5',
-      3: 'p1,9',
-      4: 'p1,3',
-      # 5: 'p2,1',
-      # 6: 'p2,7',
-      # 7: 'p2,5',
-      # 8: 'p2,9',
-      # 9: 'p2,3',
-    }
+  def __init__(self, style = 'singles'):
+    self.style = style
+
+    if style == 'singles':
+      self.df = singles_pos_df
+      self.idx_to_panel = {
+        0: 'p1,1',
+        1: 'p1,7',
+        2: 'p1,5',
+        3: 'p1,9',
+        4: 'p1,3',
+      }
+    elif style == 'doubles':
+      self.df = doubles_pos_df
+      self.idx_to_panel = {
+        0: 'p1,1',
+        1: 'p1,7',
+        2: 'p1,5',
+        3: 'p1,9',
+        4: 'p1,3',
+        5: 'p2,1',
+        6: 'p2,7',
+        7: 'p2,5',
+        8: 'p2,9',
+        9: 'p2,3',
+      }
+
     self.arrow_panels = list(self.idx_to_panel.values())
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
 
@@ -131,12 +144,7 @@ class SinglesStances():
       Format: 
       Stance string ; Action string
     '''
-    panel_to_action = dict()
-    for idx, action in enumerate(panel_constraints):
-      panel = self.idx_to_panel[idx]
-      if action != '0':
-        panel_to_action[panel] = action
-
+    panel_to_action = self.text_to_panel_to_action(panel_constraints)
     stance_actions = []
     for stance in stances:
       poss = stance.split(',')
@@ -204,20 +212,18 @@ class SinglesStances():
   '''
     Primary
   '''
-  def get_stanceactions(self, panel_constraints: str, verbose: bool = False, prev_panels: List[str] = []) -> List[str]:
+  def get_stanceactions(self, panel_constraints: str, prev_panels: List[str] = [], verbose: bool = False) -> List[str]:
     '''
-      panel_constraints: '10002'
-
       stance_action: example 15,53;1-,-1
       <limb positions>;<limb actions>
       For each subgroup, comma-delimited position names for limbs in [Left foot, Right foot, Left hand, Right hand].
 
       stance_actions are unique and represent nodes in the graph.
     '''
-    active_panels = [self.idx_to_panel[idx] for idx, num in enumerate(panel_constraints) if num != '0']
-
+    active_panels = self.text_to_panels(panel_constraints)
     if len(prev_panels) == 0:
       prev_panels = self.arrow_panels
+    prev_panels = list(set(prev_panels))
 
     # Get foot stances consistent with active panels, and including previous panels
     stances = self.get_stances(active_panels, prev_panels)
@@ -229,27 +235,103 @@ class SinglesStances():
     return stance_actions
 
 
+  '''
+    Helper
+  '''
+  def text_to_panels(self, text: str) -> List[str]:
+    '''
+      '10002' -> ['p1,1', 'p1,3']
+    '''
+    return[self.idx_to_panel[idx] for idx, num in enumerate(text) if num != '0']
 
+
+  def text_to_panel_to_action(self, text: str) -> dict:
+    panel_to_action = dict()
+    for idx, action in enumerate(text):
+      panel = self.idx_to_panel[idx]
+      if action != '0':
+        panel_to_action[panel] = action
+    return panel_to_action
+
+
+  def initial_stanceaction(self):
+    if self.style == 'singles':
+      return ['44,66;--,--']
+    if self.style == 'doubles':
+      return []
+
+
+  def combine_lines(self, lines: List[str]):
+    '''
+      '10000' and '00100' -> '10100'
+    '''
+    if len(lines) == 1:
+      return lines[0]
+
+    combined_line = ''
+    n = len(lines[0])
+    priority = ['2', '1', '3', '0']
+
+    for idx in range(n):
+      cs = set([line[idx] for line in lines])
+      for char in priority:
+        if char in cs:
+          combined_line += char
+          break
+    return combined_line
+
+
+'''
+  Testing
+'''
 def test():
-  stance = SinglesStances()
+  stance = Stances(style = 'singles')
   print(f'Running tests ...')
 
-  '''
-    Todo -- get this to work. Implement ability to propose positions for unused foot among certain panels with no action. Default to all panels
-  '''
   # pattern = '10000'
   # pattern = '10001'
   pattern = '01110'
+
+  print(f'Running {pattern} ...')
   stance_actions = stance.get_stanceactions(pattern, verbose = True)
   import code; code.interact(local=dict(globals(), **locals()))
 
+  test_limb_order_preservation(stance)
+  test_prev_panel_reduction(stance, verbose = True)
+
+  return
+
+def test_prev_panel_reduction(stance, verbose = False):
   '''
     Test with '11111' pattern: Check that all righthand positions proposed are concordant with design
   '''
+  pattern = '00100'
+  print(f'Running {pattern} ...')
+  print(f'... checking that specifying prev panels reduces possible stances')
+  sa1 = stance.get_stanceactions(pattern)
+  sa2 = stance.get_stanceactions(pattern, prev_panels = ['p1,1'])
+  sa3 = stance.get_stanceactions(pattern, prev_panels = ['p1,1', 'p1,9'])
+  sa4 = stance.get_stanceactions(pattern, prev_panels = ['p1,1', 'p1,3', 'p1,7', 'p1,9'])
 
+  assert len(sa2) < len(sa1), 'Failed'
+  assert len(sa2) < len(sa3), 'Failed'
+  assert len(sa3) < len(sa1), 'Failed'
+  assert len(sa4) == len(sa1), 'Failed'
+
+  if verbose:
+    print(len(sa2), len(sa3), len(sa4), len(sa1))
+
+  print('Passed')
+  return
+
+
+def test_limb_order_preservation(stance):
+  '''
+    Test with '11111' pattern: Check that all righthand positions proposed are concordant with design
+  '''
   pattern = '11111'
   print(f'Running {pattern} ...')
-  print(f'... checking that proposed hand positions are concordant with design')
+  print(f'... checking that limb order is correct')
   stance_actions = stance.get_stanceactions(pattern, verbose = False)
   found_righthand_pos = set([s.split(';')[0].split(',')[-1] for s in stance_actions])
   df = stance.df
@@ -260,8 +342,8 @@ def test():
     else:
       assert row['Name'] not in found_righthand_pos
   print('Passed')
-
   return
+
 
 if __name__ == '__main__':
   test()
