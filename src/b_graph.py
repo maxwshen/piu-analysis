@@ -66,7 +66,7 @@ def form_graph(nm: str) -> None:
       # Process
       if has_notes(line):
         # TODO: Form constraints using previous holds and current line
-        nodes = stance.get_stances(line)
+        nodes = stance.get_stanceactions(line)
 
         print(time, bpm, beat)
         import code; code.interact(local=dict(globals(), **locals()))

@@ -59,102 +59,68 @@ class SinglesStances():
       md[limb] = d
     return md
 
+
   '''
-    Assigning limbs to panels
+    Get foot positions from active and previous panels
   '''
-  def recursive_limb_combos(self, limbs: List, n: int) -> List[List]:
-    if n == 1:
-      return [[s] for s in limbs]
-    rlas = self.recursive_limb_combos(limbs, n - 1)
-    new_rlas = []
-    for la in rlas:
-      for limb in limbs:
-        new_rlas.append(la + [limb])
-    return new_rlas
-
-
-  def check_valid(self, limb_assignment: List[str], active_panels: List[str]):
-    limb_to_panels = defaultdict(list)
-    for limb, panel in zip(limb_assignment, active_panels):
-      limb_to_panels[limb].append(panel)
-
-    for limb in limb_to_panels:
-      panels = limb_to_panels[limb]
-      footpos = set.intersection(*[self.limb_panel_to_footpos[limb][panel] for panel in panels])
-      if len(footpos) == 0:
-        return False, None
-
-    # Enforce use of exactly 2 or 4 limbs
-    if len(limb_to_panels.keys()) not in [2, 4]:
-      return False, None
-
-    # Enforce that dict is ordered by self.all_limbs
-    l_to_p = {limb: limb_to_panels[limb] for limb in self.all_limbs if limb in limb_to_panels}
-    return True, l_to_p
-
-
-  def get_limb_assignments(self, panel_constraints: str) -> List[dict]:
+  def get_stances(self, active_panels, prev_panels):
     '''
+      - Determine how many limbs we need
+      - Propose stances as combinations of allowed positions for each limb, subset by possibility (in csv) and panels
+      - Filter to stances that cover constraint panels
     '''
-    num_constraints = len(panel_constraints) - panel_constraints.count('0')
-    active_panels = [self.idx_to_panel[idx] for idx, num in enumerate(panel_constraints) if num != '0']
+    num_constraints = len(active_panels)
+    all_panels = list(set(active_panels) | set(prev_panels))
 
+    '''
+      Todo -- smarter detection of whether we need hands or not. 
+    '''
     limbs = ['Left foot', 'Right foot']
     if num_constraints > 4:
       limbs += ['Left hand', 'Right hand']
 
-    rlas = self.recursive_limb_combos(limbs, len(active_panels))
+    ps = []
+    for limb in limbs:
+      dfs = self.df[self.df[limb] == 1]
+      crit = (dfs[all_panels].sum(axis = 'columns') > 0)
+      positions = list(dfs[crit]['Name'])
+      ps.append(positions)
 
-    # Filter limb assignments
-    valid_las = []
-    for limb_assignment in rlas:
-      ok_flag, limb_to_panels = self.check_valid(limb_assignment, active_panels)
-      if ok_flag:
-        valid_las.append(limb_to_panels)
+    sts = self.recursive_get_stances(ps)
 
-    # print(valid_las)
-    return valid_las
+    # Filter stances that do not include all active panels
+    filt_sts = []
+    for st in sts:
+      covered_panels = set()
+      for pos in st:
+        covered_panels.add(self.nm_to_toe_panel[pos])
+        covered_panels.add(self.nm_to_heel_panel[pos])
+      ok = True
+      for ap in active_panels:
+        if ap not in covered_panels:
+          ok = False
+          break
+      if ok:
+        filt_sts.append(st)
 
-  '''
-    Annotating foot positions
-  '''
-  def expand_to_footpos(self, las: List[dict]) -> List[str]:
-    all_stances = []
-    for la in las:
-      limb_to_footpos = dict()
-      for limb in la:
-        panels = la[limb]
-        foot_pos = set.intersection(*[self.limb_panel_to_footpos[limb][panel] for panel in panels])
-        limb_to_footpos[limb] = list(foot_pos)
-
-      stances = self.get_stance_strs(limb_to_footpos)
-      for stance in stances:
-        if stance not in all_stances:
-          all_stances.append(stance)
-    return all_stances
-
-
-  def get_stance_strs(self, limb_to_footpos: dict) -> List[str]:
-    '''
-      Creates a stance string, delimiter = ','
-      limb_to_footpos assumed to follow order:
-      - Left foot
-      - Right foot
-      - Left hand (optional)
-      - Right hand (optional)
-    '''
     delim = ','
-    stance_strs = []
-    for limb in limb_to_footpos:
-      if len(stance_strs) == 0:
-        stance_strs = limb_to_footpos[limb]
-      else:
-        new_ss = []
-        for s in stance_strs:
-          for footpos in limb_to_footpos[limb]:
-            new_ss.append(s + f'{delim}{footpos}')
-        stance_strs = new_ss
+    stance_strs = [delim.join(s) for s in filt_sts]
     return stance_strs
+
+
+  def recursive_get_stances(self, ps: List[List[str]]) -> List[List[str]]:
+    '''
+      List of <num_limbs> lists of positions
+      Returns List of position combinations for each limb
+    '''
+    if len(ps) == 1:
+      return [[s] for s in ps[0]]
+    positions = self.recursive_get_stances(ps[:-1])
+    np = []
+    for p in positions:
+      for s in ps[-1]:
+        np.append(p + [s])
+    return np
 
 
   '''
@@ -238,7 +204,7 @@ class SinglesStances():
   '''
     Primary
   '''
-  def get_stanceactions(self, panel_constraints: str, verbose = False) -> List[str]:
+  def get_stanceactions(self, panel_constraints: str, verbose: bool = False, prev_panels: List[str] = []) -> List[str]:
     '''
       panel_constraints: '10002'
 
@@ -248,16 +214,15 @@ class SinglesStances():
 
       stance_actions are unique and represent nodes in the graph.
     '''
-    # Assign limbs to each panel
-    las = self.get_limb_assignments(panel_constraints)
-    if verbose: print(las)
+    active_panels = [self.idx_to_panel[idx] for idx, num in enumerate(panel_constraints) if num != '0']
 
-    # Expand limb-panel tuples to all foot positions
-    stances = self.expand_to_footpos(las)
-    if verbose: print(stances)
-    # import code; code.interact(local=dict(globals(), **locals()))
+    if len(prev_panels) == 0:
+      prev_panels = self.arrow_panels
 
-    # Annotate all possible actions
+    # Get foot stances consistent with active panels, and including previous panels
+    stances = self.get_stances(active_panels, prev_panels)
+
+    # Annotate all possible actions (one to many relationship)
     stance_actions = self.annotate_actions(panel_constraints, stances)
     if verbose: print(stance_actions)
 
@@ -268,8 +233,15 @@ class SinglesStances():
 def test():
   stance = SinglesStances()
   print(f'Running tests ...')
+
+  '''
+    Todo -- get this to work. Implement ability to propose positions for unused foot among certain panels with no action. Default to all panels
+  '''
+  # pattern = '10000'
   # pattern = '10001'
-  # pattern = '01110'
+  pattern = '01110'
+  stance_actions = stance.get_stanceactions(pattern, verbose = True)
+  import code; code.interact(local=dict(globals(), **locals()))
 
   '''
     Test with '11111' pattern: Check that all righthand positions proposed are concordant with design
