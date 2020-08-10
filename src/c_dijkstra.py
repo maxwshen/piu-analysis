@@ -46,6 +46,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   '''
   graph_nodes = init_graph_nodes(nodes)
   cost_memoizer = dict()
+  jump_memoizer = dict()
   psa_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
@@ -75,7 +76,14 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
           d2 = get_parsed_stanceaction(sa2, psa_memoizer, stats_d, mover)
           stats_d['Num. edges'] += 1
 
-          if mover.unnecessary_jump(d1, d2, child_line):
+          if (sa1, sa2) in jump_memoizer:
+            jump_flag = jump_memoizer[(sa1, sa2)]
+            stats_d['Num. times jump memoizer used'] += 1
+          else:
+            jump_flag = mover.unnecessary_jump(d1, d2, child_line)
+            jump_memoizer[(sa1, sa2)] = jump_flag
+
+          if jump_flag:
             stats_d['Num. edges skipped by unnecessary jump'] += 1
             continue
 
