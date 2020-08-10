@@ -50,8 +50,8 @@ def form_graph(nm: str):
   beats_per_measure = 4
 
   # Testing -- first 9 measures only
-  # measures = measures[:9]
-  measures = measures[:26]
+  measures = measures[:9]
+  # measures = measures[:26]
 
   beat = 0
   time = 0     # units = seconds
@@ -90,6 +90,7 @@ def form_graph(nm: str):
             'Time': float,
             'Beat': float,
             'Line': str,
+            'Line with active holds': str,
             'Measure': int,
             'BPM': float,
             'Stance actions': List[str],
@@ -165,7 +166,7 @@ def form_graph(nm: str):
     'Line with active holds': '',
     'Measure': np.inf,
     'BPM': 0,
-    'Stance actions': [],
+    'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
   }
   edges_out[prev_node_nm].append('final')

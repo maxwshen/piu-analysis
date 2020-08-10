@@ -7,7 +7,7 @@ from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
 
-import _movement
+import _movement, _params
 
 # Default params
 inp_dir = _config.OUT_PLACE + f'b_graph/'
@@ -18,7 +18,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def dijkstra(nodes, edges_out, edges_in):
+def dijkstra(nm, nodes, edges_out, edges_in):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -29,7 +29,6 @@ def dijkstra(nodes, edges_out, edges_in):
       'BPM': float,
       'Stance actions': List[str],
       'Previous panels': List[str],
-      'Best parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
     }
     edges = {
       node_nm: List[node_nm: str]
@@ -42,32 +41,127 @@ def dijkstra(nodes, edges_out, edges_in):
   steptype = nodes['init']['Steptype']
   mover = _movement.Movement(style = steptype)
 
-  node_qu = ['init']
+  '''
+    graph_nodes[node_nm][sa_idx] = (best_score, best_parent_node_nm, best_parent_sa_idx)
+  '''
+  graph_nodes = init_graph_nodes(nodes)
+  memoizer = dict()
 
+  print('Running Dijkstra`s algorithm ...')
+  visited = set()
+  node_qu = ['init']
+  timer = util.Timer(total = len(nodes))
+  '''
+    Traverse DAG with Dijkstra's
+    todo: implement topological sort
+  '''
   while len(node_qu) > 0:
     nm, node_qu = node_qu[0], node_qu[1:]
     children = edges_out[nm]
     node_qu += children
 
-    sa1 = nodes[nm]['Stance actions'][0]
-    sa2 = nodes[children[0]]['Stance actions'][0]
-    timedelta = nodes[children[0]]['Time'] - nodes[nm]['Time']
-    cost = mover.get_cost(sa1, sa2, time = timedelta)
-    print(sa1, sa2, cost)
+    curr_sas = nodes[nm]['Stance actions']
 
-    import code; code.interact(local=dict(globals(), **locals()))
+    for child in children:
+      child_sas = nodes[child]['Stance actions']
+      timedelta = nodes[child]['Time'] - nodes[nm]['Time']
+      if child not in graph_nodes:
+        graph_nodes[child] = dict()
 
+      for sa_idx, sa1 in enumerate(curr_sas):
+        for sa_jdx, sa2 in enumerate(child_sas):
+
+          if child != 'final':
+            if (sa1, sa2) in memoizer:
+              edge_cost = memoizer[(sa1, sa2)]
+            else:
+              # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
+              edge_cost = mover.get_cost(sa1, sa2)
+              # Todo -- consider applying time cost here
+              memoizer[(sa1, sa2)] = edge_cost
+
+          elif child == 'final':
+            edge_cost = 0
+
+          # print(sa1, sa2, edge_cost)
+
+          curr_cost = graph_nodes[nm][sa_idx][0]
+          cost = curr_cost + edge_cost
+
+          if cost < graph_nodes[child][sa_jdx][0]:
+            graph_nodes[child][sa_jdx] = (cost, nm, sa_idx)
+
+    visited.add(nm)
+    timer.update()
+
+  # Save
+  with open(out_dir + f'{nm}.pkl', 'wb') as f:
+    pickle.dump(graph_nodes, f)
+
+  # Find best path
+  df = get_best_path(graph_nodes, nodes)
+  df.to_csv(out_dir + f'{nm}.csv')
+  import code; code.interact(local=dict(globals(), **locals()))
   return
 
+
+def get_best_path(graph_nodes, nodes):
+  '''
+    Backtrack from final node to init, getting stance actions
+  '''
+
+  cols = [
+    'Time',
+    'Beat',
+    'Line', 
+    'Line with active holds',
+    'Measure',
+    'BPM',
+  ]
+
+  dd = defaultdict(list)
+  cost, node, sa_idx = graph_nodes['final'][0]
+  while node != 'init':
+    cost, parent_node, parent_sa_idx = graph_nodes[node][sa_idx]
+
+    dd['Node name'].append(node)
+    dd['Cost'].append(cost)
+    dd['Stance action'].append(nodes[node]['Stance actions'][sa_idx])
+    for col in cols:
+      dd[col].append(nodes[node][col])
+
+    node = parent_node
+    sa_idx = parent_sa_idx
+
+  df = pd.DataFrame(dd)
+  df = df.iloc[::-1].reset_index(drop = True)
+  df['Line'] = [f'`{s}' for s in df['Line']]
+  df['Line with active holds'] = [f'`{s}' for s in df['Line with active holds']]
+  return df
 
 
 '''
   Helper
 '''
-def load_data(nm):
+def load_data(nm: str):
   with open(inp_dir + f'{nm}.pkl', 'rb') as f:
     nodes, edges_out, edges_in = pickle.load(f)
   return nodes, edges_out, edges_in
+
+
+def init_graph_nodes(nodes: dict) -> dict:
+  print(f'Initializing graph nodes ...')
+  graph_nodes = {'init': {0: (0, None, None)}}
+  timer = util.Timer(total = len(nodes))
+  for node in nodes:
+    if node == 'init':
+      continue
+    graph_nodes[node] = {}
+    for sa_idx, sa in enumerate(nodes[node]['Stance actions']):
+      graph_nodes[node][sa_idx] = (np.inf, None, None)
+    timer.update()
+  print('Done')
+  return graph_nodes
 
 
 ##
@@ -114,7 +208,7 @@ def main():
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   nodes, edges_out, edges_in = load_data(nm)
-  dijkstra(nodes, edges_out, edges_in)
+  dijkstra(nm, nodes, edges_out, edges_in)
   return
 
 

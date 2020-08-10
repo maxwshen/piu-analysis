@@ -264,7 +264,7 @@ class Movement():
   '''
     Primary
   '''
-  def get_cost(self, sa1: str, sa2: str, time: float = 0.2, verbose: bool = False) -> float:
+  def get_cost(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
     '''
     '''
     self.verbose = verbose
