@@ -4,8 +4,11 @@ import numpy as np
 
 # parameters
 
-# Need 4 for double brackets :/
-prev_panel_buffer_len = 4
+# Value = largest possible num. panels hit simultaneously
+prev_panel_buffer_len = {
+  'singles': 3,
+  'doubles': 4,
+}
 
 perfect_windows = {
   'piu nj': [0.0416, 0.0832],

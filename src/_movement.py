@@ -42,6 +42,8 @@ class Movement():
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
     self.downpress = ['1', '2']
     self.doublestep_actions = ['1', '2', '3']
+    self.prev_hold = ['2', '4']
+    self.ok_hold = ['3', '4']
     self.verbose = False
     pass
 
@@ -137,10 +139,8 @@ class Movement():
         if curr_ha == '4':
           cost += self.costs['Hold footslide']
 
-      prev_hold = ['2', '4']
-      ok = ['3', '4']
-      if prev_ha in prev_hold or prev_ta in prev_hold:
-        if curr_ta not in ok and curr_ha not in ok:
+      if prev_ha in self.prev_hold or prev_ta in self.prev_hold:
+        if curr_ta not in self.ok_hold and curr_ha not in self.ok_hold:
           cost += self.costs['Hold footswitch']
 
     if self.verbose: print(f'Hold change cost: {cost}')

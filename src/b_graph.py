@@ -140,7 +140,7 @@ def form_graph(nm: str):
           elif a == '3':
             active_holds.remove(p)
             prev_presses.insert(0, p)
-        prev_presses = prev_presses[:_params.prev_panel_buffer_len]
+        prev_presses = prev_presses[:_params.prev_panel_buffer_len[steptype]]
         prev_presses = list(unique_everseen(prev_presses))
 
         # print(time, bpm, beat, line, len(sas), active_holds, prev_presses)
@@ -317,6 +317,8 @@ def main():
   nodes, edges_out, edges_in, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge
   a_nodes, a_edges_out, a_edges_in = augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = timing_judge)
+
+  print(f'Found {len(a_nodes)} nodes')
 
   with open(out_dir + f'{nm}.pkl', 'wb') as f:
     pickle.dump((a_nodes, a_edges_out, a_edges_in), f)

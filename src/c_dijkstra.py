@@ -72,22 +72,27 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
 
       for sa_idx, sa1 in enumerate(curr_sas):
         d1 = get_parsed_stanceaction(sa1, psa_memoizer, stats_d, mover)
+        stance1 = sa1[:sa1.index(';')]
         for sa_jdx, sa2 in enumerate(child_sas):
           d2 = get_parsed_stanceaction(sa2, psa_memoizer, stats_d, mover)
+          stance2 = sa2[:sa2.index(';')]
           stats_d['Num. edges'] += 1
 
-          if (sa1, sa2) in jump_memoizer:
-            jump_flag = jump_memoizer[(sa1, sa2)]
+          # Get unnecessary jump flag by memoization
+          jump_key = (stance1, stance2, child_line)
+          if jump_key in jump_memoizer:
+            jump_flag = jump_memoizer[jump_key]
             stats_d['Num. times jump memoizer used'] += 1
           else:
             jump_flag = mover.unnecessary_jump(d1, d2, child_line)
-            jump_memoizer[(sa1, sa2)] = jump_flag
+            jump_memoizer[jump_key] = jump_flag
 
           if jump_flag:
             stats_d['Num. edges skipped by unnecessary jump'] += 1
             continue
 
           if child != 'final':
+            # Get cost by memoization
             if (sa1, sa2) in cost_memoizer:
               edge_cost = cost_memoizer[(sa1, sa2)]
               stats_d['Num. times cost memoizer used'] += 1
