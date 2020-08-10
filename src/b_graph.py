@@ -50,8 +50,8 @@ def form_graph(nm: str):
   beats_per_measure = 4
 
   # Testing -- first 9 measures only
-  measures = measures[:9]
-  # measures = measures[:26]
+  # measures = measures[:9]
+  measures = measures[:26]
 
   beat = 0
   time = 0     # units = seconds

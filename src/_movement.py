@@ -294,6 +294,9 @@ class Movement():
     return cost
 
 
+  '''
+    Heuristic node/edge pruning
+  '''
   def unnecessary_jump(self, d1: dict, d2: dict, line: str) -> bool:
     '''
       Detect if unnecessary jump

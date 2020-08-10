@@ -46,6 +46,9 @@ class Stances():
         9: 'p2,3',
       }
 
+    # No unusual positions
+    self.df = self.df[self.df['Unusual'] != 1]
+
     self.arrow_panels = list(self.idx_to_panel.values())
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
 
@@ -231,12 +234,13 @@ class Stances():
 
     # Get foot stances consistent with active panels, and including previous panels
     stances = self.get_stances(active_panels, prev_panels)
+    stances = list(set(stances))
 
     # Annotate all possible actions (one to many relationship)
     stance_actions = self.annotate_actions(panel_constraints, stances)
     if verbose: print(stance_actions)
 
-    return stance_actions
+    return list(set(stance_actions))
 
 
   '''

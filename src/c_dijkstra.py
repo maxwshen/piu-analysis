@@ -6,6 +6,7 @@ import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
+from functools import lru_cache
 
 import _movement, _params
 
@@ -47,8 +48,30 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   graph_nodes = init_graph_nodes(nodes)
   cost_memoizer = dict()
   jump_memoizer = dict()
+  dist_memoizer = dict()
   psa_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
+
+
+  @lru_cache(maxsize = None)
+  def get_parsed_stanceaction(sa):
+    return mover.parse_stanceaction(sa)
+
+  '''
+    Investigate nodes
+  '''
+  # print('Exploring nodes in graph -- investigate for filtering and speedups')
+  # nsas = []
+  # for n in nodes:
+  #   if n not in ['init', 'final']:
+  #     nsa = len(nodes[n]['Stance actions'])
+  #     nsas.append(nsa)
+  # print(f'Num. stance actions per note line, statistics')
+  # print(pd.DataFrame(nsas).describe())
+  # n1 = edges_out['init'][0]
+  # print(f'Stance actions of first note line')
+  # print(nodes[n1]['Stance actions'])
+  # import code; code.interact(local=dict(globals(), **locals()))
 
   print('Running Dijkstra`s algorithm ...')
   visited = set()
@@ -71,31 +94,69 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
       child_line = nodes[child]['Line with active holds']
 
       for sa_idx, sa1 in enumerate(curr_sas):
-        d1 = get_parsed_stanceaction(sa1, psa_memoizer, stats_d, mover)
+        d1 = get_parsed_stanceaction(sa1)
         stance1 = sa1[:sa1.index(';')]
+
+        '''
+          Consider all children: filter by heuristics
+          - Unnecessary jumps
+          - Closest distance percentile
+        '''
+        subset_sa_idxs = []
+        subset_sas = []
+        # Use a heap / priority queue
+        subset_dists = []
         for sa_jdx, sa2 in enumerate(child_sas):
-          d2 = get_parsed_stanceaction(sa2, psa_memoizer, stats_d, mover)
+          d2 = get_parsed_stanceaction(sa2)
           stance2 = sa2[:sa2.index(';')]
           stats_d['Num. edges'] += 1
 
           # Get unnecessary jump flag by memoization
+          # Use strings as keys; dicts are not hashable
           jump_key = (stance1, stance2, child_line)
           if jump_key in jump_memoizer:
             jump_flag = jump_memoizer[jump_key]
-            stats_d['Num. times jump memoizer used'] += 1
+            stats_d['Jump memoizer, num hits'] += 1
           else:
             jump_flag = mover.unnecessary_jump(d1, d2, child_line)
             jump_memoizer[jump_key] = jump_flag
-
           if jump_flag:
             stats_d['Num. edges skipped by unnecessary jump'] += 1
             continue
 
+          # dist_key = (stance1, stance2)
+          # if dist_key in dist_memoizer:
+          #   dist = dist_memoizer[dist_key]
+          #   stats_d['Dist memoizer, num hits'] += 1
+          # else:
+          #   dist = mover.move_cost(d1, d2, time = 1)
+          #   dist_memoizer[dist_key] = dist
+          # subset_dists.append(dist)
+          subset_sa_idxs.append(sa_jdx)
+          subset_sas.append(sa2)
+
+        # Filter subset sas by distance
+        # pct = 99
+        # dist_cutoff = np.percentile(subset_dists, pct)
+        # dist_cutoff = min(subset_dists) * 10
+        # prev_n = len(subset_sa_idxs)
+        # subset_sa_idxs = [s for idx, s in enumerate(subset_sa_idxs) if subset_dists[idx] < dist_cutoff]
+        # subset_sas = [s for idx, s in enumerate(subset_sas) if subset_dists[idx] < dist_cutoff]
+        # stats_d['Num. edges skipped by dist'] += prev_n - len(subset_sa_idxs)
+
+        '''
+          Run Dijkstra's on subset of edges
+        '''
+        for sa_jdx, sa2 in zip(subset_sa_idxs, subset_sas):
+          d2 = get_parsed_stanceaction(sa2)
+          stance2 = sa2[:sa2.index(';')]
+
+          stats_d['Num. edges considered'] += 1
           if child != 'final':
             # Get cost by memoization
             if (sa1, sa2) in cost_memoizer:
               edge_cost = cost_memoizer[(sa1, sa2)]
-              stats_d['Num. times cost memoizer used'] += 1
+              stats_d['Cost memoizer, num hits'] += 1
 
             else:
               # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
@@ -120,6 +181,16 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   # Save
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump(graph_nodes, f)
+
+  cache_funcs = {
+    'psa cache': get_parsed_stanceaction,
+  }
+  for cache_func in cache_funcs:
+    info = cache_funcs[cache_func].cache_info()
+    stats_d[f'{cache_func}, num hits'] = info[0]
+    stats_d[f'{cache_func}, size'] = info[-1]
+  stats_d['Cost memoizer, size'] = len(cost_memoizer)
+  stats_d['Jump memoizer, size'] = len(jump_memoizer)
 
   stats_df = pd.DataFrame(stats_d, index = ['Count']).T
   print(stats_df)
@@ -147,8 +218,14 @@ def get_best_path(graph_nodes, nodes):
 
   dd = defaultdict(list)
   cost, node, sa_idx = graph_nodes['final'][0]
+  assert node is not None, f'Error in backtracking: Final node has no parent'
+
   while node != 'init':
-    cost, parent_node, parent_sa_idx = graph_nodes[node][sa_idx]
+    try:
+      cost, parent_node, parent_sa_idx = graph_nodes[node][sa_idx]
+    except KeyError:
+      print(f'Error in backtracking: {node} has no parent')
+      sys.exit(1)
 
     dd['Node name'].append(node)
     dd['Cost'].append(cost)
@@ -188,16 +265,6 @@ def init_graph_nodes(nodes: dict) -> dict:
     timer.update()
   print('Done')
   return graph_nodes
-
-
-def get_parsed_stanceaction(sa, psa_memoizer, stats_d, mover):
-  if sa in psa_memoizer:
-    d = psa_memoizer[sa]
-    stats_d['Num. times psa memoizer used'] += 1
-  else:
-    d = mover.parse_stanceaction(sa)
-    psa_memoizer[sa] = d
-  return d
 
 
 ##
