@@ -37,11 +37,12 @@ def form_graph(nm: str):
   '''
   atts = sc_df[sc_df['Name (unique)'] == nm].iloc[0]
   if 'S' in atts['Steptype simple']:
-    stance = stance_store['singles']
+    steptype = 'singles'
   elif 'D' in atts['Steptype simple']:
-    stance = stance_store['doubles']
+    steptype = 'doubles'
   else:
     assert False, 'No stance found' 
+  stance = stance_store[steptype]
 
   notes = all_notes[nm]
   measures = [s.strip() for s in notes.split(',')]
@@ -70,6 +71,8 @@ def form_graph(nm: str):
     'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
     'Best parent': '',
+    'Steptype': steptype,
+    'Timing judge': '',
   }
   prev_node_nm = 'init'
 
@@ -176,6 +179,7 @@ def augment_graph_multihits(nodes, edges, stance, timing_judge = 'piu nj'):
     time = node['Time']
 
     if nm == 'init':
+      node['Timing judge'] = timing_judge
       continue
 
     # Only propose multi hits starting on 1 and 2
@@ -278,12 +282,12 @@ def main():
   
   # Test: Single stepchart
   # 13 second runtime
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
 
   timing_judge = 'piu nj'
 
   # Test: Has multi hits
-  nm = 'Sorceress Elise - YAHPP S23 arcade'
+  # nm = 'Sorceress Elise - YAHPP S23 arcade'
   nodes, edges, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge
   a_nodes, a_edges = augment_graph_multihits(nodes, edges, stance, timing_judge = timing_judge)

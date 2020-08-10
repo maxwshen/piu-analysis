@@ -94,10 +94,8 @@ class Stances():
 
     ps = []
     for limb in limbs:
-      dfs = self.df[self.df[limb] == 1]
-      crit = (dfs[all_panels].sum(axis = 'columns') > 0)
-      positions = list(dfs[crit]['Name'])
-      ps.append(positions)
+      positions = set().union(*[self.limb_panel_to_footpos[limb][panel] for panel in all_panels])
+      ps.append(list(positions))
 
     sts = self.recursive_get_stances(ps)
 
@@ -298,8 +296,8 @@ def test():
 
   test_limb_order_preservation(stance)
   test_prev_panel_reduction(stance, verbose = True)
-
   return
+
 
 def test_prev_panel_reduction(stance, verbose = False):
   '''
