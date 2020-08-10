@@ -264,13 +264,21 @@ class Movement():
   '''
     Primary
   '''
-  def get_cost(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
+  def get_cost_from_text(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
     '''
     '''
     self.verbose = verbose
 
     d1 = self.parse_stanceaction(sa1)
     d2 = self.parse_stanceaction(sa2)
+    return self.get_cost_from_ds(d1, d2, time = time, verbose = verbose)
+
+
+  def get_cost_from_ds(self, d1: dict, d2: dict, time: float = 1, verbose: bool = False) -> float:
+    '''
+    '''
+    self.verbose = verbose
+
     cost = self.angle_cost(d2) + \
       self.foot_inversion_cost(d2) + \
       self.foot_pos_cost(d2) + \
@@ -281,6 +289,19 @@ class Movement():
       self.bracket_cost(d2) + \
       self.hands_cost(d2)
     return cost
+
+
+  def unnecessary_jump(self, d1: dict, d2: dict, line: str) -> bool:
+    '''
+      Detect if unnecessary jump
+    '''
+    num_nonpresses = line.count('0')
+    if num_nonpresses == len(line) - 1:
+      for downpress in self.downpress:
+        if downpress in line:
+          if self.jump_cost(d1, d2):
+            return True
+    return False
 
 
 '''

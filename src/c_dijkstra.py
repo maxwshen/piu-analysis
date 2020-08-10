@@ -18,7 +18,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def dijkstra(nm, nodes, edges_out, edges_in):
+def dijkstra(sc_nm, nodes, edges_out, edges_in):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -46,6 +46,7 @@ def dijkstra(nm, nodes, edges_out, edges_in):
   '''
   graph_nodes = init_graph_nodes(nodes)
   memoizer = dict()
+  stats_d = defaultdict(lambda: 0)
 
   print('Running Dijkstra`s algorithm ...')
   visited = set()
@@ -65,18 +66,25 @@ def dijkstra(nm, nodes, edges_out, edges_in):
     for child in children:
       child_sas = nodes[child]['Stance actions']
       timedelta = nodes[child]['Time'] - nodes[nm]['Time']
-      if child not in graph_nodes:
-        graph_nodes[child] = dict()
+      child_line = nodes[child]['Line with active holds']
 
       for sa_idx, sa1 in enumerate(curr_sas):
+        d1 = mover.parse_stanceaction(sa1)
         for sa_jdx, sa2 in enumerate(child_sas):
+          d2 = mover.parse_stanceaction(sa2)
+
+          if mover.unnecessary_jump(d1, d2, child_line):
+            stats_d['Num. edges skipped by unnecessary jump'] += 1
+            continue
 
           if child != 'final':
             if (sa1, sa2) in memoizer:
               edge_cost = memoizer[(sa1, sa2)]
+              stats_d['Num. times memoizer used'] += 1
+
             else:
               # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
-              edge_cost = mover.get_cost(sa1, sa2)
+              edge_cost = mover.get_cost_from_ds(d1, d2)
               # Todo -- consider applying time cost here
               memoizer[(sa1, sa2)] = edge_cost
 
@@ -95,12 +103,15 @@ def dijkstra(nm, nodes, edges_out, edges_in):
     timer.update()
 
   # Save
-  with open(out_dir + f'{nm}.pkl', 'wb') as f:
+  with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump(graph_nodes, f)
+
+  stats_df = pd.DataFrame(stats_d, index = ['Count']).T
+  print(stats_df)
 
   # Find best path
   df = get_best_path(graph_nodes, nodes)
-  df.to_csv(out_dir + f'{nm}.csv')
+  df.to_csv(out_dir + f'{sc_nm}.csv')
   import code; code.interact(local=dict(globals(), **locals()))
   return
 
@@ -143,8 +154,8 @@ def get_best_path(graph_nodes, nodes):
 '''
   Helper
 '''
-def load_data(nm: str):
-  with open(inp_dir + f'{nm}.pkl', 'rb') as f:
+def load_data(sc_nm: str):
+  with open(inp_dir + f'{sc_nm}.pkl', 'rb') as f:
     nodes, edges_out, edges_in = pickle.load(f)
   return nodes, edges_out, edges_in
 

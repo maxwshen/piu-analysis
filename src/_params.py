@@ -4,6 +4,7 @@ import numpy as np
 
 # parameters
 
+# Need 4 for double brackets :/
 prev_panel_buffer_len = 4
 
 perfect_windows = {
