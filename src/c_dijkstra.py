@@ -76,18 +76,16 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   print('Running Dijkstra`s algorithm ...')
   visited = set()
   node_qu = ['init']
-  timer = util.Timer(total = len(nodes))
+  node_nms = list(nodes.keys())
+  topo_sorted_nms = topological_sort(node_nms, edges_out)
   '''
     Traverse DAG with Dijkstra's
     todo: implement topological sort
   '''
-  while len(node_qu) > 0:
-    nm, node_qu = node_qu[0], node_qu[1:]
-    children = edges_out[nm]
-    node_qu += children
-
+  timer = util.Timer(total = len(topo_sorted_nms))
+  for nm in topo_sorted_nms:
     curr_sas = nodes[nm]['Stance actions']
-
+    children = edges_out[nm]
     for child in children:
       child_sas = nodes[child]['Stance actions']
       timedelta = nodes[child]['Time'] - nodes[nm]['Time']
@@ -265,6 +263,27 @@ def init_graph_nodes(nodes: dict) -> dict:
     timer.update()
   print('Done')
   return graph_nodes
+
+
+def topological_sort(node_nms, edges_out):
+  visited = [False] * len(node_nms)
+  stack = []
+
+
+  def topological_sort_util(idx, visited, stack):
+    visited[idx] = True
+    for child_nm in edges_out[node_nms[idx]]:
+      jdx = node_nms.index(child_nm)
+      if not visited[jdx]:
+        topological_sort_util(jdx, visited, stack)
+    stack.insert(0, node_nms[idx])
+    return
+
+  for idx in range(len(node_nms)):
+    if not visited[idx]:
+      topological_sort_util(idx, visited, stack)
+
+  return stack
 
 
 ##
