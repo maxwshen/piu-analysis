@@ -83,12 +83,12 @@ class Movement():
       right_angle = float(right_angle)
   
       angle = -1 * left_angle + right_angle
-      if angle > 170:      
-        cost += 3
+      if angle > 170:
+        cost += self.costs['Angle too open']
       if angle < 0:
-        cost += 0.5
+        cost += self.costs['Angle duck']
       if angle < -45:
-        cost += 3
+        cost += self.costs['Angle extreme duck']
 
     if verbose: print(f'Angle cost: {cost}')
     return cost
@@ -114,6 +114,28 @@ class Movement():
       Penalize switching limb/part on a hold
     '''
     cost = 0
+    for limb in d2['limb_to_pos']:
+      if limb not in d1['limb_to_pos']:
+        continue
+
+      prev_ha = d1['limb_to_heel_action'][limb]
+      prev_ta = d1['limb_to_toe_action'][limb]
+
+      curr_ha = d2['limb_to_heel_action'][limb]
+      curr_ta = d2['limb_to_toe_action'][limb]
+
+      if prev_ha == '4' and curr_ha != '4':
+        if curr_ta == '4':
+          cost += self.costs['Hold footslide']
+
+      if prev_ta == '4' and curr_ta != '4':
+        if curr_ha == '4':
+          cost += self.costs['Hold footslide']
+
+      ok = ['3', '4']
+      if prev_ha == '4' or prev_ta == '4':
+        if curr_ta not in ok and curr_ha not in ok:
+          cost += self.costs['Hold footswitch']
 
     if verbose: print(f'Hold change cost: {cost}')
     return cost
@@ -131,7 +153,7 @@ class Movement():
     return cost
 
 
-  def move_cost(self, d1: dict, d2: dict, verbose = False) -> float:
+  def move_cost(self, d1: dict, d2: dict, time: float, verbose = False) -> float:
     '''
       Sum over limbs, distance moved by center of limb
     '''
@@ -145,11 +167,19 @@ class Movement():
       dist = np.linalg.norm(prev_center - new_center, ord = 2)
       cost += dist / self.costs['Distance normalizer']
 
+    if time < self.costs['Time threshold']:
+      '''
+        Ex. normalizer = 300 ms, then
+        400 ms since = 3/4 cost
+        100 ms since = 3 cost
+      '''
+      time_factor = self.costs['Time normalizer'] / time
+      cost *= time_factor
     if verbose: print(f'Move cost: {cost}')
     return cost
 
 
-  def double_step_cost(self, d1: dict, d2: dict, verbose = False) -> float:
+  def double_step_cost(self, d1: dict, d2: dict, time: float, verbose = False) -> float:
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
@@ -161,14 +191,23 @@ class Movement():
         continue
       prev_step = False
       curr_step = False
-      if d1['limb_to_heel_action'][limb] != '-' or d1['limb_to_toe_action'][limb] != '-':
+      if d1['limb_to_heel_action'][limb] in self.downpress or d1['limb_to_toe_action'][limb] in self.downpress:
         prev_step = True
 
-      if d2['limb_to_heel_action'][limb] != '-' or d2['limb_to_toe_action'][limb] != '-':
+      if d2['limb_to_heel_action'][limb] in self.downpress or d2['limb_to_toe_action'][limb] in self.downpress:
         curr_step = True
 
       if prev_step and curr_step:
         cost += self.costs['Double step per limb']
+
+    if time < self.costs['Time threshold']:
+      '''
+        Ex. normalizer = 300 ms, then
+        400 ms since = 3/4 cost
+        100 ms since = 3 cost
+      '''
+      time_factor = self.costs['Time normalizer'] / time
+      cost *= time_factor
     if verbose: print(f'Double step cost: {cost}')
     return cost
 
@@ -200,20 +239,21 @@ class Movement():
   '''
     Primary
   '''
-  def get_cost(self, sa1: str, sa2: str, verbose: bool = False) -> float:
+  def get_cost(self, sa1: str, sa2: str, time: float = 0.2, verbose: bool = False) -> float:
     '''
     '''
+    v = verbose
 
     d1 = self.parse_stanceaction(sa1)
     d2 = self.parse_stanceaction(sa2)
-    cost = self.angle_cost(d2, verbose = verbose) + \
-      self.foot_inversion_cost(d2, verbose = verbose) + \
-      self.foot_pos_cost(d2, verbose = verbose) + \
-      self.hold_change_cost(d1, d2, verbose = verbose) + \
-      self.move_cost(d1, d2, verbose = verbose) + \
-      self.double_step_cost(d1, d2, verbose = verbose) + \
-      self.bracket_cost(d2, verbose = verbose) + \
-      self.hands_cost(d2, verbose = verbose)
+    cost = self.angle_cost(d2, verbose = v) + \
+      self.foot_inversion_cost(d2, verbose = v) + \
+      self.foot_pos_cost(d2, verbose = v) + \
+      self.hold_change_cost(d1, d2, verbose = v) + \
+      self.move_cost(d1, d2, time, verbose = v) + \
+      self.double_step_cost(d1, d2, time, verbose = v) + \
+      self.bracket_cost(d2, verbose = v) + \
+      self.hands_cost(d2, verbose = v)
     return cost
 
 
@@ -223,19 +263,38 @@ class Movement():
 def test():
   mover = Movement(style = 'singles')
 
-  sa1 = '44,66;--,--'
+  test_basic(mover)
+  # test_holds(mover)
 
-  # Hitting 01000 = p1,7
+  return
+
+
+def test_basic(mover):
+  # 00000 -> 01000
+  sa1 = '44,66;--,--'
   sa2s = [
     '47,36;-1,--',
     '57,36;-1,--',
     'a9,57;--,-1',
   ]
-
   for sa2 in sa2s:
     cost = mover.get_cost(sa1, sa2, verbose = True)
     print(sa2, cost, '\n')
+  return
 
+
+def test_holds(mover):
+  # 40001 -> 40100
+  sa1 = '14,36;4-,1-'
+  sa2s = [
+    '14,56;4-,1-',
+    '14,54;4-,1-',
+    'a1,56;-4,1-',
+    '54,a1;1-,-4',
+  ]
+  for sa2 in sa2s:
+    cost = mover.get_cost(sa1, sa2, verbose = True)
+    print(sa2, cost, '\n')
   return
 
 

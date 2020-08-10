@@ -22,7 +22,17 @@ movement_costs = {
     'Double step per limb': 2,
     'Bracket': 0.5,
     'Hands': 5,
-    'Distance normalizer': 1000,
     'Inverted feet': 1,
+    'Hold footslide': 1,
+    'Hold footswitch': 3,
+    'Angle too open': 3,
+    'Angle duck': 1,
+    'Angle extreme duck': 3,
+
+    # Distance of 1000 mm = 1 cost
+    'Distance normalizer': 1000,
+    'Time threshold': 0.5,
+    # Time of 250 ms = 1 cost
+    'Time normalizer': 0.25,
   },
 }

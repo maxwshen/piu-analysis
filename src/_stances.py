@@ -51,6 +51,8 @@ class Stances():
 
     self.limb_panel_to_footpos = self.__init_panel_to_footpos()
 
+    self.panel_to_idx = {self.idx_to_panel[idx]: idx for idx in self.idx_to_panel}
+
     self.nm_to_heel_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - heel'])}
     self.nm_to_toe_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - toe'])}
     pass
@@ -149,9 +151,6 @@ class Stances():
 
       panel_to_part = defaultdict(list)
       for idx, pos in enumerate(poss):
-        # design_row = self.df[self.df['Name'] == pos].iloc[0]
-        # heel_panel = design_row['Panel - heel']
-        # toe_panel = design_row['Panel - toe']
         heel_panel = self.nm_to_heel_panel[pos]
         toe_panel = self.nm_to_toe_panel[pos]
         if heel_panel in self.arrow_panels:
@@ -217,6 +216,13 @@ class Stances():
       For each subgroup, comma-delimited position names for limbs in [Left foot, Right foot, Left hand, Right hand].
 
       stance_actions are unique and represent nodes in the graph.
+
+      Any non-zero value is treated as an action. We use:
+      0: nothing
+      1: hit
+      2: start hold
+      3: end hold
+      4: continue hold
     '''
     active_panels = self.text_to_panels(panel_constraints)
     if len(prev_panels) == 0:
@@ -268,7 +274,7 @@ class Stances():
 
     combined_line = ''
     n = len(lines[0])
-    priority = ['2', '1', '3', '0']
+    priority = ['4', '2', '1', '3', '0']
 
     for idx in range(n):
       cs = set([line[idx] for line in lines])
@@ -296,6 +302,18 @@ def test():
 
   test_limb_order_preservation(stance)
   test_prev_panel_reduction(stance, verbose = True)
+  test_continue_hold(stance)
+  return
+
+
+def test_continue_hold(stance):
+  pattern = '10004'
+  print(f'Running {pattern} ...')
+  print(f'... checking that hold continue works')
+  sa = stance.get_stanceactions(pattern)
+  # Manually inspect if needed
+  # import code; code.interact(local=dict(globals(), **locals()))
+  print('Passed')
   return
 
 

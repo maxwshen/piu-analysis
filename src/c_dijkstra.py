@@ -24,6 +24,7 @@ def dijkstra(nodes, edges):
       'Time': float,
       'Beat': float,
       'Line': str,
+      'Line with active holds': str,
       'Measure': int,
       'BPM': float,
       'Stance actions': List[str],
@@ -50,7 +51,8 @@ def dijkstra(nodes, edges):
 
     sa1 = nodes[nm]['Stance actions'][0]
     sa2 = nodes[children[0]]['Stance actions'][0]
-    cost = mover.get_cost(sa1, sa2)
+    timedelta = nodes[children[0]]['Time'] - nodes[nm]['Time']
+    cost = mover.get_cost(sa1, sa2, time = timedelta)
     print(sa1, sa2, cost)
 
     import code; code.interact(local=dict(globals(), **locals()))

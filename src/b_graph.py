@@ -65,12 +65,10 @@ def form_graph(nm: str):
   nodes['init'] = {
     'Time': time,
     'Beat': beat,
-    'Line': '',
     'Measure': 0,
     'BPM': bpm,
     'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
-    'Best parent': '',
     'Steptype': steptype,
     'Timing judge': '',
   }
@@ -94,26 +92,36 @@ def form_graph(nm: str):
             'BPM': float,
             'Stance actions': List[str],
             'Previous panels': List[str],
-            'Best parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
           }
           edges = {
             node_nm: List[node_nm: str]
           }
         '''
+
+        # Add active holds into line as 4
+        # 01000 -> 01040
+        aug_line = list(line)
+        for panel in active_holds:
+          idx = stance.panel_to_idx[panel]
+          if aug_line[idx] == '0':
+            aug_line[idx] = '4'
+        aug_line = ''.join(aug_line)
+
         active_panel_to_action = stance.text_to_panel_to_action(line)
-        prev_panels = list(active_holds) + prev_presses
-        sas = stance.get_stanceactions(line, prev_panels = prev_panels)
+        # prev_panels = list(active_holds) + prev_presses
+        prev_panels = prev_presses
+        sas = stance.get_stanceactions(aug_line, prev_panels = prev_panels)
 
         node_nm = f'{beat}'
         nodes[node_nm] = {
           'Time': time,
           'Beat': beat,
           'Line': line,
+          'Line with active holds': aug_line,
           'Measure': measure_num,
           'BPM': bpm,
           'Stance actions': sas,
           'Previous panels': prev_panels,
-          'Best parent': '',
         }
         edges[prev_node_nm].append(node_nm)
         prev_node_nm = node_nm
@@ -151,11 +159,11 @@ def form_graph(nm: str):
     'Time': np.inf,
     'Beat': np.inf,
     'Line': '',
+    'Line with active holds': '',
     'Measure': np.inf,
     'BPM': 0,
     'Stance actions': [],
     'Previous panels': [],
-    'Best parent': '',
   }
   edges[prev_node_nm].append('final')
   edges['final'] = []
@@ -201,18 +209,22 @@ def augment_graph_multihits(nodes, edges, stance, timing_judge = 'piu nj'):
       lines = [node['Line']] + [nodes[nm]['Line'] for nm in hits]
       joint_line = stance.combine_lines(lines)
 
-      sas = stance.get_stanceactions(joint_line, prev_panels = node['Previous panels'])
+      # Combine line
+      aug_lines = [node['Line with active holds']] + [nodes[nm]['Line with active holds'] for nm in hits]
+      joint_aug_line = stance.combine_lines(aug_lines)
+
+      sas = stance.get_stanceactions(joint_aug_line, prev_panels = node['Previous panels'])
 
       node_nm = f'{nm} multi v{jdx + 1}'
       nodes[node_nm] = {
         'Time': node['Time'],
         'Beat': node['Beat'],
         'Line': joint_line,
+        'Line with active holds': joint_aug_line,
         'Measure': node['Measure'],
         'BPM': node['BPM'],
         'Stance actions': sas,
         'Previous panels': node['Previous panels'],
-        'Best parent': '',
       }
       last_multi_node = hits[-1]
       edges[node_nm] = edges[last_multi_node]
@@ -282,13 +294,16 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # 13 second runtime
-  nm = 'Super Fantasy - SHK S19 arcade'
-
-  timing_judge = 'piu nj'
+  # nm = 'Super Fantasy - SHK S19 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
+
+  # Test: has hits during holds
+  nm = '8 6 - DASU S20 arcade'
+
+  timing_judge = 'piu nj'
+
   nodes, edges, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge
   a_nodes, a_edges = augment_graph_multihits(nodes, edges, stance, timing_judge = timing_judge)
