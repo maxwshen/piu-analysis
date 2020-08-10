@@ -45,7 +45,8 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
     graph_nodes[node_nm][sa_idx] = (best_score, best_parent_node_nm, best_parent_sa_idx)
   '''
   graph_nodes = init_graph_nodes(nodes)
-  memoizer = dict()
+  cost_memoizer = dict()
+  psa_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
   print('Running Dijkstra`s algorithm ...')
@@ -69,24 +70,25 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
       child_line = nodes[child]['Line with active holds']
 
       for sa_idx, sa1 in enumerate(curr_sas):
-        d1 = mover.parse_stanceaction(sa1)
+        d1 = get_parsed_stanceaction(sa1, psa_memoizer, stats_d, mover)
         for sa_jdx, sa2 in enumerate(child_sas):
-          d2 = mover.parse_stanceaction(sa2)
+          d2 = get_parsed_stanceaction(sa2, psa_memoizer, stats_d, mover)
+          stats_d['Num. edges'] += 1
 
           if mover.unnecessary_jump(d1, d2, child_line):
             stats_d['Num. edges skipped by unnecessary jump'] += 1
             continue
 
           if child != 'final':
-            if (sa1, sa2) in memoizer:
-              edge_cost = memoizer[(sa1, sa2)]
-              stats_d['Num. times memoizer used'] += 1
+            if (sa1, sa2) in cost_memoizer:
+              edge_cost = cost_memoizer[(sa1, sa2)]
+              stats_d['Num. times cost memoizer used'] += 1
 
             else:
               # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
               edge_cost = mover.get_cost_from_ds(d1, d2)
               # Todo -- consider applying time cost here
-              memoizer[(sa1, sa2)] = edge_cost
+              cost_memoizer[(sa1, sa2)] = edge_cost
 
           elif child == 'final':
             edge_cost = 0
@@ -173,6 +175,16 @@ def init_graph_nodes(nodes: dict) -> dict:
     timer.update()
   print('Done')
   return graph_nodes
+
+
+def get_parsed_stanceaction(sa, psa_memoizer, stats_d, mover):
+  if sa in psa_memoizer:
+    d = psa_memoizer[sa]
+    stats_d['Num. times psa memoizer used'] += 1
+  else:
+    d = mover.parse_stanceaction(sa)
+    psa_memoizer[sa] = d
+  return d
 
 
 ##

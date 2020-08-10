@@ -49,6 +49,9 @@ class Movement():
     Helper
   '''
   def parse_stanceaction(self, sa: str) -> dict:
+    '''
+      Todo - current speed bottleneck
+    '''
     [stance, action] = sa.split(';')
     limb_to_pos = {limb: pos for limb, pos in zip(self.all_limbs, stance.split(','))}
 
@@ -134,8 +137,9 @@ class Movement():
         if curr_ha == '4':
           cost += self.costs['Hold footslide']
 
+      prev_hold = ['2', '4']
       ok = ['3', '4']
-      if prev_ha == '4' or prev_ta == '4':
+      if prev_ha in prev_hold or prev_ta in prev_hold:
         if curr_ta not in ok and curr_ha not in ok:
           cost += self.costs['Hold footswitch']
 
@@ -234,7 +238,6 @@ class Movement():
 
     if self.verbose: print(f'Jump cost: {cost}')
     return cost
-
 
 
   def bracket_cost(self, d: dict) -> float:
