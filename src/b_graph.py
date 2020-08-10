@@ -87,13 +87,14 @@ def form_graph(nm: str):
       if has_notes(line):
         '''
           nodes[node_nm] = {
-            'time': float,
-            'beat': float,
-            'line': str,
-            'measure': int,
-            'bpm': float,
-            'stance_actions': List[str],
-            'best_parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
+            'Time': float,
+            'Beat': float,
+            'Line': str,
+            'Measure': int,
+            'BPM': float,
+            'Stance actions': List[str],
+            'Previous panels': List[str],
+            'Best parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
           }
           edges = {
             node_nm: List[node_nm: str]

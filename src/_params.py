@@ -18,5 +18,11 @@ perfect_windows = {
   Movement costs
 '''
 movement_costs = {
-  'Double step per limb': 1,
+  'default': {
+    'Double step per limb': 2,
+    'Bracket': 0.5,
+    'Hands': 5,
+    'Distance normalizer': 1000,
+    'Inverted feet': 1,
+  },
 }

@@ -15,39 +15,45 @@ NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
-# Load data
-sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col = 0)
-
 ##
 # Functions
 ##
-def dijkstra(nodes: dict[dict], edges: dict[List]):
+def dijkstra(nodes, edges):
   '''
     nodes[node_nm] = {
-      'time': float,
-      'beat': float,
-      'line': str,
-      'measure': int,
-      'bpm': float,
-      'stance_actions': List[str],
-      'best_parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
+      'Time': float,
+      'Beat': float,
+      'Line': str,
+      'Measure': int,
+      'BPM': float,
+      'Stance actions': List[str],
+      'Previous panels': List[str],
+      'Best parent': node_nm: str; filled in during Dijkstra's, backtrack to find best path
     }
     edges = {
       node_nm: List[node_nm: str]
     }
   
     Initial node has extra keys
-    nodes['init']['steptype'] = singles or doubles
-    nodes['init']['timing judge']
+    nodes['init']['Steptype'] = singles or doubles
+    nodes['init']['Timing judge']
   '''
-  steptype = nodes['init']['steptype']
+  steptype = nodes['init']['Steptype']
   mover = _movement.Movement(style = steptype)
 
   node_qu = ['init']
 
   while len(node_qu) > 0:
     nm, node_qu = node_qu[0], node_qu[1:]
-    node_qu += edges[nm]
+    children = edges[nm]
+    node_qu += children
+
+    sa1 = nodes[nm]['Stance actions'][0]
+    sa2 = nodes[children[0]]['Stance actions'][0]
+    cost = mover.get_cost(sa1, sa2)
+    print(sa1, sa2, cost)
+
+    import code; code.interact(local=dict(globals(), **locals()))
 
   return
 
