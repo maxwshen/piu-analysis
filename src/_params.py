@@ -28,6 +28,7 @@ movement_costs = {
     'Angle too open': 3,
     'Angle duck': 1,
     'Angle extreme duck': 3,
+    'Jump': 0.5,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,

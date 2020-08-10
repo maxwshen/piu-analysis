@@ -260,7 +260,7 @@ class Stances():
 
   def initial_stanceaction(self):
     if self.style == 'singles':
-      return ['44,66;--,--']
+      return ['14,36;--,--']
     if self.style == 'doubles':
       return []
 
