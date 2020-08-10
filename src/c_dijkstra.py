@@ -18,7 +18,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def dijkstra(nodes, edges):
+def dijkstra(nodes, edges_out, edges_in):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -46,7 +46,7 @@ def dijkstra(nodes, edges):
 
   while len(node_qu) > 0:
     nm, node_qu = node_qu[0], node_qu[1:]
-    children = edges[nm]
+    children = edges_out[nm]
     node_qu += children
 
     sa1 = nodes[nm]['Stance actions'][0]
@@ -66,8 +66,8 @@ def dijkstra(nodes, edges):
 '''
 def load_data(nm):
   with open(inp_dir + f'{nm}.pkl', 'rb') as f:
-    nodes, edges = pickle.load(f)
-  return nodes, edges
+    nodes, edges_out, edges_in = pickle.load(f)
+  return nodes, edges_out, edges_in
 
 
 ##
@@ -113,8 +113,8 @@ def main():
   nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
-  nodes, edges = load_data(nm)
-  dijkstra(nodes, edges)
+  nodes, edges_out, edges_in = load_data(nm)
+  dijkstra(nodes, edges_out, edges_in)
   return
 
 

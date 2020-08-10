@@ -41,6 +41,7 @@ class Movement():
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
     self.downpress = ['1', '2']
+    self.doublestep_actions = ['1', '2', '3']
     pass
 
   '''
@@ -185,16 +186,17 @@ class Movement():
 
       Add cost for each limb that double steps
     '''
+    dsa = self.doublestep_actions
     cost = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
       prev_step = False
       curr_step = False
-      if d1['limb_to_heel_action'][limb] in self.downpress or d1['limb_to_toe_action'][limb] in self.downpress:
+      if d1['limb_to_heel_action'][limb] in dsa or d1['limb_to_toe_action'][limb] in dsa:
         prev_step = True
 
-      if d2['limb_to_heel_action'][limb] in self.downpress or d2['limb_to_toe_action'][limb] in self.downpress:
+      if d2['limb_to_heel_action'][limb] in dsa or d2['limb_to_toe_action'][limb] in dsa:
         curr_step = True
 
       if prev_step and curr_step:
@@ -208,6 +210,10 @@ class Movement():
       '''
       time_factor = self.costs['Time normalizer'] / time
       cost *= time_factor
+
+    if time >= self.costs['Time forgive double step']:
+      cost = 0
+
     if verbose: print(f'Double step cost: {cost}')
     return cost
 

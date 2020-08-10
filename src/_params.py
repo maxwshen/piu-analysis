@@ -34,5 +34,6 @@ movement_costs = {
     'Time threshold': 0.5,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
+    'Time forgive double step': 2,
   },
 }

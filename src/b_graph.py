@@ -60,7 +60,8 @@ def form_graph(nm: str):
   active_holds = set()
 
   nodes = dict()
-  edges = defaultdict(list)
+  edges_out = defaultdict(list)
+  edges_in = defaultdict(list)
 
   nodes['init'] = {
     'Time': time,
@@ -73,6 +74,7 @@ def form_graph(nm: str):
     'Timing judge': '',
   }
   prev_node_nm = 'init'
+  edges_in['init'] = []
 
   timer = util.Timer(total = len(measures))
   for measure_num, measure in enumerate(measures):
@@ -123,7 +125,8 @@ def form_graph(nm: str):
           'Stance actions': sas,
           'Previous panels': prev_panels,
         }
-        edges[prev_node_nm].append(node_nm)
+        edges_out[prev_node_nm].append(node_nm)
+        edges_in[node_nm].append(prev_node_nm)
         prev_node_nm = node_nm
 
         # Update prev panels
@@ -165,15 +168,16 @@ def form_graph(nm: str):
     'Stance actions': [],
     'Previous panels': [],
   }
-  edges[prev_node_nm].append('final')
-  edges['final'] = []
-  prev_node_nm = 'final'
-  edges = dict(edges)
+  edges_out[prev_node_nm].append('final')
+  edges_in['final'].append(prev_node_nm)
+  edges_out['final'] = []
+  edges_out = dict(edges_out)
+  edges_in = dict(edges_in)
 
-  return nodes, edges, stance
+  return nodes, edges_out, edges_in, stance
 
 
-def augment_graph_multihits(nodes, edges, stance, timing_judge = 'piu nj'):
+def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj'):
   '''
     Add new nodes and edges when a player can hit multiple notes at different beats with a single hit.
     Augmenting graph after formation helps handle multihits that span measures
@@ -191,7 +195,7 @@ def augment_graph_multihits(nodes, edges, stance, timing_judge = 'piu nj'):
       node['Timing judge'] = timing_judge
       continue
 
-    # Only propose multi hits starting on 1 and 2
+    # Only propose multi hits starting on 1 or 2
     if not has_downpress(node['Line']):
       continue
 
@@ -227,9 +231,14 @@ def augment_graph_multihits(nodes, edges, stance, timing_judge = 'piu nj'):
         'Previous panels': node['Previous panels'],
       }
       last_multi_node = hits[-1]
-      edges[node_nm] = edges[last_multi_node]
+      edges_out[node_nm] = edges_out[last_multi_node]
+      for node in edges_out[last_multi_node]:
+        edges_in[node].append(node_nm)
+      edges_in[node_nm] = edges_in[nm]
+      for node in edges_in[nm]:
+        edges_out[node].append(node_nm)
 
-  return nodes, edges
+  return nodes, edges_out, edges_in
 
 
 '''
@@ -294,22 +303,22 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # Test: has hits during holds
-  nm = '8 6 - DASU S20 arcade'
+  # nm = '8 6 - DASU S20 arcade'
 
   timing_judge = 'piu nj'
 
-  nodes, edges, stance = form_graph(nm)
+  nodes, edges_out, edges_in, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge
-  a_nodes, a_edges = augment_graph_multihits(nodes, edges, stance, timing_judge = timing_judge)
+  a_nodes, a_edges_out, a_edges_in = augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = timing_judge)
 
   with open(out_dir + f'{nm}.pkl', 'wb') as f:
-    pickle.dump((a_nodes, a_edges), f)
+    pickle.dump((a_nodes, a_edges_out, a_edges_in), f)
 
   return
 
