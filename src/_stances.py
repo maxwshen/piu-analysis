@@ -278,7 +278,7 @@ class Stances():
 
     combined_line = ''
     n = len(lines[0])
-    priority = ['4', '2', '1', '3', '0']
+    priority = ['2', '1', '4', '3', '0']
 
     for idx in range(n):
       cs = set([line[idx] for line in lines])

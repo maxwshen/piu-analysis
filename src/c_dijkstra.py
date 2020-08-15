@@ -79,8 +79,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   node_nms = list(nodes.keys())
   topo_sorted_nms = topological_sort(node_nms, edges_out)
   '''
-    Traverse DAG with Dijkstra's
-    todo: implement topological sort
+    Traverse DAG with Dijkstra's in topological order
   '''
   timer = util.Timer(total = len(topo_sorted_nms))
   for nm in topo_sorted_nms:

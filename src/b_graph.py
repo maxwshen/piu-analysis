@@ -51,13 +51,20 @@ def form_graph(nm: str):
 
   # Testing -- first 9 measures only
   # measures = measures[:9]
-  measures = measures[:26]
+  # measures = measures[:26]
 
   beat = 0
   time = 0     # units = seconds
   bpm = None
   prev_presses = []
   active_holds = set()
+
+  # Init bpm at beat = 0
+  if beat >= bpms[0][0]:
+    # print(beat, bpms)
+    bpm = bpms[0][1]
+    bpms = bpms[1:]
+  assert bpm is not None, 'Failed to set bpm'
 
   nodes = dict()
   edges_out = defaultdict(list)
@@ -121,7 +128,8 @@ def form_graph(nm: str):
           'Beat': beat,
           'Line': line,
           'Line with active holds': aug_line,
-          'Measure': measure_num,
+          # convert from 0 index to 1 index
+          'Measure': measure_num + 1, 
           'BPM': bpm,
           'Stance actions': sas,
           'Previous panels': prev_panels,
@@ -147,6 +155,10 @@ def form_graph(nm: str):
         # import code; code.interact(local=dict(globals(), **locals()))
 
       # After processing line, update beat, bpm, and time
+      # Important: Update bpm after time
+      time_increment = beat_increment * (60 / bpm)
+      time += time_increment
+
       beat += beat_increment
       if beat >= bpms[0][0]:
         # print(beat, bpms)
@@ -154,8 +166,6 @@ def form_graph(nm: str):
         bpms = bpms[1:]
       assert bpm is not None, 'Failed to set bpm'
 
-      time_increment = beat_increment * (60 / bpm)
-      time += time_increment
     timer.update()
 
   # Add terminal node and edge
@@ -186,6 +196,7 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
     If there are more than 1, hit them in ascending inclusive order. [1, 2, 3] -> [1, 2] and [1, 2, 3]
   '''
   [pre_window, post_window] = _params.perfect_windows[timing_judge]
+  num_multihits_proposed = 0
   nms = list(nodes.keys())
   for idx in range(len(nms)):
     nm = nms[idx]
@@ -210,35 +221,48 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
 
     for jdx in range(len(multi)):
       hits = multi[:jdx + 1]
+      last_node_nm = hits[-1]
+      last_node = nodes[last_node_nm]
       # Combine line
       lines = [node['Line']] + [nodes[nm]['Line'] for nm in hits]
       joint_line = stance.combine_lines(lines)
+
+      # If num downhits in multihit is the same as the regular hit, skip
+      if num_downpress(joint_line) == num_downpress(node['Line']):
+        continue
 
       # Combine line
       aug_lines = [node['Line with active holds']] + [nodes[nm]['Line with active holds'] for nm in hits]
       joint_aug_line = stance.combine_lines(aug_lines)
 
-      sas = stance.get_stanceactions(joint_aug_line, prev_panels = node['Previous panels'])
+      sas = stance.get_stanceactions(joint_aug_line, prev_panels = last_node['Previous panels'])
 
-      node_nm = f'{nm} multi v{jdx + 1}'
-      nodes[node_nm] = {
-        'Time': node['Time'],
-        'Beat': node['Beat'],
+      new_node_nm = f'{nm} multi v{jdx + 1}'
+      nodes[new_node_nm] = {
+        'Time': last_node['Time'],
+        'Beat': last_node['Beat'],
         'Line': joint_line,
         'Line with active holds': joint_aug_line,
-        'Measure': node['Measure'],
-        'BPM': node['BPM'],
+        'Measure': last_node['Measure'],
+        'BPM': last_node['BPM'],
         'Stance actions': sas,
-        'Previous panels': node['Previous panels'],
+        'Previous panels': last_node['Previous panels'],
       }
-      last_multi_node = hits[-1]
-      edges_out[node_nm] = edges_out[last_multi_node]
-      for node in edges_out[last_multi_node]:
-        edges_in[node].append(node_nm)
-      edges_in[node_nm] = edges_in[nm]
-      for node in edges_in[nm]:
-        edges_out[node].append(node_nm)
+      edges_out[new_node_nm] = edges_out[last_node_nm]
+      for n in edges_out[last_node_nm]:
+        edges_in[n].append(new_node_nm)
+      edges_in[new_node_nm] = edges_in[nm]
+      for n in edges_in[nm]:
+        edges_out[n].append(new_node_nm)
 
+      # Inspect proposed multihits
+      for key in ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']:
+        print(key, nodes[new_node_nm][key])
+      import code; code.interact(local=dict(globals(), **locals()))
+
+      num_multihits_proposed += 1
+
+  print(f'Proposed {num_multihits_proposed} multihit nodes')
   return nodes, edges_out, edges_in
 
 
@@ -247,6 +271,10 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
 '''
 def has_downpress(line: str) -> bool:
   return bool('1' in line or '2' in line)
+
+
+def num_downpress(line: str) -> int:
+  return line.count('1') + line.count('2')
 
 
 def has_notes(line: str) -> bool:
@@ -304,10 +332,10 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
 
   # Test: Has multi hits
-  # nm = 'Sorceress Elise - YAHPP S23 arcade'
+  nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # Test: has hits during holds
   # nm = '8 6 - DASU S20 arcade'
