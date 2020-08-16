@@ -181,6 +181,10 @@ class Movement():
       '''
       time_factor = self.costs['Time normalizer'] / time
       cost *= time_factor
+
+    if cost == 0:
+      cost = self.costs['No movement reward']
+
     if self.verbose: print(f'Move cost: {cost}')
     return cost
 
@@ -282,15 +286,24 @@ class Movement():
     '''
     self.verbose = verbose
 
-    cost = self.angle_cost(d2) + \
-      self.foot_inversion_cost(d2) + \
-      self.foot_pos_cost(d2) + \
-      self.hold_change_cost(d1, d2) + \
-      self.move_cost(d1, d2, time) + \
-      self.double_step_cost(d1, d2, time) + \
-      self.jump_cost(d1, d2) + \
-      self.bracket_cost(d2) + \
-      self.hands_cost(d2)
+    cost = 0
+    cost += self.angle_cost(d2)
+    cost += self.foot_inversion_cost(d2)
+    cost += self.foot_pos_cost(d2)
+    cost += self.hold_change_cost(d1, d2)
+    mv_cost = self.move_cost(d1, d2, time)
+    cost += mv_cost
+    cost += self.jump_cost(d1, d2)
+    cost += self.bracket_cost(d2)
+    cost += self.hands_cost(d2)
+
+    '''
+      Conditional costs
+    '''
+    # Only apply double step cost if it requires moving feet
+    if mv_cost >= 0:
+      cost += self.double_step_cost(d1, d2, time)
+
     return cost
 
 
@@ -308,6 +321,17 @@ class Movement():
           if self.jump_cost(d1, d2):
             return True
     return False
+
+
+  def beginner_ok(self, d2: dict) -> bool:
+    '''
+      Filter all stances other than air-X
+    '''
+    for limb in d2['limb_to_pos']:
+      pos = d2['limb_to_pos'][limb]
+      if 'a' not in pos:
+        return False
+    return True
 
 
 '''

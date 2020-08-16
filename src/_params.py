@@ -22,10 +22,8 @@ perfect_windows = {
   Movement costs
 '''
 movement_costs = {
-  'default': {
+  'beginner': {
     'Double step per limb': 2,
-    'Bracket': 0.5,
-    'Hands': 5,
     'Inverted feet': 1,
     'Hold footslide': 1,
     'Hold footswitch': 3,
@@ -33,6 +31,30 @@ movement_costs = {
     'Angle duck': 1,
     'Angle extreme duck': 3,
     'Jump': 0.5,
+    'No movement reward': -0.5,
+    # Unused, since only air-X allowed
+    'Bracket': 5,
+    'Hands': 5,
+
+    # Distance of 1000 mm = 1 cost
+    'Distance normalizer': 1000,
+    'Time threshold': 0.5,
+    # Time of 250 ms = 1 cost
+    'Time normalizer': 0.25,
+    'Time forgive double step': 2,
+  },
+  'default': {
+    'Double step per limb': 2,
+    'Bracket': 0.5,
+    'Hands': 5,
+    'Inverted feet': 0.1,
+    'Hold footslide': 1,
+    'Hold footswitch': 3,
+    'Angle too open': 3,
+    'Angle duck': 1,
+    'Angle extreme duck': 3,
+    'Jump': 0.5,
+    'No movement reward': -3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,

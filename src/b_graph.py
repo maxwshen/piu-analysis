@@ -51,7 +51,7 @@ def form_graph(nm: str):
 
   # Testing -- first 9 measures only
   # measures = measures[:9]
-  # measures = measures[:26]
+  measures = measures[:26]
 
   beat = 0
   time = 0     # units = seconds
@@ -333,9 +333,10 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S7 arcade'
 
   # Test: Has multi hits
-  nm = 'Sorceress Elise - YAHPP S23 arcade'
+  # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # Test: has hits during holds
   # nm = '8 6 - DASU S20 arcade'

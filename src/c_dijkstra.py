@@ -19,7 +19,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def dijkstra(sc_nm, nodes, edges_out, edges_in):
+def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -40,7 +40,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
     nodes['init']['Timing judge']
   '''
   steptype = nodes['init']['Steptype']
-  mover = _movement.Movement(style = steptype)
+  mover = _movement.Movement(style = steptype, move_skillset = move_skillset)
 
   '''
     graph_nodes[node_nm][sa_idx] = (best_score, best_parent_node_nm, best_parent_sa_idx)
@@ -50,6 +50,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   jump_memoizer = dict()
   dist_memoizer = dict()
   psa_memoizer = dict()
+  beginner_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
 
@@ -101,26 +102,53 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
         '''
         subset_sa_idxs = []
         subset_sas = []
-        # Use a heap / priority queue
+        # Todo -- consider a heap / priority queue
         subset_dists = []
         for sa_jdx, sa2 in enumerate(child_sas):
           d2 = get_parsed_stanceaction(sa2)
           stance2 = sa2[:sa2.index(';')]
           stats_d['Num. edges'] += 1
 
-          # Get unnecessary jump flag by memoization
-          # Use strings as keys; dicts are not hashable
-          jump_key = (stance1, stance2, child_line)
-          if jump_key in jump_memoizer:
-            jump_flag = jump_memoizer[jump_key]
-            stats_d['Jump memoizer, num hits'] += 1
-          else:
-            jump_flag = mover.unnecessary_jump(d1, d2, child_line)
-            jump_memoizer[jump_key] = jump_flag
-          if jump_flag:
-            stats_d['Num. edges skipped by unnecessary jump'] += 1
+          # Do not filter edges going into final
+          if child == 'final':
+            subset_sa_idxs.append(sa_jdx)
+            subset_sas.append(sa2)
             continue
 
+          '''
+            Get unnecessary jump flag by memoization
+            Use strings as keys; dicts are not hashable
+          '''
+          if nm != 'init':
+            jump_key = (stance1, stance2, child_line)
+            if jump_key in jump_memoizer:
+              jump_flag = jump_memoizer[jump_key]
+              stats_d['Jump memoizer, num hits'] += 1
+            else:
+              jump_flag = mover.unnecessary_jump(d1, d2, child_line)
+              jump_memoizer[jump_key] = jump_flag
+            if jump_flag:
+              stats_d['Num. edges skipped by unnecessary jump'] += 1
+              continue
+
+          '''
+            Filter by skillset
+          '''
+          if move_skillset == 'beginner':
+            bg_key = stance2
+            if bg_key in beginner_memoizer:
+              beginner_flag = beginner_memoizer[bg_key]
+              stats_d['Beginner memoizer, num hits'] += 1
+            else:
+              beginner_flag = mover.beginner_ok(d2)
+              beginner_memoizer[bg_key] = beginner_flag
+            if not beginner_flag:
+              stats_d['Num. edges skipped by beginner filtering'] += 1
+              continue
+
+          '''
+            Record distance for filtering later by sorting
+          '''
           # dist_key = (stance1, stance2)
           # if dist_key in dist_memoizer:
           #   dist = dist_memoizer[dist_key]
@@ -129,10 +157,13 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
           #   dist = mover.move_cost(d1, d2, time = 1)
           #   dist_memoizer[dist_key] = dist
           # subset_dists.append(dist)
+
           subset_sa_idxs.append(sa_jdx)
           subset_sas.append(sa2)
 
-        # Filter subset sas by distance
+        '''
+          Filter subset sas by distance via sorting
+        '''
         # pct = 99
         # dist_cutoff = np.percentile(subset_dists, pct)
         # dist_cutoff = min(subset_dists) * 10
@@ -158,13 +189,19 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
             else:
               # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
               edge_cost = mover.get_cost_from_ds(d1, d2)
-              # Todo -- consider applying time cost here
+
+              # Apply time cost here to get memoization speedup and time sensitivity
+              if timedelta < mover.costs['Time threshold']:
+                time_factor = mover.costs['Time normalizer'] / timedelta
+                edge_cost *= time_factor
+
               cost_memoizer[(sa1, sa2)] = edge_cost
 
           elif child == 'final':
             edge_cost = 0
 
           # print(sa1, sa2, edge_cost)
+          # import code; code.interact(local=dict(globals(), **locals()))
 
           curr_cost = graph_nodes[nm][sa_idx][0]
           cost = curr_cost + edge_cost
@@ -199,9 +236,10 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in):
   return
 
 
-def get_best_path(graph_nodes, nodes):
+def get_best_path(graph_nodes, nodes) -> pd.DataFrame:
   '''
     Backtrack from final node to init, getting stance actions
+    Return df
   '''
 
   cols = [
@@ -215,7 +253,12 @@ def get_best_path(graph_nodes, nodes):
 
   dd = defaultdict(list)
   cost, node, sa_idx = graph_nodes['final'][0]
-  assert node is not None, f'Error in backtracking: Final node has no parent'
+  try:
+    assert node is not None, f'Error in backtracking:   Final node has no parent'
+  except AssertionError:
+    print(f'Error in backtracking:   Final node has no parent')
+    import code; code.interact(local=dict(globals(), **locals()))
+
 
   while node != 'init':
     try:
@@ -224,9 +267,13 @@ def get_best_path(graph_nodes, nodes):
       print(f'Error in backtracking: {node} has no parent')
       sys.exit(1)
 
+    best_sa = nodes[node]['Stance actions'][sa_idx]
+    ad = parse_sa_to_limb_action(best_sa)
     dd['Node name'].append(node)
     dd['Cost'].append(cost)
-    dd['Stance action'].append(nodes[node]['Stance actions'][sa_idx])
+    dd['Stance action'].append(best_sa)
+    for limb in ad:
+      dd[limb].append(ad[limb])
     for col in cols:
       dd[col].append(nodes[node][col])
 
@@ -285,6 +332,21 @@ def topological_sort(node_nms, edges_out):
   return stack
 
 
+def parse_sa_to_limb_action(sa: str) -> dict:
+  '''
+    Tuple = (Left foot, right foot, left hand, right hand)
+  '''
+  actions = sa[sa.index(';'):].split(',') + ['--', '--']
+  limbs = ('Left foot', 'Right foot', 'Left hand', 'Right hand')
+  d = dict()
+  res = []
+  for limb, action in zip(limbs, actions):
+    if '1' in action or '2' in action or '4' in action:
+      d[limb] = 1
+    else:
+      d[limb] = np.nan
+  return d
+
 ##
 # qsub
 ##
@@ -325,11 +387,17 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
+  # move_skillset = 'default'
+  move_skillset = 'beginner'
+
+  print(nm, move_skillset)
+
   nodes, edges_out, edges_in = load_data(nm)
-  dijkstra(nm, nodes, edges_out, edges_in)
+  dijkstra(nm, nodes, edges_out, edges_in, move_skillset = move_skillset)
   return
 
 
