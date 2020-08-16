@@ -388,7 +388,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Super Fantasy - SHK S7 arcade'
+  # nm = 'Super Fantasy - SHK S7 arcade'
+  nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # move_skillset = 'default'

@@ -138,8 +138,12 @@ def form_graph(nm: str):
         edges_in[node_nm].append(prev_node_nm)
         prev_node_nm = node_nm
 
-        # Update prev panels
+        '''
+          Update prev panels
+        '''
         for p in active_panel_to_action:
+          if p in prev_presses:
+            prev_presses.remove(p)
           a = active_panel_to_action[p]
           if a == '1':
             prev_presses.insert(0, p)
@@ -333,7 +337,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Super Fantasy - SHK S7 arcade'
+  # nm = 'Super Fantasy - SHK S7 arcade'
+  nm = 'Super Fantasy - SHK S4 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
