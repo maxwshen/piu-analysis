@@ -35,7 +35,12 @@ def form_graph(nm: str):
 
     Notes format: https://github.com/stepmania/stepmania/wiki/sm.
   '''
-  atts = sc_df[sc_df['Name (unique)'] == nm].iloc[0]
+  try:
+    atts = sc_df[sc_df['Name (unique)'] == nm].iloc[0]
+  except IndexError:
+    print(f'ERROR: Failed to find stepchart {nm}')
+    sys.exit(1)
+
   if 'S' in atts['Steptype simple']:
     steptype = 'singles'
   elif 'D' in atts['Steptype simple']:
@@ -260,9 +265,9 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
         edges_out[n].append(new_node_nm)
 
       # Inspect proposed multihits
-      for key in ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']:
-        print(key, nodes[new_node_nm][key])
-      import code; code.interact(local=dict(globals(), **locals()))
+      # for key in ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']:
+        # print(key, nodes[new_node_nm][key])
+      # import code; code.interact(local=dict(globals(), **locals()))
 
       num_multihits_proposed += 1
 
@@ -338,13 +343,18 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
-  nm = 'Super Fantasy - SHK S4 arcade'
+  # nm = 'Super Fantasy - SHK S4 arcade'
+  # nm = 'Final Audition 2 - BanYa S7 arcade'
+  # nm = 'Super Fantasy - SHK S10 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # Test: has hits during holds
   # nm = '8 6 - DASU S20 arcade'
+
+  # Test: Brackets
+  nm = '1950 - SLAM S23 arcade'
 
   timing_judge = 'piu nj'
 
