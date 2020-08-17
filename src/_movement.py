@@ -34,6 +34,8 @@ class Movement():
     self.pos_to_center = {}
     self.pos_to_heel_coord = {}
     self.pos_to_toe_coord = {}
+    self.pos_to_heel_panel = {}
+    self.pos_to_toe_panel = {}
     self.pos_to_rotation = {}
     for idx, row in self.df.iterrows():
       nm = row['Name']
@@ -58,7 +60,6 @@ class Movement():
   '''
   def parse_stanceaction(self, sa: str) -> dict:
     '''
-      Todo - current speed bottleneck
     '''
     [stance, action] = sa.split(';')
     limb_to_pos = {limb: pos for limb, pos in zip(self.all_limbs, stance.split(','))}
@@ -291,19 +292,26 @@ class Movement():
     return cost
 
 
+  def move_without_action_cost(self, d1: dict, d2: dict) -> float:
+    cost = 0
+    for limb in ['Left foot', 'Right foot']:
+      prev_pos = d1['limb_to_pos'][limb]
+      curr_pos = d2['limb_to_pos'][limb]
+
+      heel_action = d2['limb_to_heel_action'][limb]
+      toe_action = d2['limb_to_toe_action'][limb]
+      no_action = bool(heel_action + toe_action == '--')
+
+      if prev_pos != curr_pos and no_action:
+        cost += self.costs['Move without action']
+
+    if self.verbose: print(f'Move without action cost: {cost}')
+    return cost
+
+
   '''
     Primary
   '''
-  def get_cost_from_text(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
-    '''
-    '''
-    self.verbose = verbose
-
-    d1 = self.parse_stanceaction(sa1)
-    d2 = self.parse_stanceaction(sa2)
-    return self.get_cost_from_ds(d1, d2, time = time, verbose = verbose)
-
-
   def get_cost_from_ds(self, d1: dict, d2: dict, time: float = 1, verbose: bool = False) -> float:
     '''
     '''
@@ -319,6 +327,7 @@ class Movement():
     cost += self.jump_cost(d1, d2)
     cost += self.bracket_cost(d2)
     cost += self.hands_cost(d2)
+    cost += self.move_without_action_cost(d1, d2)
 
     '''
       Conditional costs
@@ -328,6 +337,16 @@ class Movement():
       cost += self.double_step_cost(d1, d2, time)
 
     return cost
+
+
+  def get_cost_from_text(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
+    '''
+    '''
+    self.verbose = verbose
+
+    d1 = self.parse_stanceaction(sa1)
+    d2 = self.parse_stanceaction(sa2)
+    return self.get_cost_from_ds(d1, d2, time = time, verbose = verbose)
 
 
   '''

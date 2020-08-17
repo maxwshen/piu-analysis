@@ -35,6 +35,7 @@ movement_costs = {
     # Unused, since only air-X allowed
     'Bracket': 5,
     'Hands': 5,
+    'Move without action': 3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
@@ -55,6 +56,7 @@ movement_costs = {
     'No movement reward': -0.5,
     'Bracket': 5,
     'Hands': 5,
+    'Move without action': 3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
@@ -75,6 +77,7 @@ movement_costs = {
     'No movement reward': -0.5,
     'Bracket': 0.5,
     'Hands': 5,
+    'Move without action': 3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
