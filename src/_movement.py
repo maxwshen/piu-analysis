@@ -32,11 +32,17 @@ class Movement():
 
     self.pos_to_cost = {}
     self.pos_to_center = {}
+    self.pos_to_heel_coord = {}
+    self.pos_to_toe_coord = {}
     self.pos_to_rotation = {}
     for idx, row in self.df.iterrows():
       nm = row['Name']
       self.pos_to_cost[nm] = row[f'Cost - {move_skillset}']
       self.pos_to_center[nm] = np.array([row['Loc x - center'], row['Loc y - center']])
+      self.pos_to_heel_coord[nm] = np.array([row['Loc x - heel ball'], row['Loc y - heel ball']])
+      self.pos_to_toe_coord[nm] = np.array([row['Loc x - toe ball'], row['Loc y - toe ball']])
+      self.pos_to_heel_panel[nm] = row['Panel - heel']
+      self.pos_to_toe_panel[nm] = row['Panel - toe']
       self.pos_to_rotation[nm] = row['Rotation']
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
@@ -161,16 +167,33 @@ class Movement():
 
   def move_cost(self, d1: dict, d2: dict, time: float) -> float:
     '''
-      Sum over limbs, distance moved by center of limb
+      Sum over limbs, distance moved by
+      - foot center
+      - average of heel and toe
     '''
     cost = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_pos']:
         continue
-      prev_center = self.pos_to_center[d1['limb_to_pos'][limb]]
-      new_center = self.pos_to_center[d2['limb_to_pos'][limb]]
 
-      dist = np.linalg.norm(prev_center - new_center, ord = 2)
+      '''
+        Center to center
+      '''
+      # prev_center = self.pos_to_center[d1['limb_to_pos'][limb]]
+      # new_center = self.pos_to_center[d2['limb_to_pos'][limb]]
+      # dist = np.linalg.norm(prev_center - new_center, ord = 2)
+
+      '''
+        Avg of heel to heel and toe to toe
+      '''
+      prev_heel = self.pos_to_heel_coord[d1['limb_to_pos'][limb]]
+      new_heel = self.pos_to_heel_coord[d2['limb_to_pos'][limb]]
+      prev_toe = self.pos_to_toe_coord[d1['limb_to_pos'][limb]]
+      new_toe = self.pos_to_toe_coord[d2['limb_to_pos'][limb]]
+      dist_heel = np.linalg.norm(prev_heel - new_heel, ord = 2)
+      dist_toe = np.linalg.norm(prev_toe - new_toe, ord = 2)
+      dist = np.mean(dist_heel + dist_toe)
+
       cost += dist / self.costs['Distance normalizer']
 
     if time < self.costs['Time threshold']:
@@ -332,6 +355,20 @@ class Movement():
       if 'a' not in pos:
         return False
     return True
+
+
+  def call_twist(self, sa: str, lwah: str):
+    '''
+      Label type of twist
+      - 90 degree
+      - Diagonal
+      - 180 degree
+      Facing left or right
+    '''
+    d = self.parse_stanceaction(sa)
+
+
+    return
 
 
 '''

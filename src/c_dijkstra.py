@@ -230,13 +230,13 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   print(stats_df)
 
   # Find best path
-  df = get_best_path(graph_nodes, nodes)
+  df = backtrack_annotate(graph_nodes, nodes)
   df.to_csv(out_dir + f'{sc_nm}.csv')
   import code; code.interact(local=dict(globals(), **locals()))
   return
 
 
-def get_best_path(graph_nodes, nodes) -> pd.DataFrame:
+def backtrack_annotate(graph_nodes, nodes) -> pd.DataFrame:
   '''
     Backtrack from final node to init, getting stance actions
     Return df
@@ -259,7 +259,9 @@ def get_best_path(graph_nodes, nodes) -> pd.DataFrame:
     print(f'Error in backtracking:   Final node has no parent')
     import code; code.interact(local=dict(globals(), **locals()))
 
-
+  '''
+    Backtrack
+  '''
   while node != 'init':
     try:
       cost, parent_node, parent_sa_idx = graph_nodes[node][sa_idx]
@@ -272,10 +274,10 @@ def get_best_path(graph_nodes, nodes) -> pd.DataFrame:
     dd['Node name'].append(node)
     dd['Cost'].append(cost)
     dd['Stance action'].append(best_sa)
-    for limb in ad:
-      dd[limb].append(ad[limb])
     for col in cols:
       dd[col].append(nodes[node][col])
+    for limb in ad:
+      dd[limb].append(ad[limb])
 
     node = parent_node
     sa_idx = parent_sa_idx
@@ -284,7 +286,34 @@ def get_best_path(graph_nodes, nodes) -> pd.DataFrame:
   df = df.iloc[::-1].reset_index(drop = True)
   df['Line'] = [f'`{s}' for s in df['Line']]
   df['Line with active holds'] = [f'`{s}' for s in df['Line with active holds']]
+
+  '''
+    Annotate in forward direction
+  '''
+  cdd = defaultdict(list)
+  for idx, row in df.iterrows():
+    if idx == 0:
+      cdd['Jump'].append(np.nan)
+    else:
+      cdd['Jump'].append(is_jump(df.iloc[idx - 1]['Stance action'], row['Stance action']))
+  for col in cdd:
+    df[col] = cdd[col]
   return df
+
+'''
+
+'''
+def is_jump(sa1, sa2):
+  if sa1 == '':
+    return np.nan
+  stances1 = sa1[:sa1.index(';')].split(',')[:2]
+  stances2 = sa2[:sa2.index(';')].split(',')[:2]
+  jump_flag = True
+  for s1, s2 in zip(stances1, stances2):
+    if s1 == s2:
+      jump_flag = False
+  return 1 if jump_flag else np.nan
+
 
 
 '''
