@@ -49,7 +49,8 @@ class Movement():
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
     self.downpress = ['1', '2']
-    self.doublestep_actions = ['1', '2', '3']
+    self.doublestep_prev = ['1', '2', '3']
+    self.doublestep_curr = ['1', '2']
     self.prev_hold = ['2', '4']
     self.ok_hold = ['3', '4']
     self.verbose = False
@@ -219,16 +220,15 @@ class Movement():
 
       Add cost for each limb that double steps
     '''
-    dsa = self.doublestep_actions
     cost = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
 
-      prev_heel = d1['limb_to_heel_action'][limb] in dsa
-      prev_toe = d1['limb_to_toe_action'][limb] in dsa
-      curr_heel = d2['limb_to_heel_action'][limb] in dsa
-      curr_toe = d2['limb_to_toe_action'][limb] in dsa
+      prev_heel = d1['limb_to_heel_action'][limb] in self.doublestep_prev
+      prev_toe = d1['limb_to_toe_action'][limb] in self.doublestep_prev
+      curr_heel = d2['limb_to_heel_action'][limb] in self.doublestep_curr
+      curr_toe = d2['limb_to_toe_action'][limb] in self.doublestep_curr
 
       prev_step = prev_heel or prev_toe
       curr_step = curr_heel or curr_toe

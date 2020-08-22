@@ -417,13 +417,13 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
-  # nm = '1950 - SLAM S23 arcade'
+  nm = '1950 - SLAM S23 arcade'
 
   # move_skillset = 'default'
   # move_skillset = 'beginner'

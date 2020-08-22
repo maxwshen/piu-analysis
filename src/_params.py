@@ -46,7 +46,9 @@ movement_costs = {
   },
   'basic': {
     'Double step per limb': 3,
+    # 'Double step per limb': 4,
     'Inverted feet': 0.1,
+    # 'Inverted feet': 1.6,
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
