@@ -32,6 +32,7 @@ movement_costs = {
     'Angle extreme duck': 3,
     'Jump': 0.5,
     'No movement reward': -0.5,
+    'Multi reward': 0,
     # Unused, since only air-X allowed
     'Bracket': 5,
     'Hands': 5,
@@ -56,6 +57,7 @@ movement_costs = {
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
+    'Multi reward': -10.5,
     'Bracket': 5,
     'Hands': 5,
     'Move without action': 3,
@@ -77,6 +79,7 @@ movement_costs = {
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
+    'Multi reward': -5.5,
     'Bracket': 0.5,
     'Hands': 5,
     'Move without action': 3,

@@ -90,6 +90,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
       child_sas = nodes[child]['Stance actions']
       timedelta = nodes[child]['Time'] - nodes[nm]['Time']
       child_line = nodes[child]['Line with active holds']
+      is_multi = bool('multi' in child)
 
       for sa_idx, sa1 in enumerate(curr_sas):
         d1 = get_parsed_stanceaction(sa1)
@@ -194,6 +195,9 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
               if timedelta < mover.costs['Time threshold']:
                 time_factor = mover.costs['Time normalizer'] / timedelta
                 edge_cost *= time_factor
+
+              if is_multi:
+                edge_cost += mover.costs['Multi reward']
 
               cost_memoizer[(sa1, sa2)] = edge_cost
 
@@ -423,7 +427,8 @@ def main():
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
-  nm = '1950 - SLAM S23 arcade'
+  # nm = '1950 - SLAM S23 arcade'
+  nm = 'HTTP - Quree S21 arcade'
 
   # move_skillset = 'default'
   # move_skillset = 'beginner'
