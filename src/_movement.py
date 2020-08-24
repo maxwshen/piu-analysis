@@ -236,17 +236,17 @@ class Movement():
       if prev_step and curr_step:
         cost += self.costs['Double step per limb']
 
-    if time < self.costs['Time threshold']:
+    # if time < self.costs['Time threshold']:
       '''
         Ex. normalizer = 300 ms, then
         400 ms since = 3/4 cost
         100 ms since = 3 cost
       '''
-      time_factor = self.costs['Time normalizer'] / time
-      cost *= time_factor
+      # time_factor = self.costs['Time normalizer'] / time
+      # cost *= time_factor
 
-    if time >= self.costs['Time forgive double step']:
-      cost = 0
+    # if time >= self.costs['Time forgive double step']:
+      # cost = 0
 
     if self.verbose: print(f'Double step cost: {cost}')
     return cost
@@ -274,8 +274,8 @@ class Movement():
     '''
     cost = 0
     for limb in d['limb_to_pos']:
-      if d['limb_to_heel_action'] in self.downpress:
-        if d['limb_to_toe_action'] in self.downpress:
+      if d['limb_to_heel_action'][limb] in self.downpress:
+        if d['limb_to_toe_action'][limb] in self.downpress:
           cost += self.costs['Bracket']
     if self.verbose: print(f'Bracket cost: {cost}')
     return cost
@@ -389,6 +389,26 @@ class Movement():
 
     return
 
+
+  def multihit_modifier(self, d: dict, node_nm: str):
+    '''
+      Apply multihit reward only if brackets are involved
+    '''
+    cost = 0
+    is_multi = bool('multi' in node_nm)
+    if not is_multi:
+      return 0
+
+    has_bracket = False
+    for limb in d['limb_to_pos']:
+      if d['limb_to_heel_action'][limb] in self.downpress:
+        if d['limb_to_toe_action'][limb] in self.downpress:
+          has_bracket = True
+          break
+
+    if is_multi and has_bracket:
+      cost += self.costs['Multi reward']
+    return cost
 
 '''
   Testing

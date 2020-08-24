@@ -356,7 +356,9 @@ def main():
   # Test: Brackets
   # nm = '1950 - SLAM S23 arcade'
 
-  nm = 'HTTP - Quree S21 arcade'
+  # nm = 'HTTP - Quree S21 arcade'
+  # nm = '8 6 - DASU S20 arcade'
+  nm = 'Shub Sothoth - Nato & EXC S25 remix'
 
   timing_judge = 'piu nj'
 

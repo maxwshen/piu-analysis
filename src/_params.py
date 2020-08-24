@@ -58,7 +58,7 @@ movement_costs = {
     'Jump': 0.75,
     'No movement reward': -0.5,
     'Multi reward': -10.5,
-    'Bracket': 5,
+    'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
 
@@ -69,26 +69,26 @@ movement_costs = {
     'Time normalizer': 0.25,
     'Time forgive double step': 1.5,
   },
-  'default': {
-    'Double step per limb': 2,
+  'advanced': {
+    'Double step per limb': 3,
     'Inverted feet': 0.1,
-    'Hold footslide': 1,
+    'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
-    'Angle duck': 1,
+    'Angle duck': 0.3,
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
-    'Multi reward': -5.5,
-    'Bracket': 0.5,
+    'Multi reward': -10,
+    'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
-    'Time threshold': 0.5,
-    # Time of 250 ms = 1 cost
-    'Time normalizer': 0.25,
-    'Time forgive double step': 1,
+    'Time threshold': 0.30,
+    # Time of 100 ms = 1 cost
+    'Time normalizer': 0.10,
+    'Time forgive double step': 0.5,
   },
 }
