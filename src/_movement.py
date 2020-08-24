@@ -167,7 +167,7 @@ class Movement():
     return cost
 
 
-  def move_cost(self, d1: dict, d2: dict, time: float) -> float:
+  def move_cost(self, d1: dict, d2: dict, time = None) -> float:
     '''
       Sum over limbs, distance moved by
       - foot center
@@ -198,14 +198,15 @@ class Movement():
 
       cost += dist / self.costs['Distance normalizer']
 
-    if time < self.costs['Time threshold']:
-      '''
-        Ex. normalizer = 300 ms, then
-        400 ms since = 3/4 cost
-        100 ms since = 3 cost
-      '''
-      time_factor = self.costs['Time normalizer'] / time
-      cost *= time_factor
+    if time is not None:
+      if 0.001 < time < self.costs['Time threshold']:
+        '''
+          Ex. normalizer = 300 ms, then
+          400 ms since = 3/4 cost
+          100 ms since = 3 cost
+        '''
+        time_factor = self.costs['Time normalizer'] / time
+        cost *= time_factor
 
     if cost == 0:
       cost = self.costs['No movement reward']
@@ -214,13 +215,14 @@ class Movement():
     return cost
 
 
-  def double_step_cost(self, d1: dict, d2: dict, time: float) -> float:
+  def double_step_cost(self, d1: dict, d2: dict, time = None) -> float:
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
-      Add cost for each limb that double steps
+      Add cost only when a single foot is used twice
     '''
     cost = 0
+    num_limbs_doubling = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
@@ -234,19 +236,22 @@ class Movement():
       curr_step = curr_heel or curr_toe
 
       if prev_step and curr_step:
-        cost += self.costs['Double step per limb']
+        num_limbs_doubling += 1
 
-    # if time < self.costs['Time threshold']:
-      '''
-        Ex. normalizer = 300 ms, then
-        400 ms since = 3/4 cost
-        100 ms since = 3 cost
-      '''
-      # time_factor = self.costs['Time normalizer'] / time
-      # cost *= time_factor
+    if num_limbs_doubling == 1:
+      cost += self.costs['Double step']
 
-    # if time >= self.costs['Time forgive double step']:
-      # cost = 0
+    if time is not None:
+      if 0.001 < time < self.costs['Time threshold']:
+        '''
+          Ex. normalizer = 300 ms, then
+          400 ms since = 3/4 cost
+          100 ms since = 3 cost
+        '''
+        time_factor = self.costs['Time normalizer'] / time
+        cost *= time_factor
+      elif time >= self.costs['Time threshold']:
+        cost = 0
 
     if self.verbose: print(f'Double step cost: {cost}')
     return cost
@@ -322,7 +327,8 @@ class Movement():
     cost += self.foot_inversion_cost(d2)
     cost += self.foot_pos_cost(d2)
     cost += self.hold_change_cost(d1, d2)
-    mv_cost = self.move_cost(d1, d2, time)
+    # mv_cost = self.move_cost(d1, d2, time)
+    mv_cost = self.move_cost(d1, d2)
     cost += mv_cost
     cost += self.jump_cost(d1, d2)
     cost += self.bracket_cost(d2)
@@ -331,10 +337,18 @@ class Movement():
 
     '''
       Conditional costs
+
+      If movement: apply double step cost
+      If no movement:
+        If time slower than 270 npm, no cost for jacks
+        else: apply high cost to get footswitching
     '''
-    # Only apply double step cost if it requires moving feet
+    ds_cost = self.double_step_cost(d1, d2, time)
     if mv_cost >= 0:
-      cost += self.double_step_cost(d1, d2, time)
+      cost += ds_cost
+    elif mv_cost <= 0:
+      if time <= _params.jacks_footswitch_t_thresh:
+        cost += ds_cost
 
     return cost
 

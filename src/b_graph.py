@@ -56,7 +56,8 @@ def form_graph(nm: str):
 
   # Testing -- first 9 measures only
   # measures = measures[:9]
-  measures = measures[:26]
+  # measures = measures[:26]
+  measures = measures[:35]
 
   beat = 0
   time = 0     # units = seconds
@@ -65,7 +66,7 @@ def form_graph(nm: str):
   active_holds = set()
 
   # Init bpm at beat = 0
-  if beat >= bpms[0][0]:
+  while beat >= bpms[0][0]:
     # print(beat, bpms)
     bpm = bpms[0][1]
     bpms = bpms[1:]
@@ -169,7 +170,7 @@ def form_graph(nm: str):
       time += time_increment
 
       beat += beat_increment
-      if beat >= bpms[0][0]:
+      while beat >= bpms[0][0]:
         # print(beat, bpms)
         bpm = bpms[0][1]
         bpms = bpms[1:]
@@ -358,7 +359,9 @@ def main():
 
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
-  nm = 'Shub Sothoth - Nato & EXC S25 remix'
+  # nm = 'Shub Sothoth - Nato & EXC S25 remix'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'Loki - Lotze S21 arcade'
 
   timing_judge = 'piu nj'
 

@@ -183,24 +183,24 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
           stats_d['Num. edges considered'] += 1
           if child != 'final':
             # Get cost by memoization
-            if (sa1, sa2) in cost_memoizer:
-              edge_cost = cost_memoizer[(sa1, sa2)]
+            if (sa1, sa2, timedelta) in cost_memoizer:
+              edge_cost = cost_memoizer[(sa1, sa2, timedelta)]
               stats_d['Cost memoizer, num hits'] += 1
 
             else:
               # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
-              edge_cost = mover.get_cost_from_ds(d1, d2)
+              edge_cost = mover.get_cost_from_ds(d1, d2, time = timedelta)
 
               # Multihit modifier if brackets
               multi_mod = mover.multihit_modifier(d2, child)
               edge_cost += multi_mod
 
               # Apply time cost here to get memoization speedup and time sensitivity
-              if timedelta < mover.costs['Time threshold']:
+              if 0.001 < timedelta < mover.costs['Time threshold']:
                 time_factor = mover.costs['Time normalizer'] / timedelta
                 edge_cost *= time_factor
 
-              cost_memoizer[(sa1, sa2)] = edge_cost
+              cost_memoizer[(sa1, sa2, timedelta)] = edge_cost
 
           elif child == 'final':
             edge_cost = 0
@@ -432,11 +432,13 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   nm = 'Shub Sothoth - Nato & EXC S25 remix'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'Loki - Lotze S21 arcade'
 
 
   # move_skillset = 'beginner'
-  # move_skillset = 'basic'
-  move_skillset = 'advanced'
+  move_skillset = 'basic'
+  # move_skillset = 'advanced'
 
   print(nm, move_skillset)
 

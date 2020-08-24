@@ -18,12 +18,15 @@ perfect_windows = {
   'itg': [0.0215, 0.0215],
 }
 
+jacks_footswitch_npm_thresh = 270
+jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
+
 '''
   Movement costs
 '''
 movement_costs = {
   'beginner': {
-    'Double step per limb': 2,
+    'Double step': 2,
     'Inverted feet': 0.1,
     'Hold footslide': 1,
     'Hold footswitch': 3,
@@ -43,13 +46,10 @@ movement_costs = {
     'Time threshold': 0.5,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
-    'Time forgive double step': 2,
   },
   'basic': {
-    'Double step per limb': 3,
-    # 'Double step per limb': 4,
+    'Double step': 3,
     'Inverted feet': 0.1,
-    # 'Inverted feet': 1.6,
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
@@ -57,20 +57,19 @@ movement_costs = {
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
-    'Multi reward': -10.5,
+    'Multi reward': -10,
     'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
-    'Time threshold': 0.5,
+    'Time threshold': 0.75,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
-    'Time forgive double step': 1.5,
   },
   'advanced': {
-    'Double step per limb': 3,
+    'Double step': 3,
     'Inverted feet': 0.1,
     'Hold footslide': 5,
     'Hold footswitch': 3,
@@ -89,6 +88,5 @@ movement_costs = {
     'Time threshold': 0.30,
     # Time of 100 ms = 1 cost
     'Time normalizer': 0.10,
-    'Time forgive double step': 0.5,
   },
 }
