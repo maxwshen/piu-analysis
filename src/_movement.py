@@ -56,6 +56,7 @@ class Movement():
     self.verbose = False
     pass
 
+
   '''
     Helper
   '''
@@ -77,6 +78,7 @@ class Movement():
       'limb_to_heel_action': limb_to_heel_action,
       'limb_to_toe_action': limb_to_toe_action,
     }
+
 
   '''
     Costs
@@ -111,13 +113,16 @@ class Movement():
 
   def foot_inversion_cost(self, d: dict):
     '''
-      Penalize if the right foot is left of left foot
+      Penalize if the right foot is left of left foot by a large distance
+      Inversion distance threshold = 185 mm (distance from center to corner). Basically only penalize 180 twists. Penalty should be less than a double step so that we prefer to do a 180 twist than double step once, but prefer to double step to avoid multiple 180 twists
     '''
     cost = 0
     left_coord = self.pos_to_center[d['limb_to_pos']['Left foot']]
     right_coord = self.pos_to_center[d['limb_to_pos']['Right foot']]
 
-    if right_coord[0] < left_coord[0]:
+    diff = left_coord[0] - right_coord[0]
+
+    if diff > self.costs['Inversion distance threshold']:
       cost += self.costs['Inverted feet']
 
     if self.verbose: print(f'Foot inversion cost: {cost}')
@@ -219,10 +224,12 @@ class Movement():
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
-      Add cost only when a single foot is used twice
+      Add cost only when a single foot is used twice, and only one foot is used both times
     '''
     cost = 0
     num_limbs_doubling = 0
+    num_limbs_prev = 0
+    num_limbs_now = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
@@ -237,8 +244,12 @@ class Movement():
 
       if prev_step and curr_step:
         num_limbs_doubling += 1
+      if prev_heel or prev_toe:
+        num_limbs_prev += 1
+      if curr_heel or curr_toe:
+        num_limbs_now += 1
 
-    if num_limbs_doubling == 1:
+    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1:
       cost += self.costs['Double step']
 
     if time is not None:
@@ -248,7 +259,8 @@ class Movement():
           400 ms since = 3/4 cost
           100 ms since = 3 cost
         '''
-        time_factor = self.costs['Time normalizer'] / time
+        # time_factor = self.costs['Time normalizer'] / time
+        time_factor = 1
         cost *= time_factor
       elif time >= self.costs['Time threshold']:
         cost = 0

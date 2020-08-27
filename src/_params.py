@@ -18,7 +18,7 @@ perfect_windows = {
   'itg': [0.0215, 0.0215],
 }
 
-jacks_footswitch_npm_thresh = 270
+jacks_footswitch_npm_thresh = 275
 jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 
 '''
@@ -26,14 +26,14 @@ jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 '''
 movement_costs = {
   'beginner': {
-    'Double step': 2,
+    'Double step': 3,
     'Inverted feet': 0.1,
     'Hold footslide': 1,
     'Hold footswitch': 3,
     'Angle too open': 3,
     'Angle duck': 1,
     'Angle extreme duck': 3,
-    'Jump': 0.5,
+    'Jump': 0.75,
     'No movement reward': -0.5,
     'Multi reward': 0,
     # Unused, since only air-X allowed
@@ -43,6 +43,7 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
+    'Inversion distance threshold': 185,
     'Time threshold': 0.5,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
@@ -64,6 +65,7 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
+    'Inversion distance threshold': 185,
     'Time threshold': 0.75,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
@@ -85,6 +87,7 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
+    'Inversion distance threshold': 185,
     'Time threshold': 0.30,
     # Time of 100 ms = 1 cost
     'Time normalizer': 0.10,
