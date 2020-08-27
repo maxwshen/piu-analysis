@@ -362,7 +362,8 @@ def main():
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
-  nm = 'Native - SHK S20 arcade'
+  # nm = 'Native - SHK S20 arcade'
+  nm = 'PARADOXX - NATO & SLAM S26 remix'
 
   timing_judge = 'piu nj'
 

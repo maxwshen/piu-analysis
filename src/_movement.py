@@ -122,8 +122,11 @@ class Movement():
 
     diff = left_coord[0] - right_coord[0]
 
+    if 0 < diff <= self.costs['Inversion distance threshold']:
+      cost += self.costs['Inverted feet small']
+
     if diff > self.costs['Inversion distance threshold']:
-      cost += self.costs['Inverted feet']
+      cost += self.costs['Inverted feet big']
 
     if self.verbose: print(f'Foot inversion cost: {cost}')
     return cost
@@ -416,9 +419,10 @@ class Movement():
     return
 
 
-  def multihit_modifier(self, d: dict, node_nm: str):
+  def multihit_modifier(self, d1: dict, d2: dict, node_nm: str):
     '''
       Apply multihit reward only if brackets are involved
+      Remove jump penalty if applied
     '''
     cost = 0
     is_multi = bool('multi' in node_nm)
@@ -426,14 +430,18 @@ class Movement():
       return 0
 
     has_bracket = False
-    for limb in d['limb_to_pos']:
-      if d['limb_to_heel_action'][limb] in self.downpress:
-        if d['limb_to_toe_action'][limb] in self.downpress:
+    for limb in d2['limb_to_pos']:
+      if d2['limb_to_heel_action'][limb] in self.downpress:
+        if d2['limb_to_toe_action'][limb] in self.downpress:
           has_bracket = True
           break
 
-    if is_multi and has_bracket:
+    if has_bracket:
       cost += self.costs['Multi reward']
+
+    jc = self.jump_cost(d1, d2)
+    cost -= jc
+
     return cost
 
 '''

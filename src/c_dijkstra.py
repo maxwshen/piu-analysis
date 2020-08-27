@@ -192,7 +192,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
               edge_cost = mover.get_cost_from_ds(d1, d2, time = timedelta)
 
               # Multihit modifier if brackets
-              multi_mod = mover.multihit_modifier(d2, child)
+              multi_mod = mover.multihit_modifier(d1, d2, child)
               edge_cost += multi_mod
 
               # Apply time cost here to get memoization speedup and time sensitivity
@@ -434,7 +434,8 @@ def main():
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
-  nm = 'Native - SHK S20 arcade'
+  # nm = 'Native - SHK S20 arcade'
+  nm = 'PARADOXX - NATO & SLAM S26 remix'
 
 
   # move_skillset = 'beginner'

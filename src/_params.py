@@ -27,7 +27,8 @@ jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 movement_costs = {
   'beginner': {
     'Double step': 3,
-    'Inverted feet': 0.1,
+    'Inverted feet small': 0.1,
+    'Inverted feet big': 0.15,
     'Hold footslide': 1,
     'Hold footswitch': 3,
     'Angle too open': 3,
@@ -43,14 +44,15 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
-    'Inversion distance threshold': 185,
+    'Inversion distance threshold': 200,
     'Time threshold': 0.5,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
   },
   'basic': {
     'Double step': 3,
-    'Inverted feet': 0.1,
+    'Inverted feet small': 0.1,
+    'Inverted feet big': 0.15,
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
@@ -65,14 +67,15 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
-    'Inversion distance threshold': 185,
+    'Inversion distance threshold': 200,
     'Time threshold': 0.75,
     # Time of 250 ms = 1 cost
     'Time normalizer': 0.25,
   },
   'advanced': {
     'Double step': 3,
-    'Inverted feet': 0.1,
+    'Inverted feet small': 0.1,
+    'Inverted feet big': 0.15,
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
@@ -87,7 +90,7 @@ movement_costs = {
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
-    'Inversion distance threshold': 185,
+    'Inversion distance threshold': 200,
     'Time threshold': 0.30,
     # Time of 100 ms = 1 cost
     'Time normalizer': 0.10,
