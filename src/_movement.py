@@ -175,7 +175,7 @@ class Movement():
     return cost
 
 
-  def move_cost(self, d1: dict, d2: dict, time = None) -> float:
+  def move_cost(self, d1: dict, d2: dict) -> float:
     '''
       Sum over limbs, distance moved by
       - foot center
@@ -205,16 +205,6 @@ class Movement():
       dist = np.mean(dist_heel + dist_toe)
 
       cost += dist / self.costs['Distance normalizer']
-
-    if time is not None:
-      if 0.001 < time < self.costs['Time threshold']:
-        '''
-          Ex. normalizer = 300 ms, then
-          400 ms since = 3/4 cost
-          100 ms since = 3 cost
-        '''
-        time_factor = self.costs['Time normalizer'] / time
-        cost *= time_factor
 
     if cost == 0:
       cost = self.costs['No movement reward']
@@ -364,7 +354,6 @@ class Movement():
     cost += self.foot_inversion_cost(d2)
     cost += self.foot_pos_cost(d2)
     cost += self.hold_change_cost(d1, d2)
-    # mv_cost = self.move_cost(d1, d2, time)
     mv_cost = self.move_cost(d1, d2)
     cost += mv_cost
     cost += self.jump_cost(d1, d2)
@@ -385,8 +374,13 @@ class Movement():
     if mv_cost >= 0:
       cost += ds_cost
     elif mv_cost <= 0:
-      if time <= _params.jacks_footswitch_t_thresh:
-        cost += ds_cost
+      pass
+      '''
+        This penalizes >1 double steps in a row
+        Instead, use fast_jacks_cost to penalize >2 double steps in a row
+      '''
+      # if time <= _params.jacks_footswitch_t_thresh:
+      #   cost += ds_cost
 
     return cost
 
@@ -442,7 +436,7 @@ class Movement():
     return
 
 
-  def multihit_modifier(self, d1: dict, d2: dict, node_nm: str):
+  def multihit_modifier(self, d1: dict, d2: dict, node_nm: str) -> float:
     '''
       Apply multihit reward only if brackets are involved
       Remove jump penalty if applied
@@ -464,6 +458,33 @@ class Movement():
 
     jc = self.jump_cost(d1, d2)
     cost -= jc
+    return cost
+
+
+  def fast_jacks_cost(self, d0: dict, d1: dict, d2: dict, prev_time: float, time: float) -> float:
+    '''
+      Penalize jacks stepped with a single foot for >2 notes
+
+      Only apply with no movement jacks (c_dijkstra enforces this)
+    '''
+    cost = 0
+    if time > _params.jacks_footswitch_t_thresh:
+      return 0
+    if prev_time > _params.jacks_footswitch_t_thresh:
+      return 0
+
+    # mv1 = self.move_cost(d0, d1)
+    # if mv1 > 0:
+    #   return 0
+    # mv2 = self.move_cost(d1, d2)
+    # if mv2 > 0:
+    #   return 0
+
+    ds1 = self.double_step_cost(d0, d1, time = prev_time)
+    ds2 = self.double_step_cost(d1, d2, time = time)
+
+    if ds1 > 0 and ds2 > 0:
+      cost += ds2
 
     return cost
 

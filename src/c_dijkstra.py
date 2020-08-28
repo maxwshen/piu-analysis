@@ -50,6 +50,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   jump_memoizer = dict()
   dist_memoizer = dict()
   psa_memoizer = dict()
+  move_memoizer = dict()
   beginner_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
@@ -95,6 +96,25 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
       for sa_idx, sa1 in enumerate(curr_sas):
         d1 = get_parsed_stanceaction(sa1)
         stance1 = sa1[:sa1.index(';')]
+
+        consider_fast_jacks = False
+        _, parent, parent_sa_idx = graph_nodes[nm][sa_idx]
+        if parent is not None:
+          prev_time = nodes[nm]['Time'] - nodes[parent]['Time']
+          if prev_time < _params.jacks_footswitch_t_thresh and timedelta < _params.jacks_footswitch_t_thresh:
+            sa_parent = nodes[parent]['Stance actions'][parent_sa_idx]
+            d0 = get_parsed_stanceaction(sa_parent)
+
+            mv_key = (sa_parent, stance1)
+            if mv_key in move_memoizer:
+              mv_cost = move_memoizer[mv_key]
+              stats_d['Move memoizer, num hits'] += 1
+            else:
+              mv_cost = mover.move_cost(d0, d1)
+              move_memoizer[mv_key] = mv_cost
+
+            if mv_cost <= 0:
+              consider_fast_jacks = True
 
         '''
           Consider all children: filter by heuristics
@@ -188,9 +208,12 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
               stats_d['Cost memoizer, num hits'] += 1
 
             else:
-              # edge_cost = mover.get_cost(sa1, sa2, time = timedelta)
+              # Get base cost
               edge_cost = mover.get_cost_from_ds(d1, d2, time = timedelta)
 
+              '''
+                Modify cost for memoization
+              '''
               # Multihit modifier if brackets
               multi_mod = mover.multihit_modifier(d1, d2, child)
               edge_cost += multi_mod
@@ -201,6 +224,22 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
                 edge_cost *= time_factor
 
               cost_memoizer[(sa1, sa2, timedelta)] = edge_cost
+
+            '''
+              Modify cost w/o memoization
+            '''
+            # Fast jacks
+            if consider_fast_jacks:
+              mv_key = (stance1, stance2)
+              if mv_key in move_memoizer:
+                mv_cost = move_memoizer[mv_key]
+                stats_d['Move memoizer, num hits'] += 1
+              else:
+                mv_cost = mover.move_cost(d1, d2)
+                move_memoizer[mv_key] = mv_cost
+
+              if mv_cost <= 0:
+                edge_cost += mover.fast_jacks_cost(d0, d1, d2, prev_time, timedelta)
 
           elif child == 'final':
             edge_cost = 0
@@ -435,8 +474,8 @@ def main():
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
-  nm = 'PARADOXX - NATO & SLAM S26 remix'
-
+  # nm = 'PARADOXX - NATO & SLAM S26 remix'
+  nm = 'BEMERA - YAHPP S24 remix'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'
