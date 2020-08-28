@@ -48,11 +48,11 @@ class Movement():
       self.pos_to_rotation[nm] = row['Rotation']
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
-    self.downpress = ['1', '2']
-    self.doublestep_prev = ['1', '2', '3']
-    self.doublestep_curr = ['1', '2']
-    self.prev_hold = ['2', '4']
-    self.ok_hold = ['3', '4']
+    self.downpress = set(['1', '2'])
+    self.doublestep_prev = set(['1', '2', '3'])
+    self.doublestep_curr = set(['1', '2'])
+    self.prev_hold = set(['2', '4'])
+    self.ok_hold = set(['3', '4'])
     self.verbose = False
     pass
 
@@ -227,12 +227,13 @@ class Movement():
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
-      Add cost only when a single foot is used twice, and only one foot is used both times
+      Add cost only when a single foot is used twice, and only one foot is used both times, and no limb is in a hold
     '''
     cost = 0
     num_limbs_doubling = 0
     num_limbs_prev = 0
     num_limbs_now = 0
+    num_limbs_hold = 0
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
@@ -252,7 +253,12 @@ class Movement():
       if curr_heel or curr_toe:
         num_limbs_now += 1
 
-    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1:
+      curr_heel_hold = d2['limb_to_heel_action'][limb] in self.ok_hold
+      curr_toe_hold = d2['limb_to_toe_action'][limb] in self.ok_hold
+      if curr_heel_hold or curr_toe_hold:
+        num_limbs_hold += 1
+
+    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1 and num_limbs_hold == 0:
       cost += self.costs['Double step']
 
     if time is not None:
