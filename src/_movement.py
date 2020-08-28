@@ -142,17 +142,38 @@ class Movement():
     return cost
 
 
+  def hand_inversion_cost(self, d: dict):
+    '''
+      Penalize if the right hand is left of left hand
+    '''
+    cost = 0
+    if len(d['limb_to_pos']) <= 2:
+      return 0
+
+    left_coord = self.pos_to_center[d['limb_to_pos']['Left hand']]
+    right_coord = self.pos_to_center[d['limb_to_pos']['Right hand']]
+
+    diff = left_coord[0] - right_coord[0]
+
+    if 0 < diff:
+      cost += self.costs['Inverted hands']
+
+    if self.verbose: print(f'Hand inversion cost: {cost}')
+    return cost
+
+
   def hold_change_cost(self, d1: dict, d2: dict):
     '''
       Penalize switching limb/part on a hold
     '''
     cost = 0
     for limb in d2['limb_to_pos']:
-      if limb not in d1['limb_to_pos']:
-        continue
-
-      prev_ha = d1['limb_to_heel_action'][limb]
-      prev_ta = d1['limb_to_toe_action'][limb]
+      if limb in d1['limb_to_pos']:
+        prev_ha = d1['limb_to_heel_action'][limb]
+        prev_ta = d1['limb_to_toe_action'][limb]
+      else:
+        prev_ha = '-'
+        prev_ta = '-'
 
       curr_ha = d2['limb_to_heel_action'][limb]
       curr_ta = d2['limb_to_toe_action'][limb]
@@ -168,6 +189,10 @@ class Movement():
       if prev_ha in self.prev_hold or prev_ta in self.prev_hold:
         if curr_ta not in self.ok_hold and curr_ha not in self.ok_hold:
           cost += self.costs['Hold footswitch']
+
+      if prev_ha not in self.prev_hold and prev_ta not in self.prev_hold:
+        if curr_ta == '3' or curr_ha == '3':
+          cost += 100
 
     if self.verbose: print(f'Hold change cost: {cost}')
     return cost
@@ -371,6 +396,7 @@ class Movement():
     cost = 0
     cost += self.angle_cost(d2)
     cost += self.foot_inversion_cost(d2)
+    cost += self.hand_inversion_cost(d2)
     cost += self.foot_pos_cost(d2)
     cost += self.hold_change_cost(d1, d2)
     mv_cost = self.move_cost(d1, d2)

@@ -81,7 +81,7 @@ class Stances():
   '''
     Get foot positions from active and previous panels
   '''
-  def get_stances(self, active_panels, prev_panels):
+  def get_stances(self, active_panels, prev_panels, use_hands = False):
     '''
       - Determine how many limbs we need
       - Propose stances as combinations of allowed positions for each limb, subset by possibility (in csv) and panels
@@ -93,8 +93,9 @@ class Stances():
     '''
       Todo -- smarter detection of whether we need hands or not. 
     '''
-    limbs = ['Left foot', 'Right foot']
-    if num_constraints > 4:
+    if not use_hands:
+      limbs = ['Left foot', 'Right foot']
+    else:
       limbs += ['Left hand', 'Right hand']
 
     ps = []
@@ -235,6 +236,9 @@ class Stances():
     # Get foot stances consistent with active panels, and including previous panels
     stances = self.get_stances(active_panels, prev_panels)
     stances = list(set(stances))
+    if len(stances) == 0:
+      stances = self.get_stances(active_panels, prev_panels, use_hands = True)
+      stances = list(set(stances))
 
     # Annotate all possible actions (one to many relationship)
     stance_actions = self.annotate_actions(panel_constraints, stances)

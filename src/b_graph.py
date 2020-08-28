@@ -56,7 +56,8 @@ def form_graph(nm: str):
 
   # Testing -- first 9 measures only
   # measures = measures[:9]
-  measures = measures[:22]
+  # measures = measures[:12]
+  measures = measures[:19]
   # measures = measures[:26]
   # measures = measures[:35]
 
@@ -95,7 +96,7 @@ def form_graph(nm: str):
     lines = measure.split('\n')
     num_subbeats = len(lines)
     note_type = num_subbeats
-    for line in lines:
+    for lidx, line in enumerate(lines):
       beat_increment = beats_per_measure / num_subbeats
 
       line = parse_line(line)
@@ -166,19 +167,60 @@ def form_graph(nm: str):
         # print(time, bpm, beat, line, len(sas), active_holds, prev_presses)
         # import code; code.interact(local=dict(globals(), **locals()))
 
+      '''
+        Handle possibility of multiple beat updates before the next note
+      '''
       # After processing line, update beat, bpm, and time
       # Important: Update bpm after time
-      time_increment = beat_increment * (60 / bpm)
-      time += time_increment
+      done_popping_bpm = False
+      next_bpm_update_beat = bpms[0][0]
+      next_note_beat = beat + beat_increment
+      if next_note_beat < next_bpm_update_beat:
+        # Update once, normally
+        bi = beat_increment
+        time_increment = bi * (60 / bpm)
+        time += time_increment
 
-      beat += beat_increment
-      while beat >= bpms[0][0]:
-        # print(beat, bpms)
-        bpm = bpms[0][1]
-        bpms = bpms[1:]
-      assert bpm is not None, 'Failed to set bpm'
+        beat += bi
+        if beat >= bpms[0][0]:
+          # print(beat, bpms)
+          bpm = bpms[0][1]
+          bpms = bpms[1:]
+        assert bpm is not None, 'Failed to set bpm'
 
-    timer.update()
+      while next_bpm_update_beat <= next_note_beat:
+        bi = next_bpm_update_beat - beat
+        time_increment = bi * (60 / bpm)
+        time += time_increment
+
+        beat += bi
+        if beat >= bpms[0][0]:
+          # print(beat, bpms)
+          bpm = bpms[0][1]
+          bpms = bpms[1:]
+          done_popping_bpm = False
+          next_bpm_update_beat = bpms[0][0]
+        assert bpm is not None, 'Failed to set bpm'
+
+      if beat < next_note_beat:
+        bi = next_note_beat - beat
+        time_increment = bi * (60 / bpm)
+        time += time_increment
+        beat += bi
+
+      # Old code
+      # time_increment = beat_increment * (60 / bpm)
+      # time += time_increment
+
+      # beat += beat_increment
+      # while beat >= bpms[0][0]:
+      #   # print(beat, bpms)
+      #   bpm = bpms[0][1]
+      #   bpms = bpms[1:]
+      # assert bpm is not None, 'Failed to set bpm'
+      # print(beat, bpm)
+
+    # timer.update()
 
   # Add terminal node and edge
   nodes['final'] = {
@@ -398,9 +440,14 @@ def main():
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
-  nm = 'HEART RABBIT COASTER - nato S23 arcade'
+  # nm = 'HEART RABBIT COASTER - nato S23 arcade'
+  # nm = 'F(R)IEND - D_AAN S23 arcade'
+  # nm = 'Pump me Amadeus - BanYa S11 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
 
   timing_judge = 'piu nj'
+
+  print(nm, timing_judge)
 
   nodes, edges_out, edges_in, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge

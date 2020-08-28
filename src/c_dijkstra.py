@@ -461,7 +461,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -477,10 +477,13 @@ def main():
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
+  # nm = 'F(R)IEND - D_AAN S23 arcade'
+  # nm = 'Pump me Amadeus - BanYa S11 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
 
   # move_skillset = 'beginner'
-  # move_skillset = 'basic'
-  move_skillset = 'advanced'
+  move_skillset = 'basic'
+  # move_skillset = 'advanced'
 
   print(nm, move_skillset)
 
