@@ -86,7 +86,7 @@ movement_costs = {
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
-    'Multi reward': -10,
+    'Multi reward': --1.5,
     'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
@@ -95,8 +95,8 @@ movement_costs = {
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
     'Inversion distance threshold': 200,
-    'Time threshold': 0.30,
-    # Time of 100 ms = 1 cost
-    'Time normalizer': 0.10,
+    'Time threshold': 0.50,
+    # Time of 200 ms = 1 cost
+    'Time normalizer': 0.20,
   },
 }

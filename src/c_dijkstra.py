@@ -275,7 +275,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
 
   # Find best path
   df = backtrack_annotate(graph_nodes, nodes)
-  df.to_csv(out_dir + f'{sc_nm}.csv')
+  df.to_csv(out_dir + f'{sc_nm} {move_skillset}.csv')
   import code; code.interact(local=dict(globals(), **locals()))
   return
 
@@ -461,7 +461,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -475,11 +475,12 @@ def main():
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
-  nm = 'BEMERA - YAHPP S24 remix'
+  # nm = 'BEMERA - YAHPP S24 remix'
+  # nm = 'HEART RABBIT COASTER - nato S23 arcade'
 
   # move_skillset = 'beginner'
-  move_skillset = 'basic'
-  # move_skillset = 'advanced'
+  # move_skillset = 'basic'
+  move_skillset = 'advanced'
 
   print(nm, move_skillset)
 

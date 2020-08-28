@@ -25,6 +25,13 @@ class Movement():
 
     if style == 'singles':
       self.df = singles_pos_df
+      panel_cols = [
+        'p1,1',
+        'p1,3',
+        'p1,5',
+        'p1,7',
+        'p1,9',
+      ]
     elif style == 'doubles':
       self.df = doubles_pos_df
 
@@ -37,6 +44,7 @@ class Movement():
     self.pos_to_heel_panel = {}
     self.pos_to_toe_panel = {}
     self.pos_to_rotation = {}
+    self.bracket_pos = set()
     for idx, row in self.df.iterrows():
       nm = row['Name']
       self.pos_to_cost[nm] = row[f'Cost - {move_skillset}']
@@ -46,6 +54,8 @@ class Movement():
       self.pos_to_heel_panel[nm] = row['Panel - heel']
       self.pos_to_toe_panel[nm] = row['Panel - toe']
       self.pos_to_rotation[nm] = row['Rotation']
+      if sum(row[panel_cols]) > 1:
+        self.bracket_pos.add(nm)
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
     self.downpress = set(['1', '2'])
@@ -180,8 +190,11 @@ class Movement():
       Sum over limbs, distance moved by
       - foot center
       - average of heel and toe
+
+      Only grant no movement reward for basic heel toe and air positions, not for bracket positions
     '''
     cost = 0
+    has_bracket = False
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_pos']:
         continue
@@ -205,6 +218,12 @@ class Movement():
       dist = np.mean(dist_heel + dist_toe)
 
       cost += dist / self.costs['Distance normalizer']
+
+      if d2['limb_to_pos'][limb] in self.bracket_pos:
+        has_bracket = True
+
+    if has_bracket and cost == 0:
+      cost = 0.01
 
     if cost == 0:
       cost = self.costs['No movement reward']

@@ -397,7 +397,8 @@ def main():
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
-  nm = 'BEMERA - YAHPP S24 remix'
+  # nm = 'BEMERA - YAHPP S24 remix'
+  nm = 'HEART RABBIT COASTER - nato S23 arcade'
 
   timing_judge = 'piu nj'
 
