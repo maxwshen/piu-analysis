@@ -41,6 +41,7 @@ movement_costs = {
     'Bracket': 5,
     'Hands': 5,
     'Move without action': 3,
+    'Downpress cost per limb': 0.05,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
@@ -56,7 +57,7 @@ movement_costs = {
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
-    'Angle duck': 0.3,
+    'Angle duck': 0.01,
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
@@ -65,6 +66,7 @@ movement_costs = {
     'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
+    'Downpress cost per limb': 0.05,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,
@@ -80,7 +82,7 @@ movement_costs = {
     'Hold footslide': 5,
     'Hold footswitch': 3,
     'Angle too open': 3,
-    'Angle duck': 0.3,
+    'Angle duck': 0.01,
     'Angle extreme duck': 3,
     'Jump': 0.75,
     'No movement reward': -0.5,
@@ -88,6 +90,7 @@ movement_costs = {
     'Bracket': 0,
     'Hands': 5,
     'Move without action': 3,
+    'Downpress cost per limb': 0.05,
 
     # Distance of 1000 mm = 1 cost
     'Distance normalizer': 1000,

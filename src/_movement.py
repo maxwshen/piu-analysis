@@ -335,6 +335,22 @@ class Movement():
     return cost
 
 
+  def downpress_cost(self, d: dict) -> float:
+    cost = 0
+    for limb in ['Left foot', 'Right foot']:
+      heel_action = d['limb_to_heel_action'][limb]
+      toe_action = d['limb_to_toe_action'][limb]
+
+      heel_press = heel_action in self.downpress
+      toe_press = toe_action in self.downpress
+
+      if heel_press or toe_press:
+        cost += self.costs['Downpress cost per limb']
+
+    if self.verbose: print(f'Downpress cost: {cost}')
+    return cost
+
+
   '''
     Primary
   '''
@@ -355,6 +371,7 @@ class Movement():
     cost += self.bracket_cost(d2)
     cost += self.hands_cost(d2)
     cost += self.move_without_action_cost(d1, d2)
+    cost += self.downpress_cost(d2)
 
     '''
       Conditional costs
