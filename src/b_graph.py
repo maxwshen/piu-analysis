@@ -56,7 +56,8 @@ def form_graph(nm: str):
 
   # Testing -- first 9 measures only
   # measures = measures[:9]
-  measures = measures[:26]
+  measures = measures[:22]
+  # measures = measures[:26]
   # measures = measures[:35]
 
   beat = 0
@@ -97,6 +98,7 @@ def form_graph(nm: str):
     for line in lines:
       beat_increment = beats_per_measure / num_subbeats
 
+      line = parse_line(line)
       if has_notes(line):
         '''
           nodes[node_nm] = {
@@ -204,6 +206,8 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
     Augmenting graph after formation helps handle multihits that span measures
 
     If there are more than 1, hit them in ascending inclusive order. [1, 2, 3] -> [1, 2] and [1, 2, 3]
+
+    Consider at most 3 additional nodes (for 4 total). More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
   '''
   [pre_window, post_window] = _params.perfect_windows[timing_judge]
   num_multihits_proposed = 0
@@ -228,6 +232,9 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
 
     if not multi:
       continue
+
+    max_multi = 3
+    multi = multi[:max_multi]
 
     for jdx in range(len(multi)):
       hits = multi[:jdx + 1]
@@ -300,6 +307,32 @@ def parse_bpm(bpms: str) -> List[List]:
     bpm_list.append([float(beat), float(bpm)])
   bpm_list.append([np.inf, 0])
   return bpm_list
+
+
+def parse_line(line: str) -> str:
+  '''
+    Handle lines like:
+      0000F00000
+      00{2|n|1|0}0000000    
+  '''
+  if 'F' not in line and '{' not in line:
+    return line
+
+  replace = {
+    'F': '1',
+  }
+  line = line.translate(str.maketrans(replace))
+
+  import re
+  ws = re.split('{|}', line)
+  nl = ''
+  for w in ws:
+    if '|' not in w:
+      nl += w
+    else:
+      nl += w[0]
+  line = nl
+  return line
 
 
 ##
