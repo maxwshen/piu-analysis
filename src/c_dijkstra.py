@@ -16,6 +16,8 @@ NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
+log_fn = ''
+
 ##
 # Functions
 ##
@@ -92,6 +94,10 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
       timedelta = nodes[child]['Time'] - nodes[nm]['Time']
       child_line = nodes[child]['Line with active holds']
       is_multi = bool('multi' in child)
+
+      if timedelta < 0.001:
+        output_log('Notes are too close together, likely from very high bpm')
+        sys.exit(1)
 
       for sa_idx, sa1 in enumerate(curr_sas):
         d1 = get_parsed_stanceaction(sa1)
@@ -468,7 +474,7 @@ def main():
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
   # nm = '1950 - SLAM S23 arcade'
-  # nm = 'HTTP - Quree S21 arcade'
+  nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -479,16 +485,21 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'Hyperion - M2U S20 shortcut'
+  # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'
   # move_skillset = 'advanced'
 
+  global log_fn
+  log_fn = out_dir + f'{nm} {move_skillset}.log'
   print(nm, move_skillset)
 
   nodes, edges_out, edges_in = load_data(nm)
   dijkstra(nm, nodes, edges_out, edges_in, move_skillset = move_skillset)
+  output_log('Success')
   return
 
 

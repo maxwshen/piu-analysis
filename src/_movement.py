@@ -261,7 +261,7 @@ class Movement():
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
-      Add cost only when a single foot is used twice, and only one foot is used both times, and no limb is in a hold
+      Add cost only when a single foot is used twice, and only one foot is used both times, and no limb is in a hold (unless time is very short)
     '''
     cost = 0
     num_limbs_doubling = 0
@@ -292,8 +292,11 @@ class Movement():
       if curr_heel_hold or curr_toe_hold:
         num_limbs_hold += 1
 
-    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1 and num_limbs_hold == 0:
-      cost += self.costs['Double step']
+    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1:
+      if time <= _params.jacks_footswitch_t_thresh:
+        cost += self.costs['Double step']
+      elif num_limbs_hold == 0:
+        cost += self.costs['Double step']
 
     if time is not None:
       if 0.001 < time < self.costs['Time threshold']:

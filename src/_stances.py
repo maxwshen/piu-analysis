@@ -93,9 +93,8 @@ class Stances():
     '''
       Todo -- smarter detection of whether we need hands or not. 
     '''
-    if not use_hands:
-      limbs = ['Left foot', 'Right foot']
-    else:
+    limbs = ['Left foot', 'Right foot']
+    if use_hands:
       limbs += ['Left hand', 'Right hand']
 
     ps = []

@@ -26,6 +26,8 @@ stance_store = {
   # 'doubles': _stances.Stances(style = 'doubles'),
 }
 
+log_fn = ''
+
 ##
 # Functions
 ##
@@ -46,7 +48,7 @@ def form_graph(nm: str):
   elif 'D' in atts['Steptype simple']:
     steptype = 'doubles'
   else:
-    assert False, 'No stance found' 
+    assert False, 'No stance found'
   stance = stance_store[steptype]
 
   notes = all_notes[nm]
@@ -131,6 +133,10 @@ def form_graph(nm: str):
         prev_panels = prev_presses
         sas = stance.get_stanceactions(aug_line, prev_panels = prev_panels)
 
+        if len(sas) == 0:
+          output_log('No stance-actions found')
+          sys.exit(1)
+
         node_nm = f'{beat}'
         nodes[node_nm] = {
           'Time': time,
@@ -207,20 +213,11 @@ def form_graph(nm: str):
         time_increment = bi * (60 / bpm)
         time += time_increment
         beat += bi
+      assert bpm is not None, 'Failed to set bpm'
 
-      # Old code
-      # time_increment = beat_increment * (60 / bpm)
-      # time += time_increment
-
-      # beat += beat_increment
-      # while beat >= bpms[0][0]:
-      #   # print(beat, bpms)
-      #   bpm = bpms[0][1]
-      #   bpms = bpms[1:]
-      # assert bpm is not None, 'Failed to set bpm'
       # print(beat, bpm)
 
-    # timer.update()
+    timer.update()
 
   # Add terminal node and edge
   nodes['final'] = {
@@ -356,14 +353,10 @@ def parse_line(line: str) -> str:
     Handle lines like:
       0000F00000
       00{2|n|1|0}0000000    
+      0000{M|n|1|0} -> 0
   '''
   if 'F' not in line and '{' not in line:
     return line
-
-  replace = {
-    'F': '1',
-  }
-  line = line.translate(str.maketrans(replace))
 
   import re
   ws = re.split('{|}', line)
@@ -374,7 +367,22 @@ def parse_line(line: str) -> str:
     else:
       nl += w[0]
   line = nl
+
+  replace = {
+    'F': '1',
+    'M': '0',
+  }
+  line = line.translate(str.maketrans(replace))
   return line
+
+
+'''
+  Logging
+'''
+def output_log(message):
+  with open(log_fn, 'w') as f:
+    f.write(message)
+  return
 
 
 ##
@@ -432,7 +440,7 @@ def main():
   # Test: Brackets
   # nm = '1950 - SLAM S23 arcade'
 
-  # nm = 'HTTP - Quree S21 arcade'
+  nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -443,11 +451,16 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'Hyperion - M2U S20 shortcut'
+  # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
 
   timing_judge = 'piu nj'
 
   print(nm, timing_judge)
+
+  global log_fn
+  log_fn = out_dir + f'{nm} {timing_judge}.log'
 
   nodes, edges_out, edges_in, stance = form_graph(nm)
   # Faster than forming graph. More efficient to just run this for each timing judge
@@ -457,6 +470,8 @@ def main():
 
   with open(out_dir + f'{nm}.pkl', 'wb') as f:
     pickle.dump((a_nodes, a_edges_out, a_edges_in), f)
+
+  output_log('Success')
 
   return
 
