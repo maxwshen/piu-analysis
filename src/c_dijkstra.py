@@ -56,7 +56,6 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   beginner_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
-
   @lru_cache(maxsize = None)
   def get_parsed_stanceaction(sa):
     return mover.parse_stanceaction(sa)
@@ -427,6 +426,17 @@ def parse_sa_to_limb_action(sa: str) -> dict:
   return d
 
 
+
+'''
+  Logging
+'''
+def output_log(message):
+  print(message)
+  with open(log_fn, 'w') as f:
+    f.write(message)
+  return
+
+
 ##
 # qsub
 ##
@@ -474,7 +484,7 @@ def main():
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
   # nm = '1950 - SLAM S23 arcade'
-  nm = 'HTTP - Quree S21 arcade'
+  # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -488,10 +498,14 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
+  # nm = 'Achluoias - D_AAN S24 arcade'
+  # nm = 'Awakening - typeMARS S16 arcade'
+
+  # Doubles
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'
-  # move_skillset = 'advanced'
 
   global log_fn
   log_fn = out_dir + f'{nm} {move_skillset}.log'

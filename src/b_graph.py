@@ -23,7 +23,7 @@ sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col = 0)
 # Stances
 stance_store = {
   'singles': _stances.Stances(style = 'singles'),
-  # 'doubles': _stances.Stances(style = 'doubles'),
+  'doubles': _stances.Stances(style = 'doubles'),
 }
 
 log_fn = ''
@@ -56,10 +56,11 @@ def form_graph(nm: str):
   bpms = parse_bpm(all_bpms[nm])
   beats_per_measure = 4
 
-  # Testing -- first 9 measures only
+  # Testing
+  measures = measures[:7]
   # measures = measures[:9]
   # measures = measures[:12]
-  measures = measures[:19]
+  # measures = measures[:19]
   # measures = measures[:26]
   # measures = measures[:35]
 
@@ -380,6 +381,7 @@ def parse_line(line: str) -> str:
   Logging
 '''
 def output_log(message):
+  print(message)
   with open(log_fn, 'w') as f:
     f.write(message)
   return
@@ -440,7 +442,7 @@ def main():
   # Test: Brackets
   # nm = '1950 - SLAM S23 arcade'
 
-  nm = 'HTTP - Quree S21 arcade'
+  # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -454,6 +456,11 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
+  # nm = 'Achluoias - D_AAN S24 arcade'
+  # nm = 'Awakening - typeMARS S16 arcade'
+
+  # Doubles
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
 
   timing_judge = 'piu nj'
 

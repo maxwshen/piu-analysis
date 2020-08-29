@@ -26,14 +26,14 @@ class Movement():
     if style == 'singles':
       self.df = singles_pos_df
       panel_cols = [
-        'p1,1',
-        'p1,3',
-        'p1,5',
-        'p1,7',
-        'p1,9',
+        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9'
       ]
     elif style == 'doubles':
       self.df = doubles_pos_df
+      panel_cols = [
+        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
+        'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
+      ]
 
     self.costs = _params.movement_costs[move_skillset]
 
@@ -93,29 +93,34 @@ class Movement():
   '''
     Costs
   '''
-  def angle_cost(self, d: dict) -> float:
+  def angle_cost(self, d: dict, inv_cost: float) -> float:
     '''
       Todo -- more, beyond angle? 
       e.g., penalize heel in backswing
     '''
     cost = 0
 
-    # Angle
     left_angle = self.pos_to_rotation[d['limb_to_pos']['Left foot']]
     right_angle = self.pos_to_rotation[d['limb_to_pos']['Right foot']]
-    if left_angle == 'any' or right_angle == 'any':
-      pass
-    else:
-      left_angle = float(left_angle)
-      right_angle = float(right_angle)
-  
-      angle = -1 * left_angle + right_angle
-      if angle > 170:
-        cost += self.costs['Angle too open']
-      if angle < 0:
-        cost += self.costs['Angle duck']
-      if angle < -45:
-        cost += self.costs['Angle extreme duck']
+
+    # Not inverted
+    if inv_cost == 0:
+      if left_angle == 'any' or right_angle == 'any':
+        pass
+      else:
+        left_angle = float(left_angle)
+        right_angle = float(right_angle)
+    
+        angle = -1 * left_angle + right_angle
+        if angle > 170:
+          cost += self.costs['Angle too open']
+        if angle < 0:
+          cost += self.costs['Angle duck']
+        if angle < -45:
+          cost += self.costs['Angle extreme duck']
+    elif inv_cost > 0:
+      if left_angle != 'any' and right_angle != 'any':
+        cost += self.costs['Angle non-air inverted']
 
     if self.verbose: print(f'Angle cost: {cost}')
     return cost
@@ -397,8 +402,9 @@ class Movement():
     self.verbose = verbose
 
     cost = 0
-    cost += self.angle_cost(d2)
-    cost += self.foot_inversion_cost(d2)
+    inv_cost = self.foot_inversion_cost(d2)
+    cost += inv_cost
+    cost += self.angle_cost(d2, inv_cost)
     cost += self.hand_inversion_cost(d2)
     cost += self.foot_pos_cost(d2)
     cost += self.hold_change_cost(d1, d2)
