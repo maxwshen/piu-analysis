@@ -436,7 +436,7 @@ def get_graph_stats(nodes):
   ndf = pd.DataFrame(dd)
   print('Num. stance actions per node, statistics:')
   print(ndf['Num. stance actions'].describe())
-  import code; code.interact(local=dict(globals(), **locals()))
+  # import code; code.interact(local=dict(globals(), **locals()))
   return
 
 
@@ -515,7 +515,8 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'

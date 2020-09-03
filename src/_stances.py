@@ -269,7 +269,7 @@ class Stances():
     if self.style == 'singles':
       return ['14,36;--,--']
     if self.style == 'doubles':
-      return ['p1`a3,p2`a1;--,--']
+      return ['p1`36c,p2`14c;--,--']
 
 
   def combine_lines(self, lines: List[str]):

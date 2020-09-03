@@ -20,7 +20,7 @@ class Movement():
       _params.py
       positions_<singles/doubles>.csv
   '''
-  def __init__(self, style = 'singles', move_skillset = 'default'):
+  def __init__(self, style = 'singles', move_skillset = 'basic'):
     self.style = style
 
     if style == 'singles':
@@ -545,16 +545,16 @@ class Movement():
 '''
   Testing
 '''
-def test():
+def test_singles():
   mover = Movement(style = 'singles')
 
-  # test_basic(mover)
-  test_holds(mover)
+  # test_singles_basic(mover)
+  test_singles_holds(mover)
 
   return
 
 
-def test_basic(mover):
+def test_singles_basic(mover):
   # 00000 -> 01000
   sa1 = '14,36;--,--'
   sa2s = [
@@ -568,7 +568,7 @@ def test_basic(mover):
   return
 
 
-def test_holds(mover):
+def test_singles_holds(mover):
   # 40001 -> 40100
   sa1 = '14,36;4-,1-'
   sa2s = [
@@ -583,5 +583,22 @@ def test_holds(mover):
   return
 
 
+def test_doubles():
+  mover = Movement(style = 'doubles')
+  # 00000 -> 01000
+  sa1 = 'p1`36c,p2`14c;1-,--'
+  sa2s = [
+    'p1`36c,p1`a9c;--,-1',
+    'p1`36c,p2`4-p1`9c;--,-1',
+  ]
+  for sa2 in sa2s:
+    cost = mover.get_cost_from_text(sa1, sa2, verbose = True)
+    print(sa2, cost, '\n')
+  return
+
+  return
+
+
 if __name__ == '__main__':
-  test()
+  # test_singles()
+  test_doubles()

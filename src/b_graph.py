@@ -57,7 +57,8 @@ def form_graph(nm: str):
   beats_per_measure = 4
 
   # Testing
-  measures = measures[:7]
+  measures = measures[:3]
+  # measures = measures[:7]
   # measures = measures[:9]
   # measures = measures[:12]
   # measures = measures[:19]
@@ -460,7 +461,8 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   timing_judge = 'piu nj'
 
