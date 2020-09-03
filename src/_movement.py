@@ -266,13 +266,20 @@ class Movement():
     '''
       Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
 
-      Add cost only when a single foot is used twice, and only one foot is used both times, and no limb is in a hold (unless time is very short)
+      Add cost only when (AND)
+      - a single foot is used twice
+      - only one foot is used both times
+      - no limb is in a hold (unless time is very short)
+      # Maybe add
+      - the other limb is not in a hold
     '''
     cost = 0
     num_limbs_doubling = 0
     num_limbs_prev = 0
     num_limbs_now = 0
     num_limbs_hold = 0
+    limbs_curr_hold = set()
+    limbs_curr_press = set()
     for limb in d2['limb_to_pos']:
       if limb not in d1['limb_to_heel_action']:
         continue
@@ -287,21 +294,31 @@ class Movement():
 
       if prev_step and curr_step:
         num_limbs_doubling += 1
-      if prev_heel or prev_toe:
+      if prev_step:
         num_limbs_prev += 1
-      if curr_heel or curr_toe:
+      if curr_step:
         num_limbs_now += 1
+        limbs_curr_press.add(limb)
 
       curr_heel_hold = d2['limb_to_heel_action'][limb] in self.ok_hold
       curr_toe_hold = d2['limb_to_toe_action'][limb] in self.ok_hold
       if curr_heel_hold or curr_toe_hold:
         num_limbs_hold += 1
+        limbs_curr_hold.add(limb)
+
+    '''
+      Score double stepping
+    '''
+    hold_and_press_same_limb = bool(len(limbs_curr_press.intersection(limbs_curr_hold)))
 
     if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1:
-      if time <= _params.jacks_footswitch_t_thresh:
+      # if time <= _params.jacks_footswitch_t_thresh:
+      #   cost += self.costs['Double step']
+      if num_limbs_hold == 0:
         cost += self.costs['Double step']
-      elif num_limbs_hold == 0:
-        cost += self.costs['Double step']
+      elif num_limbs_hold > 0:
+        if hold_and_press_same_limb:
+          cost += self.costs['Double step']
 
     if time is not None:
       if 0.001 < time < self.costs['Time threshold']:
@@ -585,14 +602,24 @@ def test_singles_holds(mover):
 
 def test_doubles():
   mover = Movement(style = 'doubles')
-  # 00000 -> 01000
-  sa1 = 'p1`36c,p2`14c;1-,--'
+  
+  # #
+  # sa1 = 'p1`36c,p2`14c;1-,--'
+  # sa2s = [
+  #   'p1`36c,p1`a9c;--,-1',
+  #   'p1`36c,p2`4-p1`9c;--,-1',
+  # ]
+  # sa1 = 'p1`69c,p1`3-p2`4c;--,2-'
+  sa1 = 'p1`69c,p1`3-p2`1;--,2-'
   sa2s = [
-    'p1`36c,p1`a9c;--,-1',
-    'p1`36c,p2`4-p1`9c;--,-1',
+    'p1`69c,p1`3-p2`1;--,41',
   ]
+
   for sa2 in sa2s:
-    cost = mover.get_cost_from_text(sa1, sa2, verbose = True)
+    cost = mover.get_cost_from_text(sa1, sa2, time = 0.25, verbose = True)
+    print(sa2, cost, '\n')
+
+    cost = mover.get_cost_from_text(sa1, sa2, time = 0.20, verbose = True)
     print(sa2, cost, '\n')
   return
 
