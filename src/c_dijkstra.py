@@ -426,6 +426,19 @@ def parse_sa_to_limb_action(sa: str) -> dict:
   return d
 
 
+def get_graph_stats(nodes):
+  dd = defaultdict(list)
+  for node in nodes:
+    if node in ['init', 'final']:
+      continue
+    dd['Num. stance actions'].append(len(nodes[node]['Stance actions']))
+    dd['Node'].append(node)
+  ndf = pd.DataFrame(dd)
+  print('Num. stance actions per node, statistics:')
+  print(ndf['Num. stance actions'].describe())
+  import code; code.interact(local=dict(globals(), **locals()))
+  return
+
 
 '''
   Logging
@@ -512,6 +525,7 @@ def main():
   print(nm, move_skillset)
 
   nodes, edges_out, edges_in = load_data(nm)
+  get_graph_stats(nodes)
   dijkstra(nm, nodes, edges_out, edges_in, move_skillset = move_skillset)
   output_log('Success')
   return
