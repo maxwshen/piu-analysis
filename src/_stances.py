@@ -3,7 +3,7 @@ import _data
 import _config
 from collections import defaultdict, Counter
 import numpy as np, pandas as pd
-import os, copy
+import os, copy, itertools
 from typing import List, Dict, Set, Tuple
 
 singles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_singles.csv', index_col = 0)
@@ -12,7 +12,6 @@ doubles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_doubles.csv', index_
 '''
   Foot positions
 '''
-
 class Stances():
   '''
     Intended usage: From an input set of constraints (panels to hit), return all stances that satisfy constraints as a set of nodes
@@ -102,7 +101,7 @@ class Stances():
       positions = set().union(*[self.limb_panel_to_footpos[limb][panel] for panel in all_panels])
       ps.append(list(positions))
 
-    sts = self.recursive_get_stances(ps)
+    sts = itertools.product(*ps)
 
     # Filter stances that do not include all active panels
     filt_sts = []
@@ -122,21 +121,6 @@ class Stances():
     delim = ','
     stance_strs = [delim.join(s) for s in filt_sts]
     return stance_strs
-
-
-  def recursive_get_stances(self, ps: List[List[str]]) -> List[List[str]]:
-    '''
-      List of <num_limbs> lists of positions
-      Returns List of position combinations for each limb
-    '''
-    if len(ps) == 1:
-      return [[s] for s in ps[0]]
-    positions = self.recursive_get_stances(ps[:-1])
-    np = []
-    for p in positions:
-      for s in ps[-1]:
-        np.append(p + [s])
-    return np
 
 
   '''
@@ -177,7 +161,7 @@ class Stances():
     ps = list(panel_to_part.keys())
     vs = list(panel_to_part.values())
     # print('vs', vs)
-    part_combos = self.recursive_part_combos(vs)
+    part_combos = itertools.product(*vs)
 
     actions = []
     for part_combo in part_combos:
@@ -195,18 +179,6 @@ class Stances():
 
     sas = [f'{stance};{action}' for action in actions]
     return sas
-
-
-  def recursive_part_combos(self, parts: List[List]) -> List[List]:
-    if len(parts) == 1:
-      # print('zero', )
-      return [[s] for s in parts[0]]
-    combos = self.recursive_part_combos(parts[:-1])
-    new_combos = []
-    for combo in combos:
-      for item in parts[-1]:
-        new_combos.append(combo + [item])
-    return new_combos
 
 
   '''
@@ -304,11 +276,11 @@ def test():
   pattern = '01110'
 
   print(f'Running {pattern} ...')
-  stance_actions = stance.get_stanceactions(pattern, verbose = True)
+  stance_actions = stance.get_stanceactions(pattern, verbose=True)
   import code; code.interact(local=dict(globals(), **locals()))
 
   test_limb_order_preservation(stance)
-  test_prev_panel_reduction(stance, verbose = True)
+  test_prev_panel_reduction(stance, verbose=True)
   test_continue_hold(stance)
   return
 
@@ -332,9 +304,9 @@ def test_prev_panel_reduction(stance, verbose = False):
   print(f'Running {pattern} ...')
   print(f'... checking that specifying prev panels reduces possible stances')
   sa1 = stance.get_stanceactions(pattern)
-  sa2 = stance.get_stanceactions(pattern, prev_panels = ['p1,1'])
-  sa3 = stance.get_stanceactions(pattern, prev_panels = ['p1,1', 'p1,9'])
-  sa4 = stance.get_stanceactions(pattern, prev_panels = ['p1,1', 'p1,3', 'p1,7', 'p1,9'])
+  sa2 = stance.get_stanceactions(pattern, prev_panels=['p1,1'])
+  sa3 = stance.get_stanceactions(pattern, prev_panels=['p1,1', 'p1,9'])
+  sa4 = stance.get_stanceactions(pattern, prev_panels=['p1,1', 'p1,3', 'p1,7', 'p1,9'])
 
   assert len(sa2) < len(sa1), 'Failed'
   assert len(sa2) < len(sa3), 'Failed'
@@ -356,14 +328,11 @@ def test_limb_order_preservation(stance):
   print(f'Running {pattern} ...')
   print(f'... checking that limb order is correct')
   stance_actions = stance.get_stanceactions(pattern, verbose = False)
+  # TODO - Handle parsing elsewhere?
   found_righthand_pos = set([s.split(';')[0].split(',')[-1] for s in stance_actions])
   df = stance.df
   expected_rh_pos = set(df[df['Right hand'] == True]['Name'])
-  for idx, row in stance.df.iterrows():
-    if row['Right hand']:
-      assert row['Name'] in found_righthand_pos, f'{row["Name"]} not found'
-    else:
-      assert row['Name'] not in found_righthand_pos
+  assert found_righthand_pos.issubset(expected_rh_pos), 'Proposed an illegal right-hand position'
   print('Passed')
   return
 

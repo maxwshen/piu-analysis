@@ -21,7 +21,7 @@ log_fn = ''
 ##
 # Functions
 ##
-def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
+def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -42,7 +42,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
     nodes['init']['Timing judge']
   '''
   steptype = nodes['init']['Steptype']
-  mover = _movement.Movement(style = steptype, move_skillset = move_skillset)
+  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
 
   '''
     graph_nodes[node_nm][sa_idx] = (best_score, best_parent_node_nm, best_parent_sa_idx)
@@ -214,7 +214,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
 
             else:
               # Get base cost
-              edge_cost = mover.get_cost_from_ds(d1, d2, time = timedelta)
+              edge_cost = mover.get_cost_from_ds(d1, d2, time=timedelta)
 
               '''
                 Modify cost for memoization
@@ -332,7 +332,7 @@ def backtrack_annotate(graph_nodes, nodes) -> pd.DataFrame:
     sa_idx = parent_sa_idx
 
   df = pd.DataFrame(dd)
-  df = df.iloc[::-1].reset_index(drop = True)
+  df = df.iloc[::-1].reset_index(drop=True)
   df['Line'] = [f'`{s}' for s in df['Line']]
   df['Line with active holds'] = [f'`{s}' for s in df['Line with active holds']]
 
@@ -377,7 +377,7 @@ def load_data(sc_nm: str):
 def init_graph_nodes(nodes: dict) -> dict:
   print(f'Initializing graph nodes ...')
   graph_nodes = {'init': {0: (0, None, None)}}
-  timer = util.Timer(total = len(nodes))
+  timer = util.Timer(total=len(nodes))
   for node in nodes:
     if node == 'init':
       continue
@@ -462,23 +462,23 @@ def gen_qsubs():
 
   num_scripts = 0
   for idx in range(0, 10):
-    command = 'python %s.py %s' % (NAME, idx)
+    command = f'python {NAME}.py {idx}'
     script_id = NAME.split('_')[0]
 
     # Write shell scripts
-    sh_fn = qsubs_dir + 'q_%s_%s.sh' % (script_id, idx)
+    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
     with open(sh_fn, 'w') as f:
-      f.write('#!/bin/bash\n%s\n' % (command))
+      f.write(f'#!/bin/bash\n{command}\n')
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append('qsub -j y -V -wd %s %s' % (_config.SRC_DIR, sh_fn))
+    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
 
   # Save commands
   with open(qsubs_dir + '_commands.txt', 'w') as f:
     f.write('\n'.join(qsub_commands))
 
-  print('Wrote %s shell scripts to %s' % (num_scripts, qsubs_dir))
+  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
   return
 
 
@@ -527,7 +527,7 @@ def main():
 
   nodes, edges_out, edges_in = load_data(nm)
   get_graph_stats(nodes)
-  dijkstra(nm, nodes, edges_out, edges_in, move_skillset = move_skillset)
+  dijkstra(nm, nodes, edges_out, edges_in, move_skillset=move_skillset)
   output_log('Success')
   return
 

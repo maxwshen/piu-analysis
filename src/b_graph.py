@@ -18,12 +18,12 @@ util.ensure_dir_exists(out_dir)
 all_notes = pickle.load(open(inp_dir_a + f'notes.pkl', 'rb'))
 all_bpms = pickle.load(open(inp_dir_a + f'bpms.pkl', 'rb'))
 
-sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col = 0)
+sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col=0)
 
 # Stances
 stance_store = {
-  'singles': _stances.Stances(style = 'singles'),
-  'doubles': _stances.Stances(style = 'doubles'),
+  'singles': _stances.Stances(style='singles'),
+  'doubles': _stances.Stances(style='doubles'),
 }
 
 log_fn = ''
@@ -95,7 +95,7 @@ def form_graph(nm: str):
   prev_node_nm = 'init'
   edges_in['init'] = []
 
-  timer = util.Timer(total = len(measures))
+  timer = util.Timer(total=len(measures))
   for measure_num, measure in enumerate(measures):
     lines = measure.split('\n')
     num_subbeats = len(lines)
@@ -133,7 +133,7 @@ def form_graph(nm: str):
         active_panel_to_action = stance.text_to_panel_to_action(line)
         # prev_panels = list(active_holds) + prev_presses
         prev_panels = prev_presses
-        sas = stance.get_stanceactions(aug_line, prev_panels = prev_panels)
+        sas = stance.get_stanceactions(aug_line, prev_panels=prev_panels)
 
         if len(sas) == 0:
           output_log('No stance-actions found')
@@ -293,7 +293,7 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
       aug_lines = [node['Line with active holds']] + [nodes[nm]['Line with active holds'] for nm in hits]
       joint_aug_line = stance.combine_lines(aug_lines)
 
-      sas = stance.get_stanceactions(joint_aug_line, prev_panels = last_node['Previous panels'])
+      sas = stance.get_stanceactions(joint_aug_line, prev_panels=last_node['Previous panels'])
 
       new_node_nm = f'{nm} multi v{jdx + 1}'
       nodes[new_node_nm] = {
@@ -400,23 +400,23 @@ def gen_qsubs():
 
   num_scripts = 0
   for idx in range(0, 10):
-    command = 'python %s.py %s' % (NAME, idx)
+    command = f'python {NAME}.py {idx}'
     script_id = NAME.split('_')[0]
 
     # Write shell scripts
-    sh_fn = qsubs_dir + 'q_%s_%s.sh' % (script_id, idx)
+    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
     with open(sh_fn, 'w') as f:
-      f.write('#!/bin/bash\n%s\n' % (command))
+      f.write(f'#!/bin/bash\n{command}\n')
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append('qsub -j y -V -wd %s %s' % (_config.SRC_DIR, sh_fn))
+    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
 
   # Save commands
   with open(qsubs_dir + '_commands.txt', 'w') as f:
     f.write('\n'.join(qsub_commands))
 
-  print('Wrote %s shell scripts to %s' % (num_scripts, qsubs_dir))
+  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
   return
 
 

@@ -10,6 +10,7 @@ prev_panel_buffer_len = {
   'doubles': 4,
 }
 
+# Units: Seconds; [before note, after note]
 perfect_windows = {
   'piu nj': [0.0416, 0.0832],
   'piu hj': [0.025, 0.0666],

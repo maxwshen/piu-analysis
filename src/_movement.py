@@ -463,7 +463,7 @@ class Movement():
 
     d1 = self.parse_stanceaction(sa1)
     d2 = self.parse_stanceaction(sa2)
-    return self.get_cost_from_ds(d1, d2, time = time, verbose = verbose)
+    return self.get_cost_from_ds(d1, d2, time = time, verbose=verbose)
 
 
   '''
@@ -563,7 +563,7 @@ class Movement():
   Testing
 '''
 def test_singles():
-  mover = Movement(style = 'singles')
+  mover = Movement(style='singles')
 
   # test_singles_basic(mover)
   test_singles_holds(mover)
@@ -580,7 +580,7 @@ def test_singles_basic(mover):
     'a9,57;--,-1',
   ]
   for sa2 in sa2s:
-    cost = mover.get_cost(sa1, sa2, verbose = True)
+    cost = mover.get_cost(sa1, sa2, verbose=True)
     print(sa2, cost, '\n')
   return
 
@@ -595,13 +595,13 @@ def test_singles_holds(mover):
     '54,a1;1-,-4',
   ]
   for sa2 in sa2s:
-    cost = mover.get_cost(sa1, sa2, verbose = True)
+    cost = mover.get_cost(sa1, sa2, verbose=True)
     print(sa2, cost, '\n')
   return
 
 
 def test_doubles():
-  mover = Movement(style = 'doubles')
+  mover = Movement(style='doubles')
   
   # #
   # sa1 = 'p1`36c,p2`14c;1-,--'
@@ -616,10 +616,10 @@ def test_doubles():
   ]
 
   for sa2 in sa2s:
-    cost = mover.get_cost_from_text(sa1, sa2, time = 0.25, verbose = True)
+    cost = mover.get_cost_from_text(sa1, sa2, time=0.25, verbose=True)
     print(sa2, cost, '\n')
 
-    cost = mover.get_cost_from_text(sa1, sa2, time = 0.20, verbose = True)
+    cost = mover.get_cost_from_text(sa1, sa2, time=0.20, verbose=True)
     print(sa2, cost, '\n')
   return
 

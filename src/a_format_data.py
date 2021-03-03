@@ -27,13 +27,13 @@ def get_all_stepcharts_df() -> None:
   mdf = pd.DataFrame()
   all_notes = []
   all_bpms = []
-  timer = util.Timer(total = len(df))
+  timer = util.Timer(total=len(df))
   for idx, row in df.iterrows():
     ssc_fn = row['Files']
-    sc = _data.SSCFile(ssc_fn, pack = row['Pack'])
+    sc = _data.SSCFile(ssc_fn, pack=row['Pack'])
 
     sc_df = sc.get_stepchart_info()
-    mdf = mdf.append(sc_df, ignore_index = True)
+    mdf = mdf.append(sc_df, ignore_index=True)
 
     # Same order as mdf
     sc_notes = sc.get_stepchart_notes()
@@ -52,31 +52,31 @@ def get_all_stepcharts_df() -> None:
   ok_steptypes = ['pump-single', 'pump-double', 'pump-halfdouble']
   print(f'Filtering down to {ok_steptypes}...')
   crit = (mdf['STEPSTYPE'].isin(ok_steptypes))
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Filter UCS out
   print(f'Filtering down to non-UCS...')
   crit = (mdf['Is UCS'] == False)
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Filter to standard packs -- some repeats in basic mode
   print(f'Filtering down to standard packs...')
   crit = (mdf['Pack'].isin(_data.standard_packs))
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Filter quest
   print(f'Filtering quest stepcharts...')
   crit = (mdf['Is quest'] == False)
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Filter special
   print(f'Filtering special stepcharts...')
   crit = (mdf['SONGTYPE'] != 'SPECIAL')
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Filter time signatures other than 4/4
@@ -85,12 +85,12 @@ def get_all_stepcharts_df() -> None:
   bad_sigs += [s for s in mdf['TIMESIGNATURES'] if s[-3:] != '4=4']
   bad_sigs = set(bad_sigs)
   crit = (~mdf['TIMESIGNATURES'].isin(bad_sigs))
-  mdf = mdf[crit].reset_index(drop = True)
+  mdf = mdf[crit].reset_index(drop=True)
   print(f'... retained {len(mdf)} stepcharts ...')
 
   # Look at non-unique names
   nmcts = Counter(mdf['Name'])
-  dup_nms = sorted(nmcts, key = nmcts.get, reverse = True)
+  dup_nms = sorted(nmcts, key = nmcts.get, reverse=True)
   dup_nms = [s for s in dup_nms if nmcts[s] > 1]
   # res = [(s, nmcts[s]) for s in dup_nms]
 
@@ -157,23 +157,23 @@ def gen_qsubs():
 
   num_scripts = 0
   for idx in range(0, 10):
-    command = 'python %s.py %s' % (NAME, idx)
+    command = f'python {NAME}.py {idx}'
     script_id = NAME.split('_')[0]
 
     # Write shell scripts
-    sh_fn = qsubs_dir + 'q_%s_%s.sh' % (script_id, idx)
+    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
     with open(sh_fn, 'w') as f:
-      f.write('#!/bin/bash\n%s\n' % (command))
+      f.write(f'#!/bin/bash\n{command}\n')
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append('qsub -j y -V -wd %s %s' % (_config.SRC_DIR, sh_fn))
+    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
 
   # Save commands
   with open(qsubs_dir + '_commands.txt', 'w') as f:
     f.write('\n'.join(qsub_commands))
 
-  print('Wrote %s shell scripts to %s' % (num_scripts, qsubs_dir))
+  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
   return
 
 ##
