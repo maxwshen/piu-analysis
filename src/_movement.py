@@ -6,8 +6,7 @@ import numpy as np, pandas as pd
 import os, copy
 from typing import List, Dict, Set, Tuple
 
-singles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_singles.csv', index_col = 0)
-doubles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_doubles.csv', index_col = 0)
+import _positions
 
 '''
   Movement
@@ -24,12 +23,12 @@ class Movement():
     self.style = style
 
     if style == 'singles':
-      self.df = singles_pos_df
+      self.df = _positions.singles_pos_df
       panel_cols = [
         'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9'
       ]
     elif style == 'doubles':
-      self.df = doubles_pos_df
+      self.df = _positions.doubles_pos_df
       panel_cols = [
         'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
         'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
@@ -72,6 +71,7 @@ class Movement():
   '''
   def parse_stanceaction(self, sa: str) -> dict:
     '''
+      TODO - Consider moving LRU cache from c_dijkstra to here?
     '''
     [stance, action] = sa.split(';')
     limb_to_pos = {limb: pos for limb, pos in zip(self.all_limbs, stance.split(','))}

@@ -1,7 +1,7 @@
 # 
 from __future__ import division
 import _config, _data, _stances, util, pickle, _params
-import sys, os, fnmatch, datetime, subprocess
+import sys, os, re, fnmatch, datetime, subprocess
 import numpy as np
 from collections import defaultdict, Counter
 import pandas as pd
@@ -360,7 +360,6 @@ def parse_line(line: str) -> str:
   if 'F' not in line and '{' not in line:
     return line
 
-  import re
   ws = re.split('{|}', line)
   nl = ''
   for w in ws:
@@ -383,7 +382,7 @@ def parse_line(line: str) -> str:
 '''
 def output_log(message):
   print(message)
-  with open(log_fn, 'w') as f:
+  with open(log_fn, 'a') as f:
     f.write(message)
   return
 
@@ -428,7 +427,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -461,7 +460,7 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   timing_judge = 'piu nj'
@@ -481,7 +480,6 @@ def main():
     pickle.dump((a_nodes, a_edges_out, a_edges_in), f)
 
   output_log('Success')
-
   return
 
 

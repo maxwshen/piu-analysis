@@ -19,8 +19,8 @@ def get_all_stepcharts_df() -> None:
   '''
     Loads and filters stepcharts from .ssc files
     Outputs
-    - CSV describing each stepchart
-    - Dict mapping stepchart name to notes string
+    - all_stepcharts.csv: CSV describing each stepchart
+    - notes.pkl: Dict mapping stepchart name to notes string
   '''
   df = _data.datasets['all']
   print(f'Importing {len(df)} .ssc files ...')
@@ -46,7 +46,6 @@ def get_all_stepcharts_df() -> None:
 
   mdf['Stepchart index'] = mdf.index
   print(f'Found {len(mdf)} total stepcharts ...')
-
 
   # Filter down to singles and doubles only
   ok_steptypes = ['pump-single', 'pump-double', 'pump-halfdouble']
@@ -103,10 +102,9 @@ def get_all_stepcharts_df() -> None:
   dup_nms = set(dup_nms)
   nms = list(mdf['Name'])
   for idx, nm in enumerate(nms):
-    if nm not in dup_nms:
-      continue
-    seen[nm] += 1
-    nms[idx] = f'{nm} v{seen[nm]}'
+    if nm in dup_nms:
+      seen[nm] += 1
+      nms[idx] = f'{nm} v{seen[nm]}'
   mdf['Name'] = nms
   mdf = mdf.rename(columns = {'Name': 'Name (unique)'})
 
@@ -190,10 +188,7 @@ def main():
 
   # # import_all_sscs()
 
-  # format_data(
-  #   ssc_fn = _config.SRC_DIR + 'timeforthemoonnight-s18.ssc'
-  # )
-
+  # format_data(ssc_fn=_config.SRC_DIR + 'timeforthemoonnight-s18.ssc')
   return
 
 

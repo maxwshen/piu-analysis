@@ -108,8 +108,8 @@ def ensure_dir_exists(directory):
 
 def exists_empty_fn(fn):
   ensure_dir_exists(os.path.dirname(fn))
-  f = open(fn, 'w')
-  f.close()
+  with open(fn, 'w') as f:
+    pass
   return
 
 def get_fn(string):

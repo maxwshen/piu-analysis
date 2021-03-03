@@ -6,8 +6,7 @@ import numpy as np, pandas as pd
 import os, copy, itertools
 from typing import List, Dict, Set, Tuple
 
-singles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_singles.csv', index_col = 0)
-doubles_pos_df = pd.read_csv(_config.DATA_DIR + f'positions_doubles.csv', index_col = 0)
+import _positions
 
 '''
   Foot positions
@@ -22,7 +21,7 @@ class Stances():
     self.style = style
 
     if style == 'singles':
-      self.df = singles_pos_df
+      self.df = _positions.singles_pos_df
       self.idx_to_panel = {
         0: 'p1,1',
         1: 'p1,7',
@@ -31,7 +30,7 @@ class Stances():
         4: 'p1,3',
       }
     elif style == 'doubles':
-      self.df = doubles_pos_df
+      self.df = _positions.doubles_pos_df
       self.idx_to_panel = {
         0: 'p1,1',
         1: 'p1,7',
@@ -50,13 +49,12 @@ class Stances():
 
     self.arrow_panels = list(self.idx_to_panel.values())
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
-
     self.limb_panel_to_footpos = self.__init_panel_to_footpos()
-
     self.panel_to_idx = {self.idx_to_panel[idx]: idx for idx in self.idx_to_panel}
-
-    self.nm_to_heel_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - heel'])}
-    self.nm_to_toe_panel = {nm: p for nm, p in zip(self.df['Name'], self.df['Panel - toe'])}
+    self.nm_to_heel_panel = {nm: p for nm, p in zip(self.df['Name'],
+                                                    self.df['Panel - heel'])}
+    self.nm_to_toe_panel = {nm: p for nm, p in zip(self.df['Name'],
+                                                   self.df['Panel - toe'])}
     pass
 
 
@@ -90,7 +88,7 @@ class Stances():
     all_panels = list(set(active_panels) | set(prev_panels))
 
     '''
-      Todo -- smarter detection of whether we need hands or not. 
+      TODO -- smarter detection of whether we need hands or not. 
     '''
     limbs = ['Left foot', 'Right foot']
     if use_hands:
@@ -128,8 +126,10 @@ class Stances():
   '''
   def annotate_actions(self, panel_constraints: str, stances: List[str]) -> List[str]:
     '''
-      Format: 
-      Stance string ; Action string
+      Annotate actions on top of stances that are consistent with panel constraints. 
+      Returns list of stance-actions that hit all panels in panel constraints.
+
+      A stance-action is a string f'{stance_str};{action_str}'.
     '''
     panel_to_action = self.text_to_panel_to_action(panel_constraints)
     stance_actions = []
@@ -152,6 +152,9 @@ class Stances():
 
 
   def get_sas(self, stance, panel_to_action, panel_to_part) -> List[str]:
+    '''
+      Get stance-actions
+    '''
     num_limbs = len(stance.split(','))
     action_template = []
     for idx in range(num_limbs):
@@ -167,12 +170,11 @@ class Stances():
     for part_combo in part_combos:
       action = copy.deepcopy(action_template)
       for panel, part in zip(ps, part_combo):
-        if panel not in panel_to_action:
-          continue
-        constraint = panel_to_action[panel]
-        [idx, extremity] = part
-        jdx = extremity_to_jdx[extremity]
-        action[idx][jdx] = constraint
+        if panel in panel_to_action:
+          constraint = panel_to_action[panel]
+          [idx, extremity] = part
+          jdx = extremity_to_jdx[extremity]
+          action[idx][jdx] = constraint
       action = [''.join(s) for s in action]
       action_str = ','.join(action)
       actions.append(action_str)
@@ -223,9 +225,10 @@ class Stances():
   '''
   def text_to_panels(self, text: str) -> List[str]:
     '''
-      '10002' -> ['p1,1', 'p1,3']
+      Returns a list of panel names that are pressed in the input text string.
+      e.g., '10002' -> ['p1,1', 'p1,3']
     '''
-    return[self.idx_to_panel[idx] for idx, num in enumerate(text) if num != '0']
+    return [self.idx_to_panel[idx] for idx, num in enumerate(text) if num != '0']
 
 
   def text_to_panel_to_action(self, text: str) -> dict:
@@ -238,37 +241,36 @@ class Stances():
 
 
   def initial_stanceaction(self):
+    '''
+      Defines the initial stance-action at the beginning of a chart.
+      TODO - Consider moving to _params.py ?
+    '''
     if self.style == 'singles':
       return ['14,36;--,--']
     if self.style == 'doubles':
       return ['p1`36c,p2`14c;--,--']
 
 
-  def combine_lines(self, lines: List[str]):
+  def combine_lines(self, lines: List[str]) -> str:
     '''
-      '10000' and '00100' -> '10100'
+      Combines a list of panel constraints, prioritizing 0 < 3 < 4 < 1 < 2.
+      Used for finding a single set of panel constraints to hit to satisfy
+      multiple notes within the timing window ("multihits").
+      e.g., '10000' and '00100' -> '10100'
     '''
-    if len(lines) == 1:
-      return lines[0]
-
-    combined_line = ''
-    n = len(lines[0])
-    priority = ['2', '1', '4', '3', '0']
-
-    for idx in range(n):
-      cs = set([line[idx] for line in lines])
-      for char in priority:
-        if char in cs:
-          combined_line += char
-          break
-    return combined_line
+    order_lowtohigh = '03412'
+    priority = lambda x: order_lowtohigh.index(x)
+    n_pads = len(lines[0])
+    max_actions = [max([l[i] for l in lines], key=priority)
+                   for i in range(n_pads)]
+    return ''.join(max_actions)
 
 
 '''
   Testing
 '''
 def test():
-  stance = Stances(style = 'singles')
+  stance = Stances(style='singles')
   print(f'Running tests ...')
 
   # pattern = '10000'
@@ -282,6 +284,7 @@ def test():
   test_limb_order_preservation(stance)
   test_prev_panel_reduction(stance, verbose=True)
   test_continue_hold(stance)
+  test_combine_lines(stance)
   return
 
 
@@ -336,6 +339,13 @@ def test_limb_order_preservation(stance):
   print('Passed')
   return
 
+
+def test_combine_lines(stance):
+  print(f'... checking combine_lines')
+  assert stance.combine_lines(['10000', '00101']) == '10101'
+  assert stance.combine_lines(['10203', '00101']) == '10201'
+  print('Passed')
+  return
 
 if __name__ == '__main__':
   test()

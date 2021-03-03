@@ -1,14 +1,13 @@
 # 
 from __future__ import division
 import _config, _data, _stances, util, pickle, _params
-import sys, os, fnmatch, datetime, subprocess
+import sys, os, fnmatch, datetime, subprocess, functools
 import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
-from functools import lru_cache
 
-import _movement, _params
+import _movement, _params, _memoizer
 
 # Default params
 inp_dir = _config.OUT_PLACE + f'b_graph/'
@@ -21,7 +20,7 @@ log_fn = ''
 ##
 # Functions
 ##
-def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
+def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   '''
     nodes[node_nm] = {
       'Time': float,
@@ -45,18 +44,14 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
   mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
 
   '''
-    graph_nodes[node_nm][sa_idx] = (best_score, best_parent_node_nm, best_parent_sa_idx)
+    graph_nodes[node_nm][sa_idx] = (best_score,
+                                    best_parent_node_nm,
+                                    best_parent_sa_idx)
   '''
   graph_nodes = init_graph_nodes(nodes)
-  cost_memoizer = dict()
-  jump_memoizer = dict()
-  dist_memoizer = dict()
-  psa_memoizer = dict()
-  move_memoizer = dict()
-  beginner_memoizer = dict()
   stats_d = defaultdict(lambda: 0)
 
-  @lru_cache(maxsize = None)
+  @functools.lru_cache(maxsize=None)
   def get_parsed_stanceaction(sa):
     return mover.parse_stanceaction(sa)
 
@@ -110,14 +105,8 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
             sa_parent = nodes[parent]['Stance actions'][parent_sa_idx]
             d0 = get_parsed_stanceaction(sa_parent)
 
-            mv_key = (sa_parent, stance1)
-            if mv_key in move_memoizer:
-              mv_cost = move_memoizer[mv_key]
-              stats_d['Move memoizer, num hits'] += 1
-            else:
-              mv_cost = mover.move_cost(d0, d1)
-              move_memoizer[mv_key] = mv_cost
-
+            mv_cost = _memoizer.move_cost(mover,
+                sa_parent, stance1, d0, d1)
             if mv_cost <= 0:
               consider_fast_jacks = True
 
@@ -144,15 +133,15 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
           '''
             Get unnecessary jump flag by memoization
             Use strings as keys; dicts are not hashable
+
+            TODO - Clean up this code; shorten?
+            At beginning of for loops, d1 = get_parsed_stanceaction(stance1)
+            -- Note: stance1 does not have action; makes cache more dense
+            Make custom cache class?
           '''
           if nm != 'init':
-            jump_key = (stance1, stance2, child_line)
-            if jump_key in jump_memoizer:
-              jump_flag = jump_memoizer[jump_key]
-              stats_d['Jump memoizer, num hits'] += 1
-            else:
-              jump_flag = mover.unnecessary_jump(d1, d2, child_line)
-              jump_memoizer[jump_key] = jump_flag
+            jump_flag = _memoizer.unnecessary_jump(mover,
+                stance1, stance2, d1, d2, child_line)
             if jump_flag:
               stats_d['Num. edges skipped by unnecessary jump'] += 1
               continue
@@ -161,28 +150,10 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
             Filter by skillset
           '''
           if move_skillset == 'beginner':
-            bg_key = stance2
-            if bg_key in beginner_memoizer:
-              beginner_flag = beginner_memoizer[bg_key]
-              stats_d['Beginner memoizer, num hits'] += 1
-            else:
-              beginner_flag = mover.beginner_ok(d2)
-              beginner_memoizer[bg_key] = beginner_flag
+            beginner_flag = _memoizer.beginner_flag(mover, stance2, d2)
             if not beginner_flag:
               stats_d['Num. edges skipped by beginner filtering'] += 1
               continue
-
-          '''
-            Record distance for filtering later by sorting
-          '''
-          # dist_key = (stance1, stance2)
-          # if dist_key in dist_memoizer:
-          #   dist = dist_memoizer[dist_key]
-          #   stats_d['Dist memoizer, num hits'] += 1
-          # else:
-          #   dist = mover.move_cost(d1, d2, time = 1)
-          #   dist_memoizer[dist_key] = dist
-          # subset_dists.append(dist)
 
           subset_sa_idxs.append(sa_jdx)
           subset_sas.append(sa2)
@@ -207,42 +178,17 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
 
           stats_d['Num. edges considered'] += 1
           if child != 'final':
-            # Get cost by memoization
-            if (sa1, sa2, timedelta) in cost_memoizer:
-              edge_cost = cost_memoizer[(sa1, sa2, timedelta)]
-              stats_d['Cost memoizer, num hits'] += 1
-
-            else:
-              # Get base cost
-              edge_cost = mover.get_cost_from_ds(d1, d2, time=timedelta)
-
-              '''
-                Modify cost for memoization
-              '''
-              # Multihit modifier if brackets
-              multi_mod = mover.multihit_modifier(d1, d2, child)
-              edge_cost += multi_mod
-
-              # Apply time cost here to get memoization speedup and time sensitivity
-              if 0.001 < timedelta < mover.costs['Time threshold']:
-                time_factor = mover.costs['Time normalizer'] / timedelta
-                edge_cost *= time_factor
-
-              cost_memoizer[(sa1, sa2, timedelta)] = edge_cost
+            # Get cost
+            edge_cost = _memoizer.get_edge_cost(mover,
+                sa1, sa2, d1, d2, timedelta, child)
 
             '''
               Modify cost w/o memoization
             '''
             # Fast jacks
             if consider_fast_jacks:
-              mv_key = (stance1, stance2)
-              if mv_key in move_memoizer:
-                mv_cost = move_memoizer[mv_key]
-                stats_d['Move memoizer, num hits'] += 1
-              else:
-                mv_cost = mover.move_cost(d1, d2)
-                move_memoizer[mv_key] = mv_cost
-
+              mv_cost = _memoizer.move_cost(mover,
+                  stance1, stance2, d1, d2)
               if mv_cost <= 0:
                 edge_cost += mover.fast_jacks_cost(d0, d1, d2, prev_time, timedelta)
 
@@ -265,16 +211,8 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset='default'):
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump(graph_nodes, f)
 
-  cache_funcs = {
-    'psa cache': get_parsed_stanceaction,
-  }
-  for cache_func in cache_funcs:
-    info = cache_funcs[cache_func].cache_info()
-    stats_d[f'{cache_func}, num hits'] = info[0]
-    stats_d[f'{cache_func}, size'] = info[-1]
-  stats_d['Cost memoizer, size'] = len(cost_memoizer)
-  stats_d['Jump memoizer, size'] = len(jump_memoizer)
-
+  stats_d = _memoizer.add_cache_stats('psa', get_parsed_stanceaction, stats_d)
+  stats_d = _memoizer.add_custom_memoizer_stats(stats_d)
   stats_df = pd.DataFrame(stats_d, index = ['Count']).T
   print(stats_df)
 
@@ -490,7 +428,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -515,7 +453,7 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   # move_skillset = 'beginner'
@@ -523,11 +461,13 @@ def main():
 
   global log_fn
   log_fn = out_dir + f'{nm} {move_skillset}.log'
+  util.exists_empty_fn(log_fn)
   print(nm, move_skillset)
 
   nodes, edges_out, edges_in = load_data(nm)
   get_graph_stats(nodes)
   dijkstra(nm, nodes, edges_out, edges_in, move_skillset=move_skillset)
+
   output_log('Success')
   return
 
