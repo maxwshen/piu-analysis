@@ -37,8 +37,8 @@ def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta, child):
     edge_cost += multi_mod
 
     # Apply time cost here to get memoization speedup and time sensitivity
-    if 0.001 < timedelta < mover.costs['Time threshold']:
-      time_factor = mover.costs['Time normalizer'] / timedelta
+    if 0.001 < timedelta < mover.params['Time threshold']:
+      time_factor = mover.params['Time normalizer'] / timedelta
       edge_cost *= time_factor
   return edge_cost
 

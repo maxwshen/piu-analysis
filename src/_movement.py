@@ -34,7 +34,10 @@ class Movement():
         'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
       ]
 
-    self.costs = _params.movement_costs[move_skillset]
+    self.costs = _params.movement_costs[move_skillset]['costs']
+    self.params = _params.movement_costs[move_skillset]['parameters']
+
+    self.min_cost = min(self.costs.values())
 
     self.pos_to_cost = {}
     self.pos_to_center = {}
@@ -137,10 +140,10 @@ class Movement():
 
     diff = left_coord[0] - right_coord[0]
 
-    if 0 < diff <= self.costs['Inversion distance threshold']:
+    if 0 < diff <= self.params['Inversion distance threshold']:
       cost += self.costs['Inverted feet small']
 
-    if diff > self.costs['Inversion distance threshold']:
+    if diff > self.params['Inversion distance threshold']:
       cost += self.costs['Inverted feet big']
 
     if self.verbose: print(f'Foot inversion cost: {cost}')
@@ -247,7 +250,7 @@ class Movement():
       dist_toe = np.linalg.norm(prev_toe - new_toe, ord = 2)
       dist = np.mean(dist_heel + dist_toe)
 
-      cost += dist / self.costs['Distance normalizer']
+      cost += dist / self.params['Distance normalizer']
 
       if d2['limb_to_pos'][limb] in self.bracket_pos:
         has_bracket = True
@@ -321,16 +324,16 @@ class Movement():
           cost += self.costs['Double step']
 
     if time is not None:
-      if 0.001 < time < self.costs['Time threshold']:
+      if 0.001 < time < self.params['Time threshold']:
         '''
           Ex. normalizer = 300 ms, then
           400 ms since = 3/4 cost
           100 ms since = 3 cost
         '''
-        # time_factor = self.costs['Time normalizer'] / time
+        # time_factor = self.params['Time normalizer'] / time
         time_factor = 1
         cost *= time_factor
-      elif time >= self.costs['Time threshold']:
+      elif time >= self.params['Time threshold']:
         cost = 0
 
     if self.verbose: print(f'Double step cost: {cost}')
@@ -453,6 +456,8 @@ class Movement():
       # if time <= _params.jacks_footswitch_t_thresh:
       #   cost += ds_cost
 
+    # Guarantee that minimum cost = 0
+    cost -= self.min_cost
     return cost
 
 

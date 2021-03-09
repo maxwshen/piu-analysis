@@ -24,86 +24,97 @@ jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 
 '''
   Movement costs
+  TODO - Move to CSV?
 '''
 movement_costs = {
   'beginner': {
-    'Double step': 3,
-    'Inverted feet small': 0.1,
-    'Inverted feet big': 0.15,
-    'Inverted hands': 5,
-    'Hold footslide': 1,
-    'Hold footswitch': 3,
-    'Angle too open': 3,
-    'Angle duck': 1,
-    'Angle extreme duck': 3,
-    'Angle non-air inverted': 1,
-    'Jump': 0.75,
-    'No movement reward': -0.5,
-    'Multi reward': 0,
-    # Unused, since only air-X allowed
-    'Bracket': 5,
-    'Hands': 5,
-    'Move without action': 3,
-    'Downpress cost per limb': 0.05,
-
-    # Distance of 1000 mm = 1 cost
-    'Distance normalizer': 1000,
-    'Inversion distance threshold': 200,
-    'Time threshold': 0.5,
-    # Time of 250 ms = 1 cost
-    'Time normalizer': 0.25,
+    'costs': {
+      'Double step': 3,
+      'Inverted feet small': 0.1,
+      'Inverted feet big': 0.15,
+      'Inverted hands': 5,
+      'Hold footslide': 1,
+      'Hold footswitch': 3,
+      'Angle too open': 3,
+      'Angle duck': 1,
+      'Angle extreme duck': 3,
+      'Angle non-air inverted': 1,
+      'Jump': 0.75,
+      'No movement reward': -0.5,
+      'Multi reward': 0,
+      # Unused, since only air-X allowed
+      'Bracket': 5,
+      'Hands': 5,
+      'Move without action': 3,
+      'Downpress cost per limb': 0.05,
+    },
+    'parameters': {
+      # Distance of 1000 mm = 1 cost
+      'Distance normalizer': 1000,
+      'Inversion distance threshold': 200,
+      'Time threshold': 0.5,
+      # Time of 250 ms = 1 cost
+      'Time normalizer': 0.25,
+    },
   },
   'basic': {
-    'Double step': 3,
-    'Inverted feet small': 0.1,
-    'Inverted feet big': 0.15,
-    'Inverted hands': 5,
-    'Hold footslide': 0.2,
-    'Hold footswitch': 3,
-    'Angle too open': 3,
-    'Angle duck': 0.01,
-    'Angle extreme duck': 3,
-    'Angle non-air inverted': 1,
-    'Jump': 0.75,
-    'No movement reward': -0.5,
-    'Multi reward': --1.5,
-    'Bracket': 0,
-    'Hands': 5,
-    'Move without action': 3,
-    'Downpress cost per limb': 0.05,
-
-    # Distance of 1000 mm = 1 cost
-    'Distance normalizer': 1000,
-    'Inversion distance threshold': 200,
-    'Time threshold': 0.50,
-    # Time of 200 ms = 1 cost
-    'Time normalizer': 0.20,
+    'costs': {
+      'Double step': 3,
+      'Inverted feet small': 0.1,
+      'Inverted feet big': 0.15,
+      'Inverted hands': 5,
+      'Hold footslide': 0.2,
+      'Hold footswitch': 3,
+      'Angle too open': 3,
+      'Angle duck': 0.01,
+      'Angle extreme duck': 3,
+      'Angle non-air inverted': 1,
+      'Jump': 0.75,
+      'No movement reward': -0.5,
+      'Multi reward': -1.5,
+      'Bracket': 0,
+      'Hands': 5,
+      'Move without action': 3,
+      'Downpress cost per limb': 0.05,
+    },
+    'parameters': {
+      # Distance of 1000 mm = 1 cost
+      'Distance normalizer': 1000,
+      'Inversion distance threshold': 200,
+      'Time threshold': 0.50,
+      # Time of 200 ms = 1 cost
+      'Time normalizer': 0.20,
+    },
   },
   'basicold': {
-    'Double step': 3,
-    'Inverted feet small': 0.1,
-    'Inverted feet big': 0.15,
-    'Inverted hands': 5,
-    'Hold footslide': 0.2,
-    'Hold footswitch': 3,
-    'Angle too open': 3,
-    'Angle duck': 0.01,
-    'Angle extreme duck': 3,
-    'Angle non-air inverted': 1,
-    'Jump': 0.75,
-    'No movement reward': -0.5,
-    # 'Multi reward': -10,
-    'Multi reward': -1.5,
-    'Bracket': 0,
-    'Hands': 5,
-    'Move without action': 3,
-    'Downpress cost per limb': 0.05,
-
-    # Distance of 1000 mm = 1 cost
-    'Distance normalizer': 1000,
-    'Inversion distance threshold': 200,
-    'Time threshold': 0.75,
-    # Time of 250 ms = 1 cost
-    'Time normalizer': 0.25,
+    'costs': {
+      'Double step': 3,
+      'Inverted feet small': 0.1,
+      'Inverted feet big': 0.15,
+      'Inverted hands': 5,
+      'Hold footslide': 0.2,
+      'Hold footswitch': 3,
+      'Angle too open': 3,
+      'Angle duck': 0.01,
+      'Angle extreme duck': 3,
+      'Angle non-air inverted': 1,
+      'Jump': 0.75,
+      'No movement reward': -0.5,
+      # 'Multi reward': -10,
+      'Multi reward': -1.5,
+      'Bracket': 0,
+      'Hands': 5,
+      'Move without action': 3,
+      'Downpress cost per limb': 0.05,
+      'Min cost': 1.5,
+    },
+    'parameters': {
+      # Distance of 1000 mm = 1 cost
+      'Distance normalizer': 1000,
+      'Inversion distance threshold': 200,
+      'Time threshold': 0.75,
+      # Time of 250 ms = 1 cost
+      'Time normalizer': 0.25,
+    },
   },
 }

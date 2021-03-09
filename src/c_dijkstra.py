@@ -1,4 +1,9 @@
-# 
+'''
+  Dijkstra's algorithm on topologically sorted nodes: O(E + V).
+  Faster big-O time than priority queue at O(E + VlogV), but
+  priority queue allows skipping nodes, which could make it
+  faster in practice.
+'''
 from __future__ import division
 import _config, _data, _stances, util, pickle, _params
 import sys, os, fnmatch, datetime, subprocess, functools
@@ -105,8 +110,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
             sa_parent = nodes[parent]['Stance actions'][parent_sa_idx]
             d0 = get_parsed_stanceaction(sa_parent)
 
-            mv_cost = _memoizer.move_cost(mover,
-                sa_parent, stance1, d0, d1)
+            mv_cost = _memoizer.move_cost(mover, sa_parent, stance1, d0, d1)
             if mv_cost <= 0:
               consider_fast_jacks = True
 
@@ -133,11 +137,6 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
           '''
             Get unnecessary jump flag by memoization
             Use strings as keys; dicts are not hashable
-
-            TODO - Clean up this code; shorten?
-            At beginning of for loops, d1 = get_parsed_stanceaction(stance1)
-            -- Note: stance1 does not have action; makes cache more dense
-            Make custom cache class?
           '''
           if nm != 'init':
             jump_flag = _memoizer.unnecessary_jump(mover,
@@ -176,32 +175,30 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
           d2 = get_parsed_stanceaction(sa2)
           stance2 = sa2[:sa2.index(';')]
 
+          curr_cost = graph_nodes[nm][sa_idx][0]
+          child_cost = graph_nodes[child][sa_jdx][0]
+
+          if curr_cost > child_cost:
+            continue
+
           stats_d['Num. edges considered'] += 1
-          if child != 'final':
-            # Get cost
+          if child == 'final':
+            edge_cost = 0
+          elif child != 'final':
             edge_cost = _memoizer.get_edge_cost(mover,
                 sa1, sa2, d1, d2, timedelta, child)
 
-            '''
-              Modify cost w/o memoization
-            '''
-            # Fast jacks
+            # Modify cost w/o memoization
             if consider_fast_jacks:
               mv_cost = _memoizer.move_cost(mover,
                   stance1, stance2, d1, d2)
               if mv_cost <= 0:
                 edge_cost += mover.fast_jacks_cost(d0, d1, d2, prev_time, timedelta)
 
-          elif child == 'final':
-            edge_cost = 0
-
           # print(sa1, sa2, edge_cost)
           # import code; code.interact(local=dict(globals(), **locals()))
-
-          curr_cost = graph_nodes[nm][sa_idx][0]
           cost = curr_cost + edge_cost
-
-          if cost < graph_nodes[child][sa_jdx][0]:
+          if cost < child_cost:
             graph_nodes[child][sa_jdx] = (cost, nm, sa_idx)
 
     visited.add(nm)
@@ -211,6 +208,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump(graph_nodes, f)
 
+  # Record memoization stats
   stats_d = _memoizer.add_cache_stats('psa', get_parsed_stanceaction, stats_d)
   stats_d = _memoizer.add_custom_memoizer_stats(stats_d)
   stats_df = pd.DataFrame(stats_d, index = ['Count']).T
@@ -219,7 +217,7 @@ def dijkstra(sc_nm, nodes, edges_out, edges_in, move_skillset = 'default'):
   # Find best path
   df = backtrack_annotate(graph_nodes, nodes)
   df.to_csv(out_dir + f'{sc_nm} {move_skillset}.csv')
-  import code; code.interact(local=dict(globals(), **locals()))
+  # import code; code.interact(local=dict(globals(), **locals()))
   return
 
 
@@ -331,7 +329,6 @@ def topological_sort(node_nms, edges_out):
   visited = [False] * len(node_nms)
   stack = []
 
-
   def topological_sort_util(idx, visited, stack):
     visited[idx] = True
     for child_nm in edges_out[node_nms[idx]]:
@@ -344,7 +341,6 @@ def topological_sort(node_nms, edges_out):
   for idx in range(len(node_nms)):
     if not visited[idx]:
       topological_sort_util(idx, visited, stack)
-
   return stack
 
 
@@ -428,7 +424,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -453,7 +449,7 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   # move_skillset = 'beginner'
