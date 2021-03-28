@@ -1,5 +1,4 @@
 # 
-from __future__ import division
 import _config, _data, util, pickle
 import sys, os, fnmatch, datetime, subprocess
 import numpy as np

@@ -21,6 +21,7 @@ class Movement():
   '''
   def __init__(self, style = 'singles', move_skillset = 'basic'):
     self.style = style
+    self.move_skillset = move_skillset
 
     if style == 'singles':
       self.df = _positions.singles_pos_df
@@ -540,7 +541,6 @@ class Movement():
   def fast_jacks_cost(self, d0: dict, d1: dict, d2: dict, prev_time: float, time: float) -> float:
     '''
       Penalize jacks stepped with a single foot for >2 notes
-
       Only apply with no movement jacks (c_dijkstra enforces this)
     '''
     cost = 0
@@ -558,10 +558,8 @@ class Movement():
 
     ds1 = self.double_step_cost(d0, d1, time = prev_time)
     ds2 = self.double_step_cost(d1, d2, time = time)
-
     if ds1 > 0 and ds2 > 0:
       cost += ds2
-
     return cost
 
 '''

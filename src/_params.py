@@ -22,6 +22,9 @@ perfect_windows = {
 jacks_footswitch_npm_thresh = 275
 jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 
+# Consider at most 4 total lines for multihit. More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
+max_lines_in_multihit = 4
+
 '''
   Movement costs
   TODO - Move to CSV?

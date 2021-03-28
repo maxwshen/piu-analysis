@@ -1,5 +1,10 @@
-# 
-from __future__ import division
+'''
+  Parse note lines, propose stance actions,
+  propose multihits, and annotate edges between lines.
+
+  In this script, nodes = note lines.
+  In other scripts, nodes = stance-actions.
+'''
 import _config, _data, _stances, util, pickle, _params
 import sys, os, re, fnmatch, datetime, subprocess
 import numpy as np
@@ -15,6 +20,7 @@ out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
 # Load data
+# TODO - Unify into single data structure
 all_notes = pickle.load(open(inp_dir_a + f'notes.pkl', 'rb'))
 all_bpms = pickle.load(open(inp_dir_a + f'bpms.pkl', 'rb'))
 
@@ -31,7 +37,7 @@ log_fn = ''
 ##
 # Functions
 ##
-def form_graph(nm: str):
+def form_graph(nm: str, subset_measures = 0):
   '''
     Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
 
@@ -47,8 +53,6 @@ def form_graph(nm: str):
     steptype = 'singles'
   elif 'D' in atts['Steptype simple']:
     steptype = 'doubles'
-  else:
-    assert False, 'No stance found'
   stance = stance_store[steptype]
 
   notes = all_notes[nm]
@@ -57,30 +61,20 @@ def form_graph(nm: str):
   beats_per_measure = 4
 
   # Testing
-  # measures = measures[:3]
-  measures = measures[:7]
-  # measures = measures[:9]
-  # measures = measures[:12]
-  # measures = measures[:19]
-  # measures = measures[:26]
-  # measures = measures[:35]
+  if subset_measures:
+    print(f'WARNING: Subsetting to {subset_measures} measures.')
+    measures = measures[:subset_measures]
 
   beat = 0
   time = 0     # units = seconds
   bpm = None
   prev_presses = []
   active_holds = set()
-
-  # Init bpm at beat = 0
-  while beat >= bpms[0][0]:
-    # print(beat, bpms)
-    bpm = bpms[0][1]
-    bpms = bpms[1:]
-  assert bpm is not None, 'Failed to set bpm'
-
   nodes = dict()
   edges_out = defaultdict(list)
   edges_in = defaultdict(list)
+
+  bpm, bpms = get_init_bpm(beat, bpms)
 
   nodes['init'] = {
     'Time': time,
@@ -90,7 +84,7 @@ def form_graph(nm: str):
     'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
     'Steptype': steptype,
-    'Timing judge': '',
+    'Timing judge': 'None',
   }
   prev_node_nm = 'init'
   edges_in['init'] = []
@@ -105,38 +99,15 @@ def form_graph(nm: str):
 
       line = parse_line(line)
       if has_notes(line):
-        '''
-          nodes[node_nm] = {
-            'Time': float,
-            'Beat': float,
-            'Line': str,
-            'Line with active holds': str,
-            'Measure': int,
-            'BPM': float,
-            'Stance actions': List[str],
-            'Previous panels': List[str],
-          }
-          edges = {
-            node_nm: List[node_nm: str]
-          }
-        '''
-
         # Add active holds into line as 4
-        # 01000 -> 01040
-        aug_line = list(line)
-        for panel in active_holds:
-          idx = stance.panel_to_idx[panel]
-          if aug_line[idx] == '0':
-            aug_line[idx] = '4'
-        aug_line = ''.join(aug_line)
+        aug_line = add_active_holds(line, active_holds, stance.panel_to_idx)
 
         active_panel_to_action = stance.text_to_panel_to_action(line)
         # prev_panels = list(active_holds) + prev_presses
         prev_panels = prev_presses
         sas = stance.get_stanceactions(aug_line, prev_panels=prev_panels)
-
         if len(sas) == 0:
-          output_log('No stance-actions found')
+          output_log(f'ERROR: No stance-actions found for line {aug_line}')
           sys.exit(1)
 
         node_nm = f'{beat}'
@@ -145,19 +116,18 @@ def form_graph(nm: str):
           'Beat': beat,
           'Line': line,
           'Line with active holds': aug_line,
-          # convert from 0 index to 1 index
-          'Measure': measure_num + 1, 
+          'Measure': measure_num + 1,   # 0-based to 1-based
           'BPM': bpm,
           'Stance actions': sas,
           'Previous panels': prev_panels,
         }
+
+        # Annotate edges for line
         edges_out[prev_node_nm].append(node_nm)
         edges_in[node_nm].append(prev_node_nm)
         prev_node_nm = node_nm
 
-        '''
-          Update prev panels
-        '''
+        # Update prev panels
         for p in active_panel_to_action:
           if p in prev_presses:
             prev_presses.remove(p)
@@ -175,53 +145,11 @@ def form_graph(nm: str):
         # print(time, bpm, beat, line, len(sas), active_holds, prev_presses)
         # import code; code.interact(local=dict(globals(), **locals()))
 
-      '''
-        Handle possibility of multiple beat updates before the next note
-      '''
-      # After processing line, update beat, bpm, and time
-      # Important: Update bpm after time
-      done_popping_bpm = False
-      next_bpm_update_beat = bpms[0][0]
-      next_note_beat = beat + beat_increment
-      if next_note_beat < next_bpm_update_beat:
-        # Update once, normally
-        bi = beat_increment
-        time_increment = bi * (60 / bpm)
-        time += time_increment
-
-        beat += bi
-        if beat >= bpms[0][0]:
-          # print(beat, bpms)
-          bpm = bpms[0][1]
-          bpms = bpms[1:]
-        assert bpm is not None, 'Failed to set bpm'
-
-      while next_bpm_update_beat <= next_note_beat:
-        bi = next_bpm_update_beat - beat
-        time_increment = bi * (60 / bpm)
-        time += time_increment
-
-        beat += bi
-        if beat >= bpms[0][0]:
-          # print(beat, bpms)
-          bpm = bpms[0][1]
-          bpms = bpms[1:]
-          done_popping_bpm = False
-          next_bpm_update_beat = bpms[0][0]
-        assert bpm is not None, 'Failed to set bpm'
-
-      if beat < next_note_beat:
-        bi = next_note_beat - beat
-        time_increment = bi * (60 / bpm)
-        time += time_increment
-        beat += bi
-      assert bpm is not None, 'Failed to set bpm'
-
-      # print(beat, bpm)
+      time, beat, bpm, bpms = update_time(time, beat, beat_increment, bpm, bpms)
 
     timer.update()
 
-  # Add terminal node and edge
+  # Add terminal node and edges
   nodes['final'] = {
     'Time': np.inf,
     'Beat': np.inf,
@@ -235,13 +163,11 @@ def form_graph(nm: str):
   edges_out[prev_node_nm].append('final')
   edges_in['final'].append(prev_node_nm)
   edges_out['final'] = []
-  edges_out = dict(edges_out)
-  edges_in = dict(edges_in)
 
-  return nodes, edges_out, edges_in, stance
+  return nodes, dict(edges_out), dict(edges_in), stance
 
 
-def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj'):
+def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj'):
   '''
     Add new nodes and edges when a player can hit multiple notes at different beats with a single hit.
     Augmenting graph after formation helps handle multihits that span measures
@@ -253,7 +179,7 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
   [pre_window, post_window] = _params.perfect_windows[timing_judge]
   num_multihits_proposed = 0
   nms = list(nodes.keys())
-  for idx in range(len(nms)):
+  for idx in range(len(nodes)):
     nm = nms[idx]
     node = nodes[nm]
     time = node['Time']
@@ -262,21 +188,14 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
       node['Timing judge'] = timing_judge
       continue
 
-    # Only propose multi hits starting on 1 or 2
     if not has_downpress(node['Line']):
       continue
 
-    multi = []
-    for jdx in range(idx + 1, len(nms)):
-      if nodes[nms[jdx]]['Time'] - time <= post_window:
-        multi.append(nms[jdx])
-
+    multi = [n for n in nms[idx+1:] if nodes[n]['Time'] - time <= post_window]
     if not multi:
       continue
 
-    max_multi = 3
-    multi = multi[:max_multi]
-
+    multi = multi[:_params.max_lines_in_multihit - 1]
     for jdx in range(len(multi)):
       hits = multi[:jdx + 1]
       last_node_nm = hits[-1]
@@ -290,7 +209,8 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
         continue
 
       # Combine line
-      aug_lines = [node['Line with active holds']] + [nodes[nm]['Line with active holds'] for nm in hits]
+      aug_lines = [node['Line with active holds']] + \
+                  [nodes[nm]['Line with active holds'] for nm in hits]
       joint_aug_line = stance.combine_lines(aug_lines)
 
       sas = stance.get_stanceactions(joint_aug_line, prev_panels=last_node['Previous panels'])
@@ -325,7 +245,7 @@ def augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = '
 
 
 '''
-  Helper
+  Line
 '''
 def has_downpress(line: str) -> bool:
   return bool('1' in line or '2' in line)
@@ -339,15 +259,15 @@ def has_notes(line: str) -> bool:
   return bool(set(line) != set(['0']))
 
 
-def parse_bpm(bpms: str) -> List[List]:
-  '''
-  '''
-  bpm_list = []
-  for line in bpms.split(','):
-    [beat, bpm] = line.split('=')
-    bpm_list.append([float(beat), float(bpm)])
-  bpm_list.append([np.inf, 0])
-  return bpm_list
+def add_active_holds(line, active_holds, panel_to_idx):
+  # Add active holds into line as '4'
+  # 01000 -> 01040
+  aug_line = list(line)
+  for panel in active_holds:
+    idx = panel_to_idx[panel]
+    if aug_line[idx] == '0':
+      aug_line[idx] = '4'
+  return ''.join(aug_line)
 
 
 def parse_line(line: str) -> str:
@@ -375,6 +295,63 @@ def parse_line(line: str) -> str:
   }
   line = line.translate(str.maketrans(replace))
   return line
+
+
+'''
+  BPM, beat, and time logic
+'''
+def update_time(time, beat, beat_increment, bpm, bpms):
+  '''
+    After processing line, update beat, bpm, and time
+    Important: Update time before bpm.
+  '''
+  next_bpm_update_beat = bpms[0][0]
+  next_note_beat = beat + beat_increment
+
+  while next_bpm_update_beat <= next_note_beat:
+    # 1 or more bpm updates before next note line.
+    # For each bpm update, update beat, time (using bpm+beat), and bpm.
+    bi = next_bpm_update_beat - beat
+    time += bi * (60 / bpm)
+    beat += bi
+    if beat >= bpms[0][0]:
+      # print(beat, bpms)
+      bpm = bpms[0][1]
+      bpms = bpms[1:]
+      next_bpm_update_beat = bpms[0][0]
+    assert bpm is not None, 'ERROR: Failed to set bpm'
+
+  # No more bpm updates before next note line.
+  # Update beat, time. No need to update bpm.
+  if beat < next_note_beat:
+    bi = next_note_beat - beat
+    time += bi * (60 / bpm)
+    beat += bi
+  assert bpm is not None, 'ERROR: Failed to set bpm'
+  # print(beat, bpm)
+  return time, beat, bpm, bpms  
+
+
+def parse_bpm(bpms: str) -> List[List]:
+  '''
+  '''
+  bpm_list = []
+  for line in bpms.split(','):
+    [beat, bpm] = line.split('=')
+    bpm_list.append([float(beat), float(bpm)])
+  bpm_list.append([np.inf, 0])
+  return bpm_list
+
+
+def get_init_bpm(beat: int, bpms: List):
+  # Init bpm at beat = 0
+  while beat >= bpms[0][0]:
+    bpm = bpms[0][1]
+    bpms = bpms[1:]
+  if bpm is None:
+    print('ERROR: Failed to set bpm')
+    sys.exit(1)
+  return bpm, bpms
 
 
 '''
@@ -427,9 +404,9 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
-  # nm = 'Super Fantasy - SHK S4 arcade'
+  nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
 
@@ -463,22 +440,24 @@ def main():
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
+  subset_measures = 0
+  # subset_measures = 7
+
   timing_judge = 'piu nj'
 
   print(nm, timing_judge)
-
   global log_fn
   log_fn = out_dir + f'{nm} {timing_judge}.log'
 
-  nodes, edges_out, edges_in, stance = form_graph(nm)
+  nodes, edges_out, edges_in, stance = form_graph(nm, subset_measures=subset_measures)
+
   # Faster than forming graph. More efficient to just run this for each timing judge
-  a_nodes, a_edges_out, a_edges_in = augment_graph_multihits(nodes, edges_out, edges_in, stance, timing_judge = timing_judge)
+  nodes, edges_out, edges_in = propose_multihits(nodes,
+      edges_out, edges_in, stance, timing_judge=timing_judge)
 
-  print(f'Found {len(a_nodes)} nodes')
-
+  print(f'Found {len(nodes)} nodes')
   with open(out_dir + f'{nm}.pkl', 'wb') as f:
-    pickle.dump((a_nodes, a_edges_out, a_edges_in), f)
-
+    pickle.dump((nodes, edges_out, edges_in), f)
   output_log('Success')
   return
 

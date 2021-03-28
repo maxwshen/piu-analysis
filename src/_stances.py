@@ -3,7 +3,7 @@ import _data
 import _config
 from collections import defaultdict, Counter
 import numpy as np, pandas as pd
-import os, copy, itertools
+import os, copy, itertools, functools
 from typing import List, Dict, Set, Tuple
 
 import _positions
@@ -55,6 +55,7 @@ class Stances():
                                                     self.df['Panel - heel'])}
     self.nm_to_toe_panel = {nm: p for nm, p in zip(self.df['Name'],
                                                    self.df['Panel - toe'])}
+    self.bracket_pos = self.__init_bracket_pos()
     pass
 
 
@@ -75,10 +76,15 @@ class Stances():
     return md
 
 
+  def __init_bracket_pos(self) -> set:
+    crit = (self.df[self.arrow_panels].apply(sum, axis='columns') == 2)
+    return set(self.df[crit]['Name'])
+
+
   '''
     Get foot positions from active and previous panels
   '''
-  def get_stances(self, active_panels, prev_panels, use_hands = False):
+  def get_stances(self, active_panels, prev_panels, use_brackets = False, use_hands = False):
     '''
       - Determine how many limbs we need
       - Propose stances as combinations of allowed positions for each limb, subset by possibility (in csv) and panels
@@ -87,38 +93,18 @@ class Stances():
     num_constraints = len(active_panels)
     all_panels = list(set(active_panels) | set(prev_panels))
 
-    '''
-      TODO -- smarter detection of whether we need hands or not. 
-    '''
     limbs = ['Left foot', 'Right foot']
     if use_hands:
       limbs += ['Left hand', 'Right hand']
 
-    ps = []
-    for limb in limbs:
-      positions = set().union(*[self.limb_panel_to_footpos[limb][panel] for panel in all_panels])
-      ps.append(list(positions))
+    def get_positions(limb, all_panels):
+      footposs = [self.get_footpos(limb, panel, use_brackets) for panel in all_panels]
+      return list(set().union(*footposs))
 
-    sts = itertools.product(*ps)
-
-    # Filter stances that do not include all active panels
-    filt_sts = []
-    for st in sts:
-      covered_panels = set()
-      for pos in st:
-        covered_panels.add(self.nm_to_toe_panel[pos])
-        covered_panels.add(self.nm_to_heel_panel[pos])
-      ok = True
-      for ap in active_panels:
-        if ap not in covered_panels:
-          ok = False
-          break
-      if ok:
-        filt_sts.append(st)
-
-    delim = ','
-    stance_strs = [delim.join(s) for s in filt_sts]
-    return stance_strs
+    ps = [get_positions(limb, all_panels) for limb in limbs]
+    stance_strs = [','.join(stance) for stance in itertools.product(*ps)
+                   if self.covers_panels(stance, active_panels)]
+    return list(set(stance_strs))
 
 
   '''
@@ -145,10 +131,8 @@ class Stances():
         if toe_panel in self.arrow_panels:
           panel_to_part[toe_panel].append((idx, 'toe'))
 
-      sas = self.get_sas(stance, panel_to_action, panel_to_part)
-      stance_actions += sas
-
-    return stance_actions
+      stance_actions += self.get_sas(stance, panel_to_action, panel_to_part)
+    return list(set(stance_actions))
 
 
   def get_sas(self, stance, panel_to_action, panel_to_part) -> List[str]:
@@ -156,9 +140,7 @@ class Stances():
       Get stance-actions
     '''
     num_limbs = len(stance.split(','))
-    action_template = []
-    for idx in range(num_limbs):
-      action_template.append(['-', '-'])
+    action_template = [['-', '-'] for limb in range(num_limbs)]
     extremity_to_jdx = {'heel': 0, 'toe': 1}
 
     ps = list(panel_to_part.keys())
@@ -179,14 +161,13 @@ class Stances():
       action_str = ','.join(action)
       actions.append(action_str)
 
-    sas = [f'{stance};{action}' for action in actions]
-    return sas
+    return [f'{stance};{action}' for action in actions]
 
 
   '''
     Primary
   '''
-  def get_stanceactions(self, panel_constraints: str, prev_panels: List[str] = [], verbose: bool = False) -> List[str]:
+  def get_stanceactions(self, panel_constraints: str, prev_panels: List[str] = [], verbose = False) -> List[str]:
     '''
       stance_action: example 15,53;1-,-1
       <limb positions>;<limb actions>
@@ -207,17 +188,28 @@ class Stances():
     prev_panels = list(set(prev_panels))
 
     # Get foot stances consistent with active panels, and including previous panels
-    stances = self.get_stances(active_panels, prev_panels)
-    stances = list(set(stances))
+    # Propose brackets or hands only if necessary based on num. active panels
+    if len(active_panels) > 4:
+      stances = self.get_stances(active_panels, prev_panels,
+                                 use_brackets=True, use_hands=True)
+    elif len(active_panels) == 3 or len(active_panels) == 4:
+      stances = self.get_stances(active_panels, prev_panels,
+                                use_brackets=True)
+    else:
+      stances = self.get_stances(active_panels, prev_panels)
+      if len(stances) == 0:
+        stances = self.get_stances(active_panels, prev_panels,
+                                  use_brackets=True)
+
+    # If heuristic failed, propose with brackets and hands
     if len(stances) == 0:
-      stances = self.get_stances(active_panels, prev_panels, use_hands = True)
-      stances = list(set(stances))
+      stances = self.get_stances(active_panels, prev_panels,
+                                use_brackets=True, use_hands=True)
 
     # Annotate all possible actions (one to many relationship)
     stance_actions = self.annotate_actions(panel_constraints, stances)
     if verbose: print(stance_actions)
-
-    return list(set(stance_actions))
+    return stance_actions
 
 
   '''
@@ -266,6 +258,21 @@ class Stances():
     return ''.join(max_actions)
 
 
+  def covers_panels(self, st: List, active_panels):
+    # Does stance cover all active panels?
+    covered_panels = set(self.nm_to_toe_panel[pos] for pos in st) | \
+                      set(self.nm_to_heel_panel[pos] for pos in st)
+    return all([ap in covered_panels for ap in active_panels])
+
+
+  @functools.lru_cache(maxsize=None)
+  def get_footpos(self, limb, panel, use_brackets):
+    fps = self.limb_panel_to_footpos[limb][panel]
+    if not use_brackets:
+      fps = [fp for fp in fps if fp not in self.bracket_pos]
+    return fps
+
+
 '''
   Testing
 '''
@@ -275,11 +282,11 @@ def test():
 
   # pattern = '10000'
   # pattern = '10001'
-  pattern = '01110'
+  # pattern = '01110'
+  pattern = '11001'
 
   print(f'Running {pattern} ...')
   stance_actions = stance.get_stanceactions(pattern, verbose=True)
-  import code; code.interact(local=dict(globals(), **locals()))
 
   test_limb_order_preservation(stance)
   test_prev_panel_reduction(stance, verbose=True)

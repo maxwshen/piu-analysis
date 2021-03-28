@@ -56,7 +56,7 @@ def move_cost(mover, s1, s2, d1, d2):
 
 
 beginner_memoizer = defaultdict(lambda: 0)
-def beginner_flag(mover, s, d):
+def beginner_ok(mover, s, d):
   key = s
   if key in beginner_memoizer:
     beginner_flag = beginner_memoizer[key]
