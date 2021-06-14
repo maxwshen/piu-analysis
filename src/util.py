@@ -19,14 +19,14 @@ class Timer:
     else:   # else if stdout is directed int ofile
       self.print_interval = 5000000   # 5 seconds
 
-  def progress_update(self):
+  def progress_update(self, done=False):
     if self.last_print == 0:
       num_secs = (datetime.datetime.now() - self.times[0]).microseconds
     else:
       num_secs = (datetime.datetime.now() - self.last_print).microseconds
 
     passed_print_interval = (num_secs >= self.print_interval)
-    is_done = (self.num == self.total)
+    is_done = bool(self.num == self.total) or done
 
     if passed_print_interval or is_done:
       if self.last_print != 0:
@@ -37,6 +37,7 @@ class Timer:
         print('\t\t', self.progress_bar(float(self.num * 100) / float(self.total)))
       else:
         print('\n\t\tTIMER:', self.num, 'iterations done after', str(datetime.datetime.now() - self.times[0]), '\n')
+        print()
       rate = float(self.num - self.prev_num) / num_secs
       a = (self.times[1] - self.times[0]) / self.num
       if rate > 1:
@@ -66,6 +67,10 @@ class Timer:
 
     if print_progress:
       self.progress_update()
+    return
+
+  def end(self):
+    self.progress_update(done=True)
     return
 
   def progress_bar(self, pct):

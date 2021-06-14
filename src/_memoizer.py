@@ -10,37 +10,47 @@
 from collections import defaultdict
 
 
+cost_memoizer = defaultdict(lambda: 0)
+def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta, line_node2, verbose=False):
+  key = (sa1, sa2)
+  if key in cost_memoizer and not verbose:
+    cost_dict = cost_memoizer[key]
+    cost_memoizer['Num hits'] += 1
+  else:
+    cost_dict = mover.get_cost_from_ds(d1, d2, verbose=verbose)
+    cost_memoizer[key] = cost_dict
+
+  # Modify based on data outside high-percentage memoizer keys
+  cost_dict['multihit'] = mover.multihit_modifier(d1, d2, line_node2)
+
+  if 0.001 < timedelta < mover.params['Time threshold']:
+    time_factor = max(1.0, mover.params['Time normalizer'] / timedelta)
+    time_affected = (
+      'double_step',
+      # 'bracket',
+      'move_without_action',
+      'jump',
+    )
+    for prop in time_affected:
+      cost_dict[prop] *= time_factor
+  elif timedelta > mover.params['Time threshold']:
+    cost_dict['double_step'] = 0
+
+  if verbose:
+    print(f'Edge cost: {cost_dict}')
+  return cost_dict
+
+
 jump_memoizer = defaultdict(lambda: 0)
-def unnecessary_jump(mover, s1, s2, d1, d2, child_line):
-  key = (s1, s2, child_line)
+def unnecessary_jump(mover, s1, s2, d1, d2, line_node2):
+  key = (s1, s2, line_node2)
   if key in jump_memoizer:
     jump_flag = jump_memoizer[key]
     jump_memoizer['Num hits'] += 1
   else:
-    jump_flag = mover.unnecessary_jump(d1, d2, child_line)
+    jump_flag = mover.unnecessary_jump(d1, d2, line_node2)
     jump_memoizer[key] = jump_flag
   return jump_flag
-
-
-cost_memoizer = defaultdict(lambda: 0)
-def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta, child):
-  key = (sa1, sa2, timedelta)
-  if key in cost_memoizer:
-    edge_cost = cost_memoizer[key]
-    cost_memoizer['Num hits'] += 1
-  else:
-    edge_cost = mover.get_cost_from_ds(d1, d2, time=timedelta)
-
-    # Modify cost for memoization
-    # Multihit modifier if brackets
-    multi_mod = mover.multihit_modifier(d1, d2, child)
-    edge_cost += multi_mod
-
-    # Apply time cost here to get memoization speedup and time sensitivity
-    if 0.001 < timedelta < mover.params['Time threshold']:
-      time_factor = mover.params['Time normalizer'] / timedelta
-      edge_cost *= time_factor
-  return edge_cost
 
 
 move_memoizer = defaultdict(lambda: 0)
@@ -71,8 +81,7 @@ def beginner_ok(mover, s, d):
   TODO - Consider using template to make code more concise.
   m needs to be instantiated per function to memoize though,
   which means this function should be in a class, with instances
-  created at the top of c_dijkstra.
-  This setup is slightly preferable -- keeps c_dijkstra shorter.
+  created at the top of any other script that needs this.
 '''
 m = defaultdict(lambda: 0)
 def generic(mover, key, args, func):

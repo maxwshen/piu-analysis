@@ -13,6 +13,8 @@ import pandas as pd
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
 
+import _notelines
+
 # Default params
 inp_dir_a = _config.OUT_PLACE + f'a_format_data/'
 NAME = util.get_fn(__file__)
@@ -68,7 +70,6 @@ def form_graph(nm: str, subset_measures = 0):
   beat = 0
   time = 0     # units = seconds
   bpm = None
-  prev_presses = []
   active_holds = set()
   nodes = dict()
   edges_out = defaultdict(list)
@@ -81,7 +82,6 @@ def form_graph(nm: str, subset_measures = 0):
     'Beat': beat,
     'Measure': 0,
     'BPM': bpm,
-    'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
     'Steptype': steptype,
     'Timing judge': 'None',
@@ -92,23 +92,16 @@ def form_graph(nm: str, subset_measures = 0):
   timer = util.Timer(total=len(measures))
   for measure_num, measure in enumerate(measures):
     lines = measure.split('\n')
+    lines = [line for line in lines if '//' not in line]
     num_subbeats = len(lines)
     note_type = num_subbeats
     for lidx, line in enumerate(lines):
       beat_increment = beats_per_measure / num_subbeats
 
-      line = parse_line(line)
-      if has_notes(line):
+      line = _notelines.parse_line(line)
+      if _notelines.has_notes(line):
         # Add active holds into line as 4
-        aug_line = add_active_holds(line, active_holds, stance.panel_to_idx)
-
-        active_panel_to_action = stance.text_to_panel_to_action(line)
-        # prev_panels = list(active_holds) + prev_presses
-        prev_panels = prev_presses
-        sas = stance.get_stanceactions(aug_line, prev_panels=prev_panels)
-        if len(sas) == 0:
-          output_log(f'ERROR: No stance-actions found for line {aug_line}')
-          sys.exit(1)
+        aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
 
         node_nm = f'{beat}'
         nodes[node_nm] = {
@@ -118,8 +111,6 @@ def form_graph(nm: str, subset_measures = 0):
           'Line with active holds': aug_line,
           'Measure': measure_num + 1,   # 0-based to 1-based
           'BPM': bpm,
-          'Stance actions': sas,
-          'Previous panels': prev_panels,
         }
 
         # Annotate edges for line
@@ -127,22 +118,15 @@ def form_graph(nm: str, subset_measures = 0):
         edges_in[node_nm].append(prev_node_nm)
         prev_node_nm = node_nm
 
-        # Update prev panels
+        active_panel_to_action = stance.line_to_panel_to_action(line)
         for p in active_panel_to_action:
-          if p in prev_presses:
-            prev_presses.remove(p)
           a = active_panel_to_action[p]
-          if a == '1':
-            prev_presses.insert(0, p)
-          elif a == '2':
+          if a == '2':
             active_holds.add(p)
-          elif a == '3':
+          if a == '3':
             active_holds.remove(p)
-            prev_presses.insert(0, p)
-        prev_presses = prev_presses[:_params.prev_panel_buffer_len[steptype]]
-        prev_presses = list(unique_everseen(prev_presses))
 
-        # print(time, bpm, beat, line, len(sas), active_holds, prev_presses)
+        # print(time, bpm, beat, line, active_holds)
         # import code; code.interact(local=dict(globals(), **locals()))
 
       time, beat, bpm, bpms = update_time(time, beat, beat_increment, bpm, bpms)
@@ -157,7 +141,6 @@ def form_graph(nm: str, subset_measures = 0):
     'Line with active holds': '',
     'Measure': np.inf,
     'BPM': 0,
-    'Stance actions': stance.initial_stanceaction(),
     'Previous panels': [],
   }
   edges_out[prev_node_nm].append('final')
@@ -188,7 +171,7 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
       node['Timing judge'] = timing_judge
       continue
 
-    if not has_downpress(node['Line']):
+    if not _notelines.has_downpress(node['Line']):
       continue
 
     multi = [n for n in nms[idx+1:] if nodes[n]['Time'] - time <= post_window]
@@ -205,15 +188,13 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
       joint_line = stance.combine_lines(lines)
 
       # If num downhits in multihit is the same as the regular hit, skip
-      if num_downpress(joint_line) == num_downpress(node['Line']):
+      if _notelines.num_downpress(joint_line) == _notelines.num_downpress(node['Line']):
         continue
 
       # Combine line
       aug_lines = [node['Line with active holds']] + \
                   [nodes[nm]['Line with active holds'] for nm in hits]
       joint_aug_line = stance.combine_lines(aug_lines)
-
-      sas = stance.get_stanceactions(joint_aug_line, prev_panels=last_node['Previous panels'])
 
       new_node_nm = f'{nm} multi v{jdx + 1}'
       nodes[new_node_nm] = {
@@ -223,7 +204,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
         'Line with active holds': joint_aug_line,
         'Measure': last_node['Measure'],
         'BPM': last_node['BPM'],
-        'Stance actions': sas,
         'Previous panels': last_node['Previous panels'],
       }
       edges_out[new_node_nm] = edges_out[last_node_nm]
@@ -242,59 +222,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
 
   print(f'Proposed {num_multihits_proposed} multihit nodes')
   return nodes, edges_out, edges_in
-
-
-'''
-  Line
-'''
-def has_downpress(line: str) -> bool:
-  return bool('1' in line or '2' in line)
-
-
-def num_downpress(line: str) -> int:
-  return line.count('1') + line.count('2')
-
-
-def has_notes(line: str) -> bool:
-  return bool(set(line) != set(['0']))
-
-
-def add_active_holds(line, active_holds, panel_to_idx):
-  # Add active holds into line as '4'
-  # 01000 -> 01040
-  aug_line = list(line)
-  for panel in active_holds:
-    idx = panel_to_idx[panel]
-    if aug_line[idx] == '0':
-      aug_line[idx] = '4'
-  return ''.join(aug_line)
-
-
-def parse_line(line: str) -> str:
-  '''
-    Handle lines like:
-      0000F00000
-      00{2|n|1|0}0000000    
-      0000{M|n|1|0} -> 0
-  '''
-  if 'F' not in line and '{' not in line:
-    return line
-
-  ws = re.split('{|}', line)
-  nl = ''
-  for w in ws:
-    if '|' not in w:
-      nl += w
-    else:
-      nl += w[0]
-  line = nl
-
-  replace = {
-    'F': '1',
-    'M': '0',
-  }
-  line = line.translate(str.maketrans(replace))
-  return line
 
 
 '''
@@ -355,13 +282,19 @@ def get_init_bpm(beat: int, bpms: List):
 
 
 '''
-  Logging
+  Logging, IO
 '''
 def output_log(message):
   print(message)
   with open(log_fn, 'a') as f:
     f.write(message)
   return
+
+
+def load_data(inp_dir, sc_nm):
+  with open(inp_dir + f'{sc_nm}.pkl', 'rb') as f:
+    line_nodes, line_edges_out, line_edges_in = pickle.load(f)
+  return line_nodes, line_edges_out, line_edges_in
 
 
 ##
@@ -406,7 +339,7 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
-  nm = 'Super Fantasy - SHK S4 arcade'
+  # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
 
@@ -424,7 +357,7 @@ def main():
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
-  # nm = 'Native - SHK S20 arcade'
+  nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
@@ -438,6 +371,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
   subset_measures = 0
@@ -449,7 +383,8 @@ def main():
   global log_fn
   log_fn = out_dir + f'{nm} {timing_judge}.log'
 
-  nodes, edges_out, edges_in, stance = form_graph(nm, subset_measures=subset_measures)
+  nodes, edges_out, edges_in, stance = form_graph(nm,
+      subset_measures=subset_measures)
 
   # Faster than forming graph. More efficient to just run this for each timing judge
   nodes, edges_out, edges_in = propose_multihits(nodes,

@@ -1,7 +1,7 @@
 #
 import _data
 import _config, _params
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, namedtuple
 import numpy as np, pandas as pd
 import os, copy
 from typing import List, Dict, Set, Tuple
@@ -26,7 +26,7 @@ class Movement():
     if style == 'singles':
       self.df = _positions.singles_pos_df
       panel_cols = [
-        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9'
+        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
       ]
     elif style == 'doubles':
       self.df = _positions.doubles_pos_df
@@ -38,7 +38,7 @@ class Movement():
     self.costs = _params.movement_costs[move_skillset]['costs']
     self.params = _params.movement_costs[move_skillset]['parameters']
 
-    self.min_cost = min(self.costs.values())
+    self.min_cost = sum(cost for cost in self.costs.values() if cost < 0)
 
     self.pos_to_cost = {}
     self.pos_to_center = {}
@@ -161,9 +161,7 @@ class Movement():
 
     left_coord = self.pos_to_center[d['limb_to_pos']['Left hand']]
     right_coord = self.pos_to_center[d['limb_to_pos']['Right hand']]
-
     diff = left_coord[0] - right_coord[0]
-
     if 0 < diff:
       cost += self.costs['Inverted hands']
 
@@ -337,7 +335,30 @@ class Movement():
       elif time >= self.params['Time threshold']:
         cost = 0
 
-    if self.verbose: print(f'Double step cost: {cost}')
+    if self.verbose: print(f'Double step cost (may not apply): {cost}')
+    return cost
+
+
+  def double_step_cost_v2(self, d1, d2):
+    '''
+      Straightforward definition of double step: A limb is used on two neighboring lines.
+      Expected to be altered based on time in downstream code.
+    '''
+    cost = 0
+    for limb in d2['limb_to_pos']:
+      if limb not in d1['limb_to_heel_action']:
+        continue
+
+      prev_heel = d1['limb_to_heel_action'][limb] in self.doublestep_prev
+      prev_toe = d1['limb_to_toe_action'][limb] in self.doublestep_prev
+      curr_heel = d2['limb_to_heel_action'][limb] in self.doublestep_curr
+      curr_toe = d2['limb_to_toe_action'][limb] in self.doublestep_curr
+
+      prev_step = prev_heel or prev_toe
+      curr_step = curr_heel or curr_toe
+
+      if prev_step and curr_step:
+        cost += self.costs['Double step']
     return cost
 
 
@@ -417,25 +438,13 @@ class Movement():
   '''
     Primary
   '''
-  def get_cost_from_ds(self, d1: dict, d2: dict, time: float = 1, verbose: bool = False) -> float:
+  def get_cost_from_ds(self, d1: dict, d2: dict, verbose = False):
     '''
     '''
     self.verbose = verbose
 
-    cost = 0
     inv_cost = self.foot_inversion_cost(d2)
-    cost += inv_cost
-    cost += self.angle_cost(d2, inv_cost)
-    cost += self.hand_inversion_cost(d2)
-    cost += self.foot_pos_cost(d2)
-    cost += self.hold_change_cost(d1, d2)
     mv_cost = self.move_cost(d1, d2)
-    cost += mv_cost
-    cost += self.jump_cost(d1, d2)
-    cost += self.bracket_cost(d2)
-    cost += self.hands_cost(d2)
-    cost += self.move_without_action_cost(d1, d2)
-    cost += self.downpress_cost(d2)
 
     '''
       Conditional costs
@@ -445,24 +454,39 @@ class Movement():
         If time slower than 270 npm, no cost for jacks
         else: apply high cost to get footswitching
     '''
-    ds_cost = self.double_step_cost(d1, d2, time)
-    if mv_cost >= 0:
-      cost += ds_cost
-    elif mv_cost <= 0:
-      pass
-      '''
-        This penalizes >1 double steps in a row
-        Instead, use fast_jacks_cost to penalize >2 double steps in a row
-      '''
-      # if time <= _params.jacks_footswitch_t_thresh:
-      #   cost += ds_cost
+    # ds_cost = self.double_step_cost(d1, d2, time)
+    ds_cost = self.double_step_cost_v2(d1, d2)
+    # if mv_cost >= 0 or time <= _params.jacks_footswitch_t_thresh:
+    #   if verbose: print(f'Double step cost applied.')
+    # else:
+    #   if verbose: print(f'Double step cost not applied.')
+    #   ds_cost = 0
+    #   '''
+    #     Old notes: This penalizes >1 double steps in a row
+    #     Instead, use fast_jacks_cost to penalize >2 double steps in a row
 
-    # Guarantee that minimum cost = 0
-    cost -= self.min_cost
+    #     4/26/21: This fixes some bad doublestepping in Loki S21. Most likely has knock-on effects - what are they, and what can I do about this?
+    #   '''
+
+    cost = {
+      'foot_inversion'      : inv_cost,
+      'angle'               : self.angle_cost(d2, inv_cost),
+      'hand_inversion'      : self.hand_inversion_cost(d2),
+      'foot_position'       : self.foot_pos_cost(d2),
+      'hold_change'         : self.hold_change_cost(d1, d2),
+      'move'                : mv_cost,
+      'jump'                : self.jump_cost(d1, d2),
+      'bracket'             : self.bracket_cost(d2),
+      'hands'               : self.hands_cost(d2),
+      'move_without_action' : self.move_without_action_cost(d1, d2),
+      'downpress'           : self.downpress_cost(d2),
+      'double_step'         : ds_cost,
+      'min_cost'            : -1 * self.min_cost,
+    }
     return cost
 
 
-  def get_cost_from_text(self, sa1: str, sa2: str, time: float = 1, verbose: bool = False) -> float:
+  def get_cost_from_text(self, sa1: str, sa2: str, time = 1.0, verbose = False) -> float:
     '''
     '''
     self.verbose = verbose
@@ -476,15 +500,12 @@ class Movement():
     Heuristic node/edge pruning
   '''
   def unnecessary_jump(self, d1: dict, d2: dict, line: str) -> bool:
-    '''
-      Detect if unnecessary jump
-    '''
-    num_nonpresses = line.count('0')
-    if num_nonpresses == len(line) - 1:
-      for downpress in self.downpress:
-        if downpress in line:
-          if self.jump_cost(d1, d2):
-            return True
+    # Detect if unnecessary jump
+    has_one_press = lambda line: line.count('0') == len(line) - 1
+    has_downpress = lambda line: any([dp in line for dp in self.downpress])
+    if has_one_press(line) and has_downpress(line):
+      if self.jump_cost(d1, d2):
+        return True
     return False
 
 
@@ -499,20 +520,9 @@ class Movement():
     return True
 
 
-  def call_twist(self, sa: str, lwah: str):
-    '''
-      Label type of twist
-      - 90 degree
-      - Diagonal
-      - 180 degree
-      Facing left or right
-    '''
-    d = self.parse_stanceaction(sa)
-
-
-    return
-
-
+  '''
+    Cost modifiers using line node
+  '''
   def multihit_modifier(self, d1: dict, d2: dict, node_nm: str) -> float:
     '''
       Apply multihit reward only if brackets are involved
@@ -538,29 +548,45 @@ class Movement():
     return cost
 
 
-  def fast_jacks_cost(self, d0: dict, d1: dict, d2: dict, prev_time: float, time: float) -> float:
+  '''
+    Dynamic cost functions (function of node0 -> node1 -> node2)
+  '''
+  def fast_jacks_cost(self, d0: dict, d1: dict, d2: dict, time01: float, time12: float) -> float:
     '''
       Penalize jacks stepped with a single foot for >2 notes
-      Only apply with no movement jacks (c_dijkstra enforces this)
+      Only apply with no movement jacks (_graph enforces this)
     '''
     cost = 0
-    if time > _params.jacks_footswitch_t_thresh:
-      return 0
-    if prev_time > _params.jacks_footswitch_t_thresh:
-      return 0
-
-    # mv1 = self.move_cost(d0, d1)
-    # if mv1 > 0:
+    # if time > _params.jacks_footswitch_t_thresh:
     #   return 0
-    # mv2 = self.move_cost(d1, d2)
-    # if mv2 > 0:
+    # if prev_time > _params.jacks_footswitch_t_thresh:
+    #   return 0
+    # if self.move_cost(d0, d1) > 0 or self.move_cost(d1, d2):
     #   return 0
 
-    ds1 = self.double_step_cost(d0, d1, time = prev_time)
-    ds2 = self.double_step_cost(d1, d2, time = time)
+    ds1 = self.double_step_cost(d0, d1, time = time01)
+    ds2 = self.double_step_cost(d1, d2, time = time12)
     if ds1 > 0 and ds2 > 0:
       cost += ds2
     return cost
+
+
+  '''
+    Annotation
+  '''
+  def call_twist(self, sa: str, lwah: str):
+    '''
+      Label type of twist
+      - 90 degree
+      - Diagonal
+      - 180 degree
+      Facing left or right
+    '''
+    d = self.parse_stanceaction(sa)
+    # TODO 
+    return
+
+
 
 '''
   Testing
@@ -570,7 +596,6 @@ def test_singles():
 
   # test_singles_basic(mover)
   test_singles_holds(mover)
-
   return
 
 
@@ -624,8 +649,6 @@ def test_doubles():
 
     cost = mover.get_cost_from_text(sa1, sa2, time=0.20, verbose=True)
     print(sa2, cost, '\n')
-  return
-
   return
 
 

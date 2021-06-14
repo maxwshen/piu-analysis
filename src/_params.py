@@ -2,14 +2,6 @@ import _config
 import sys, os, fnmatch, datetime, subprocess
 import numpy as np
 
-# parameters
-
-# Value = largest possible num. panels hit simultaneously
-prev_panel_buffer_len = {
-  'singles': 3,
-  'doubles': 4,
-}
-
 # Units: Seconds; [before note, after note]
 perfect_windows = {
   'piu nj': [0.0416, 0.0832],
@@ -19,15 +11,21 @@ perfect_windows = {
   'itg': [0.0215, 0.0215],
 }
 
+bracket_level_threshold = 16
+
 jacks_footswitch_npm_thresh = 275
 jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
 
 # Consider at most 4 total lines for multihit. More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
 max_lines_in_multihit = 4
 
+init_stanceaction = {
+  'singles': '14,36;--,--',
+  'doubles': 'p1`36c,p2`14c;--,--',
+}
+
 '''
-  Movement costs
-  TODO - Move to CSV?
+  Movement costs. TODO - Move to CSV?
 '''
 movement_costs = {
   'beginner': {
@@ -55,7 +53,7 @@ movement_costs = {
       # Distance of 1000 mm = 1 cost
       'Distance normalizer': 1000,
       'Inversion distance threshold': 200,
-      'Time threshold': 0.5,
+      'Time threshold': 5,
       # Time of 250 ms = 1 cost
       'Time normalizer': 0.25,
     },
@@ -109,7 +107,6 @@ movement_costs = {
       'Hands': 5,
       'Move without action': 3,
       'Downpress cost per limb': 0.05,
-      'Min cost': 1.5,
     },
     'parameters': {
       # Distance of 1000 mm = 1 cost
@@ -121,3 +118,17 @@ movement_costs = {
     },
   },
 }
+
+bracketable_lines = set([
+  '10100', '01100', '00110', '00101',
+  '1010000000',
+  '0110000000',
+  '0011000000',
+  '0010100000',
+  '0000010100',
+  '0000001100',
+  '0000000110',
+  '0000000101',
+  '0000110000'
+  '0001001000'
+])

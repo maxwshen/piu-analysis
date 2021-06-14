@@ -1,8 +1,9 @@
 '''
   Dijkstra's algorithm on topologically sorted nodes: O(E + V).
   Faster big-O time than priority queue at O(E + VlogV), but
-  priority queue allows skipping nodes, which could make it
-  faster in practice.
+  priority queue allows skipping nodes, which makes it faster in practice.
+
+  Note: Deprecated by c2.py
 '''
 import _config, _data, _stances, util, _params
 import sys, os, pickle, fnmatch, datetime, subprocess, functools
@@ -11,7 +12,7 @@ from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
-import _movement, _params, _memoizer
+import _movement, _params, _memoizer, _stances
 import _graph
 
 # Default params
@@ -33,8 +34,11 @@ def dijkstra(graph):
   visited = set()
   qu = [(0, graph.init_node)]
 
+  mean_sa_per_line = graph.graph_stats()
+  approx_num_edges = len(graph.line_nodes) * (mean_sa_per_line)**2
+
   print('Running Dijkstra`s algorithm ...')
-  timer = util.Timer()
+  timer = util.Timer(total=approx_num_edges, print_interval=5e4)
   while qu:
     u_cost, u = heappop(qu)
 
@@ -47,8 +51,17 @@ def dijkstra(graph):
     visited.add(u)
     stats_d['Num. nodes considered'] += 1
 
+    '''
+      TODO - Right now, edge_generator is simply the product of all nodes.
+      Consider proposing edges intelligently to avoid needing to remove unnecessary jumps? (hypothesis: Calculating unnecessary jumps is expensive). Can just propose neighbors using current sa and next line. Can help reduce branching factor. 
+      Evidence: On Mitosudaira d19 and super fantasy s19, jump cache has low 22% re-hit rate, so most of the time we are computing unnecessary jump.
+      If we will compute neighbors on the fly, do we still need b_graph to explicitly enumerate stance-actions? What becomes the purpose of b_graph -- can we deprecate it?
+    '''
     for v in graph.edge_generator(u):
-      if v in visited or graph.filter_edge(u, v):
+      if v in visited:
+        continue
+
+      if graph.filter_edge(u, v):
         continue
       
       graph.error_check(u, v)
@@ -59,7 +72,11 @@ def dijkstra(graph):
         graph.costs[v] = v_cost
         graph.predecessors[v] = u
         heappush(qu, (v_cost, v))
-    # timer.update()
+      timer.update()
+  timer.end()
+
+  if u != graph.final_node:
+    raise Exception(f'Graph lacks forward path to final node. Traversed {len(visited)} nodes.')
 
   # Record memoization stats
   stats_d = _memoizer.add_cache_stats('psa', graph.parse_sa, stats_d)
@@ -79,20 +96,21 @@ def backtrack_annotate(graph) -> pd.DataFrame:
   cost = graph.costs[graph.final_node]
 
   if node is None:
-    raise RunTimeError(f'Error in backtracking: Final node has no parent')
+    raise Exception(f'Error in backtracking: Final node has no parent')
 
   while node != graph.init_node:
     parent = graph.predecessors[node]
     cost = graph.costs[node]
     if parent is None:
-      raise RunTimeError(f'Error in backtracking: {node} has no parent')
+      raise Exception(f'Error in backtracking: {node} has no parent')
 
-    line, sa = _graph.parse_node_name(node)
-    dd['Line node'].append(line)
+    line_node, sa = _graph.parse_node_name(node)
+    dd['Node'].append(node)
+    dd['Line node'].append(line_node)
     dd['Stance action'].append(sa)
     dd['Cost'].append(cost)
     for col in cols:
-      dd[col].append(graph.line_nodes[line][col])
+      dd[col].append(graph.line_nodes[line_node][col])
     ad = parse_sa_to_limb_action(sa)
     for limb in ad:
       dd[limb].append(ad[limb])
@@ -180,7 +198,7 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
-  nm = 'Super Fantasy - SHK S4 arcade'
+  # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
@@ -203,11 +221,11 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
 
-  move_skillset = 'beginner'
-  # move_skillset = 'basic'
+  # move_skillset = 'beginner'
+  move_skillset = 'basic'
 
   global log_fn
   log_fn = out_dir + f'{nm} {move_skillset}.log'
@@ -220,11 +238,11 @@ def main():
   mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
   graph = _graph.Graph(mover, line_nodes, line_edges_out)
 
-  graph.graph_stats()
-
   graph = dijkstra(graph)
   df = backtrack_annotate(graph)
   df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
+
+  graph.interactive_debug()
 
   output_log('Success')
   return
