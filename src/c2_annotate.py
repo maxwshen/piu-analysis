@@ -1,4 +1,6 @@
 
+from collections import defaultdict
+
 def annotate(df):
   # Annotate in forward direction
   cdd = defaultdict(list)

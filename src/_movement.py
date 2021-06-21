@@ -6,7 +6,7 @@ import numpy as np, pandas as pd
 import os, copy
 from typing import List, Dict, Set, Tuple
 
-import _positions
+import _positions, _notelines, _graph
 
 '''
   Movement
@@ -61,11 +61,11 @@ class Movement():
         self.bracket_pos.add(nm)
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
-    self.downpress = set(['1', '2'])
-    self.doublestep_prev = set(['1', '2', '3'])
-    self.doublestep_curr = set(['1', '2'])
-    self.prev_hold = set(['2', '4'])
-    self.ok_hold = set(['3', '4'])
+    self.downpress = set(list('12'))
+    self.doublestep_prev = set(list('123'))
+    self.doublestep_curr = set(list('12'))
+    self.prev_hold = set(list('24'))
+    self.ok_hold = set(list('34'))
     self.verbose = False
     pass
 
@@ -223,7 +223,7 @@ class Movement():
       - foot center
       - average of heel and toe
 
-      Only grant no movement reward for basic heel toe and air positions, not for bracket positions
+      Only grant no movement reward for basic heel toe and air positions, not for bracket positions (deprecated - grant reward)
     '''
     cost = 0
     has_bracket = False
@@ -254,11 +254,14 @@ class Movement():
       if d2['limb_to_pos'][limb] in self.bracket_pos:
         has_bracket = True
 
-    if has_bracket and cost == 0:
-      cost = 0.01
+    # if has_bracket and cost == 0:
+    #   cost = 0.01
 
     if cost == 0:
       cost = self.costs['No movement reward']
+
+    if cost > 0:
+      cost = cost ** self.costs['Move power']
 
     if self.verbose: print(f'Move cost: {cost}')
     return cost
@@ -342,36 +345,72 @@ class Movement():
   def double_step_cost_v2(self, d1, d2):
     '''
       Straightforward definition of double step: A limb is used on two neighboring lines.
-      Expected to be altered based on time in downstream code.
+      Can be altered based on time in downstream code.
+      Do not penalize current step = 2 (can just hold there)
+      Do not penalize double steps in active holds
     '''
     cost = 0
-    for limb in d2['limb_to_pos']:
-      if limb not in d1['limb_to_heel_action']:
-        continue
+    limbs = list(limb for limb in d2['limb_to_pos']
+                      if limb in d1['limb_to_heel_action'])
 
-      prev_heel = d1['limb_to_heel_action'][limb] in self.doublestep_prev
-      prev_toe = d1['limb_to_toe_action'][limb] in self.doublestep_prev
-      curr_heel = d2['limb_to_heel_action'][limb] in self.doublestep_curr
-      curr_toe = d2['limb_to_toe_action'][limb] in self.doublestep_curr
+    def has_active_hold(limb):
+      heel = any(x in d2['limb_to_heel_action'][limb] for x in list('34'))
+      toe = any(x in d2['limb_to_toe_action'][limb] for x in list('34'))
+      return heel or toe
 
-      prev_step = prev_heel or prev_toe
-      curr_step = curr_heel or curr_toe
+    active_hold = any(has_active_hold(limb) for limb in limbs)
+    if not active_hold:
+      for limb in limbs:
+        prev_heel = d1['limb_to_heel_action'][limb] in self.doublestep_prev
+        prev_toe = d1['limb_to_toe_action'][limb] in self.doublestep_prev
+        curr_heel = d2['limb_to_heel_action'][limb] in self.doublestep_curr
+        curr_toe = d2['limb_to_toe_action'][limb] in self.doublestep_curr
 
-      if prev_step and curr_step:
-        cost += self.costs['Double step']
+        prev_step = prev_heel or prev_toe
+        curr_step = curr_heel or curr_toe
+
+        limb_cost = 0
+        if prev_step and curr_step:
+          limb_cost = self.costs['Double step']
+
+        # Forgive 1/3->2 with same limb on same pad
+        prev_heel_a = d1['limb_to_heel_action'][limb]
+        curr_heel_a = d2['limb_to_heel_action'][limb]
+        prev_toe_a = d1['limb_to_toe_action'][limb]
+        curr_toe_a = d2['limb_to_toe_action'][limb]
+        heel_pad_match = d1['limb_to_pos'][limb] == d2['limb_to_pos'][limb]
+        toe_pad_match = d1['limb_to_pos'][limb] == d2['limb_to_pos'][limb]
+        if prev_heel_a in list('13') and curr_heel_a == '2' and heel_pad_match:
+          limb_cost = 0
+        elif prev_toe_a in list('13') and curr_toe_a == '2' and toe_pad_match:
+          limb_cost = 0
+
+        cost += limb_cost
+
+    if self.verbose: print(f'Double step cost: {cost}')
     return cost
 
 
   def jump_cost(self, d1: dict, d2: dict) -> float:
     '''
-      Penalize if both feet move
+      Jump: Both feet change position or using both feet
+      E.g., not a jump is if 1 foot has the same position and action as before.
     '''
     cost = 0
-    prev_left = d1['limb_to_pos']['Left foot']
-    prev_right = d1['limb_to_pos']['Right foot']
-    curr_left = d2['limb_to_pos']['Left foot']
-    curr_right = d2['limb_to_pos']['Right foot']
-    if prev_left != curr_left and prev_right != curr_right:
+    feet = ['Left foot', 'Right foot']
+
+    matched_keys = ['limb_to_pos']
+    matches = lambda x: all([d1[mkey][x] == d2[mkey][x] for mkey in matched_keys])
+    feet_stay = [limb for limb in feet if matches(limb)]
+    both_feet_moved = bool(len(feet_stay) == 0)
+
+    pressing_keys = ['limb_to_heel_action', 'limb_to_toe_action']
+    pressing = lambda x: any([d2[pkey][x] == '1' or d2[pkey][x] == '2'
+                              for pkey in pressing_keys])
+    feet_pressing = [limb for limb in feet if pressing(limb)]
+    both_feet_pressing = bool(len(feet_pressing) == 2)
+
+    if both_feet_moved or both_feet_pressing:
       cost += self.costs['Jump']
 
     if self.verbose: print(f'Jump cost: {cost}')
@@ -446,27 +485,8 @@ class Movement():
     inv_cost = self.foot_inversion_cost(d2)
     mv_cost = self.move_cost(d1, d2)
 
-    '''
-      Conditional costs
-
-      If movement: apply double step cost
-      If no movement:
-        If time slower than 270 npm, no cost for jacks
-        else: apply high cost to get footswitching
-    '''
     # ds_cost = self.double_step_cost(d1, d2, time)
     ds_cost = self.double_step_cost_v2(d1, d2)
-    # if mv_cost >= 0 or time <= _params.jacks_footswitch_t_thresh:
-    #   if verbose: print(f'Double step cost applied.')
-    # else:
-    #   if verbose: print(f'Double step cost not applied.')
-    #   ds_cost = 0
-    #   '''
-    #     Old notes: This penalizes >1 double steps in a row
-    #     Instead, use fast_jacks_cost to penalize >2 double steps in a row
-
-    #     4/26/21: This fixes some bad doublestepping in Loki S21. Most likely has knock-on effects - what are they, and what can I do about this?
-    #   '''
 
     cost = {
       'foot_inversion'      : inv_cost,
@@ -486,14 +506,14 @@ class Movement():
     return cost
 
 
-  def get_cost_from_text(self, sa1: str, sa2: str, time = 1.0, verbose = False) -> float:
+  def get_cost_from_text(self, sa1: str, sa2: str, verbose = False) -> float:
     '''
     '''
     self.verbose = verbose
 
     d1 = self.parse_stanceaction(sa1)
     d2 = self.parse_stanceaction(sa2)
-    return self.get_cost_from_ds(d1, d2, time = time, verbose=verbose)
+    return self.get_cost_from_ds(d1, d2, verbose=verbose)
 
 
   '''
@@ -548,44 +568,32 @@ class Movement():
     return cost
 
 
-  '''
-    Dynamic cost functions (function of node0 -> node1 -> node2)
-  '''
-  def fast_jacks_cost(self, d0: dict, d1: dict, d2: dict, time01: float, time12: float) -> float:
-    '''
-      Penalize jacks stepped with a single foot for >2 notes
-      Only apply with no movement jacks (_graph enforces this)
-    '''
-    cost = 0
-    # if time > _params.jacks_footswitch_t_thresh:
-    #   return 0
-    # if prev_time > _params.jacks_footswitch_t_thresh:
-    #   return 0
-    # if self.move_cost(d0, d1) > 0 or self.move_cost(d1, d2):
-    #   return 0
+  def bracket_on_singlepanel_line(self, d, line):
+    num_downpress = _notelines.num_downpress(line)
+    if num_downpress != 1:
+      return 0
 
-    ds1 = self.double_step_cost(d0, d1, time = time01)
-    ds2 = self.double_step_cost(d1, d2, time = time12)
-    if ds1 > 0 and ds2 > 0:
-      cost += ds2
+    cost = 0
+    for limb in d['limb_to_pos']:
+      pos = d['limb_to_pos'][limb]
+      if pos in self.bracket_pos:
+        cost += self.costs['Bracket on 1panel line']
     return cost
 
 
-  '''
-    Annotation
-  '''
-  def call_twist(self, sa: str, lwah: str):
-    '''
-      Label type of twist
-      - 90 degree
-      - Diagonal
-      - 180 degree
-      Facing left or right
-    '''
-    d = self.parse_stanceaction(sa)
-    # TODO 
-    return
-
+  def hold_alternate(self, tag1, tag2, motif_len):
+    # Apply only once
+    # curr_motif is either ((start, end), motif_name) or None
+    cost = 0
+    if motif_len:
+      _, _, tag1_hold = _graph.parse_tag(tag1)
+      _, _, tag2_hold = _graph.parse_tag(tag2)
+      if tag2_hold == 'alternate' and tag1_hold != 'alternate':
+        if motif_len <= _params.hold_tap_line_threshold:
+          cost += self.costs['Hold alternate feet for hits (onetime, short)']
+        else:
+          cost += self.costs['Hold alternate feet for hits (onetime, long)']
+    return cost
 
 
 '''
@@ -595,7 +603,8 @@ def test_singles():
   mover = Movement(style='singles')
 
   # test_singles_basic(mover)
-  test_singles_holds(mover)
+  # test_singles_holds(mover)
+  test_double_step(mover)
   return
 
 
@@ -608,7 +617,7 @@ def test_singles_basic(mover):
     'a9,57;--,-1',
   ]
   for sa2 in sa2s:
-    cost = mover.get_cost(sa1, sa2, verbose=True)
+    cost = mover.get_cost_from_text(sa1, sa2, verbose=True)
     print(sa2, cost, '\n')
   return
 
@@ -623,14 +632,31 @@ def test_singles_holds(mover):
     '54,a1;1-,-4',
   ]
   for sa2 in sa2s:
-    cost = mover.get_cost(sa1, sa2, verbose=True)
+    cost = mover.get_cost_from_text(sa1, sa2, verbose=True)
     print(sa2, cost, '\n')
+  return
+
+
+def test_double_step(mover):
+  sas = [
+    ('14,36;--,3-', '14,36;--,2-'),
+    ('14,36;--,3-', '14,69;--,-1'),
+  ]
+  for sa1, sa2 in sas:
+    cost = mover.get_cost_from_text(sa1, sa2, verbose=True)
+    print(sa1, sa2, cost, '\n')
   return
 
 
 def test_doubles():
   mover = Movement(style='doubles')
-  
+
+  # test_doubles_basic(mover)
+  test_doubles_hold_taps(mover)
+  return
+
+
+def test_doubles_basic(mover):
   # #
   # sa1 = 'p1`36c,p2`14c;1-,--'
   # sa2s = [
@@ -649,6 +675,81 @@ def test_doubles():
 
     cost = mover.get_cost_from_text(sa1, sa2, time=0.20, verbose=True)
     print(sa2, cost, '\n')
+  return
+
+
+def test_doubles_hold_taps(mover):
+  paths = {
+    # 'wrong': [
+    #   'p1`47,p1`36c;-2,--',
+    #   'p1`57,p1`36c;14,--',
+    #   'p1`57,p1`36c;-4,1-',
+    #   'p1`57,p1`36c;14,--',
+    #   'p1`47,p1`36c;-3,--',
+    # ],
+    # 'right': [
+    #   'p1`47,p1`36c;-2,--',
+    #   'p1`47,p1`a5;-4,-1',
+    #   'p1`47,p1`a3;-4,-1',
+    #   'p1`47,p1`a5;-4,-1',
+    #   'p1`47,p1`a5;-3,--',
+    # ],
+    'wrong2': [
+      'p1`35,p2`15;2-,1-',
+      'p1`36,p2`15;4-,-1',
+      'p1`36,p2`14;4-,1-',
+      'p1`36,p2`47;4-,-1',
+      'p1`36,p2`14c;4-,1-',
+      'p1`36,p2`4-p1`9c;4-,-1',
+      'p1`36,p2`14c;4-,1-',
+      'p1`36,p1`56;4-,1-',
+      'p1`36,p2`14c;4-,1-',
+      'p1`36,p2`4-p1`9c;4-,-1',
+      'p1`36,p2`14c;4-,1-',
+      'p1`36,p2`47;4-,-1',
+    ],
+    'right2': [
+      'p1`3-p2`1,p2`a5;21,--',
+      'p1`3-p2`1,p2`57;4-,1-',
+      'p1`3-p2`1,p2`57;41,--',
+      'p1`3-p2`1,p2`47c;4-,-1',
+      'p1`3-p2`1,p2`47c;41,--',
+      'p1`3-p2`1,p1`69c;4-,-1',
+      'p1`3-p2`1,p1`69c;41,--',
+      'p1`3-p2`1,p1`59;4-,1-',
+      'p1`3-p2`1,p1`59;41,--',
+      'p1`3-p2`1,p2`7-p1`9;4-,-1',
+      'p1`3-p2`1,p2`7-p1`9;41,--',
+      'p1`3-p2`1,p2`a7;4-,-1',
+    ],
+    # 'wrong3': [
+    #   'p2`1-p1`6c,p2`4-p1`9c;--,-2',
+    #   'p1`6-p2`7c,p2`4-p1`9c;-1,-4',
+    #   'p1`59,p2`4-p1`9c;1-,-4',
+    #   'p2`54,p2`4-p1`9c;1-,-4',
+    #   'p2`54,p2`4-p1`9c;--,-3',
+    # ],
+    # 'right3': [
+    #   'p1`69,p2`14;-2,--',
+    #   'p1`69,p2`47;-4,-1',
+    #   'p1`59,p2`47;14,--',
+    #   'p1`59,p2`a5;-4,-1',
+    #   'p1`69c,p2`a5;-3,--',
+    # ]
+  }
+  for name, path in paths.items():
+    total_cost_d = defaultdict(lambda: 0)
+    for sa1, sa2 in zip(path[:-1], path[1:]):
+      # print('\n', sa1, sa2)
+      # cost_d = mover.get_cost_from_text(sa1, sa2, verbose=True)
+      cost_d = mover.get_cost_from_text(sa1, sa2)
+      for k, v in cost_d.items():
+        total_cost_d[k] += v
+    cost = sum(total_cost_d.values())
+    print('\n', name, cost)
+    for k, v in total_cost_d.items():
+      print(k.ljust(15), v)
+
   return
 
 

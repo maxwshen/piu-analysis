@@ -2,8 +2,6 @@
   Dijkstra's algorithm on topologically sorted nodes: O(E + V).
   Faster big-O time than priority queue at O(E + VlogV), but
   priority queue allows skipping nodes, which makes it faster in practice.
-
-  Note: Deprecated by c2.py
 '''
 import _config, _data, _stances, util, _params
 import sys, os, pickle, fnmatch, datetime, subprocess, functools
@@ -13,10 +11,11 @@ from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
 import _movement, _params, _memoizer, _stances
-import _graph
+import _graph, b_graph, segment, segment_edit
 
 # Default params
-inp_dir = _config.OUT_PLACE + f'b_graph/'
+inp_dir_b = _config.OUT_PLACE + 'b_graph/'
+inp_dir_segment = _config.OUT_PLACE + 'segment/'
 NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
@@ -29,16 +28,13 @@ stats_d = defaultdict(lambda: 0)
 '''
 def dijkstra(graph):
   # Updates graph.costs and graph.predecessor
-  # TODO Re-implement Dynamic cost function for fast jacks
   global stats_d
   visited = set()
   qu = [(0, graph.init_node)]
-
-  mean_sa_per_line = graph.graph_stats()
-  approx_num_edges = len(graph.line_nodes) * (mean_sa_per_line)**2
+  visited_line_nodes = set()
 
   print('Running Dijkstra`s algorithm ...')
-  timer = util.Timer(total=approx_num_edges, print_interval=5e4)
+  timer = util.Timer(total=len(graph.line_nodes), print_interval=5e4)
   while qu:
     u_cost, u = heappop(qu)
 
@@ -51,12 +47,6 @@ def dijkstra(graph):
     visited.add(u)
     stats_d['Num. nodes considered'] += 1
 
-    '''
-      TODO - Right now, edge_generator is simply the product of all nodes.
-      Consider proposing edges intelligently to avoid needing to remove unnecessary jumps? (hypothesis: Calculating unnecessary jumps is expensive). Can just propose neighbors using current sa and next line. Can help reduce branching factor. 
-      Evidence: On Mitosudaira d19 and super fantasy s19, jump cache has low 22% re-hit rate, so most of the time we are computing unnecessary jump.
-      If we will compute neighbors on the fly, do we still need b_graph to explicitly enumerate stance-actions? What becomes the purpose of b_graph -- can we deprecate it?
-    '''
     for v in graph.edge_generator(u):
       if v in visited:
         continue
@@ -67,16 +57,23 @@ def dijkstra(graph):
       graph.error_check(u, v)
 
       stats_d['Num. edges considered'] += 1
-      v_cost = u_cost + graph.edge_cost(u, v)
+      cost_dict = graph.edge_cost(u, v)
+      cost = round(sum(cost_dict.values()), 2)
+      v_cost = u_cost + cost
       if v_cost < graph.costs[v]:
         graph.costs[v] = v_cost
+        graph.cost_dicts[v] = cost_dict
         graph.predecessors[v] = u
         heappush(qu, (v_cost, v))
+
+    line_node, sa, tag = _graph.parse_node_name(u)
+    if line_node not in visited_line_nodes:
+      visited_line_nodes.add(line_node)
       timer.update()
   timer.end()
 
   if u != graph.final_node:
-    raise Exception(f'Graph lacks forward path to final node. Traversed {len(visited)} nodes.')
+    raise Exception(f'Graph lacks path to final node. Traversed {len(visited)} nodes.')
 
   # Record memoization stats
   stats_d = _memoizer.add_cache_stats('psa', graph.parse_sa, stats_d)
@@ -90,30 +87,40 @@ def dijkstra(graph):
 def backtrack_annotate(graph) -> pd.DataFrame:
   # Assumes graph.predecessors and graph.costs are populated by dijkstra
   cols = ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']
-  dd = defaultdict(list)
 
   node = graph.predecessors[graph.final_node]
-  cost = graph.costs[graph.final_node]
-
   if node is None:
     raise Exception(f'Error in backtracking: Final node has no parent')
 
+  dd = defaultdict(list)
   while node != graph.init_node:
     parent = graph.predecessors[node]
     cost = graph.costs[node]
+    cost_dict = graph.cost_dicts[node]
     if parent is None:
       raise Exception(f'Error in backtracking: {node} has no parent')
 
-    line_node, sa = _graph.parse_node_name(node)
+    line_node, sa, tag = _graph.parse_node_name(node)
     dd['Node'].append(node)
     dd['Line node'].append(line_node)
     dd['Stance action'].append(sa)
-    dd['Cost'].append(cost)
+    dd['Tag'].append(tag)
+    dd['Running cost'].append(cost)
+
+    beat = graph.line_nodes[line_node]['Beat']
+    annot = graph.annots.get(beat, '')
+    motif = graph.beat_to_motif.get(beat, '')
+    dd['Annotation'].append(annot)
+    dd['Motif'].append(motif)
+
     for col in cols:
       dd[col].append(graph.line_nodes[line_node][col])
     ad = parse_sa_to_limb_action(sa)
     for limb in ad:
       dd[limb].append(ad[limb])
+    dd['Cost'].append(round(sum(cost_dict.values()), 2))
+    for col in cost_dict:
+      dd[col].append(cost_dict[col])
 
     node = parent
 
@@ -146,13 +153,15 @@ def parse_sa_to_limb_action(sa: str) -> dict:
   return d
 
 
+def is_final_node(node):
+  line_node, sa = _graph.parse_node_name(node)
+  return line_node == 'final'
+
+
 '''
   IO
 '''
-def load_data(sc_nm: str):
-  with open(inp_dir + f'{sc_nm}.pkl', 'rb') as f:
-    line_nodes, line_edges_out, line_edges_in = pickle.load(f)
-  return line_nodes, line_edges_out, line_edges_in
+
 
 
 def output_log(message):
@@ -221,8 +230,9 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
+  nm = '8 6 - DASU D21 arcade'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'
@@ -232,11 +242,12 @@ def main():
   util.exists_empty_fn(log_fn)
   print(nm, move_skillset)
 
-  line_nodes, line_edges_out, line_edges_in = load_data(nm)
+  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
+  annots, motifs = segment.load_annotations(inp_dir_segment, nm)
 
   steptype = line_nodes['init']['Steptype']
   mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
-  graph = _graph.Graph(mover, line_nodes, line_edges_out)
+  graph = _graph.Graph(mover, line_nodes, line_edges_out, annots, motifs)
 
   graph = dijkstra(graph)
   df = backtrack_annotate(graph)

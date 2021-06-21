@@ -7,11 +7,13 @@
   Here, eval functions using dicts, but cache using strings.
   Sometimes, we can cache using subset of string, increasing cache hit rate.
 '''
+import copy
 from collections import defaultdict
-
+import _notelines, _graph
 
 cost_memoizer = defaultdict(lambda: 0)
-def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta, line_node2, verbose=False):
+def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta,
+    line_node2, line, tag1, tag2, motif_len, verbose=False):
   key = (sa1, sa2)
   if key in cost_memoizer and not verbose:
     cost_dict = cost_memoizer[key]
@@ -21,20 +23,29 @@ def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta, line_node2, verbose=False)
     cost_memoizer[key] = cost_dict
 
   # Modify based on data outside high-percentage memoizer keys
+  cost_dict = copy.copy(cost_dict)
   cost_dict['multihit'] = mover.multihit_modifier(d1, d2, line_node2)
 
   if 0.001 < timedelta < mover.params['Time threshold']:
     time_factor = max(1.0, mover.params['Time normalizer'] / timedelta)
     time_affected = (
-      'double_step',
+      # 'double_step',
       # 'bracket',
-      'move_without_action',
-      'jump',
+      # 'move_without_action',
+      # 'jump',
     )
     for prop in time_affected:
       cost_dict[prop] *= time_factor
   elif timedelta > mover.params['Time threshold']:
-    cost_dict['double_step'] = 0
+    # cost_dict['double_step'] = 0
+    pass
+
+  # Penalize using bracket positions for single-panel lines
+  cost_dict['bracket_for_1panel'] = mover.bracket_on_singlepanel_line(d2, 
+      line)
+
+  # Penalize alternating feet on holds
+  cost_dict['hold_alternate'] = mover.hold_alternate(tag1, tag2, motif_len)
 
   if verbose:
     print(f'Edge cost: {cost_dict}')
@@ -107,7 +118,6 @@ def add_cache_stats(nm, cached_func, stats_d):
 def add_custom_memoizer_stats(stats_d):
   memoizers = {
     'Move': move_memoizer,
-    'Jump': jump_memoizer,
     'Cost': cost_memoizer,
     'Beginner': beginner_memoizer,
   }

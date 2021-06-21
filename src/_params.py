@@ -1,5 +1,3 @@
-import _config
-import sys, os, fnmatch, datetime, subprocess
 import numpy as np
 
 # Units: Seconds; [before note, after note]
@@ -11,12 +9,15 @@ perfect_windows = {
   'itg': [0.0215, 0.0215],
 }
 
+# min. level to propose brackets alongside jumps for two-hits (01100)
 bracket_level_threshold = 16
+# min. level to propose alternating feet in hold-taps with brackets
+hold_bracket_level_threshold = 19
 
-jacks_footswitch_npm_thresh = 275
-jacks_footswitch_t_thresh = 60 / jacks_footswitch_npm_thresh
+# max lines in hold-taps to apply penalty on alternating
+hold_tap_line_threshold = 4
 
-# Consider at most 4 total lines for multihit. More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
+# Consider at most 4 lines for multihit. More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
 max_lines_in_multihit = 4
 
 init_stanceaction = {
@@ -60,61 +61,39 @@ movement_costs = {
   },
   'basic': {
     'costs': {
-      'Double step': 3,
-      'Inverted feet small': 0.1,
-      'Inverted feet big': 0.15,
+      'Double step': 2.5,
+      'Inverted feet small': 0.3,
+      'Inverted feet big': 0.5,
       'Inverted hands': 5,
       'Hold footslide': 0.2,
-      'Hold footswitch': 3,
-      'Angle too open': 3,
-      'Angle duck': 0.01,
-      'Angle extreme duck': 3,
-      'Angle non-air inverted': 1,
+      'Hold footswitch': 5,
+      # 'Angle too open': 3,
+      # 'Angle duck': 0.01,
+      # 'Angle extreme duck': 3,
+      # 'Angle non-air inverted': 1,
+      'Angle too open': 0,
+      'Angle duck': 0,
+      'Angle extreme duck': 0,
+      'Angle non-air inverted': 0,
       'Jump': 0.75,
-      'No movement reward': -0.5,
+      'Move power': 1.5,
+      'No movement reward': -.2,
       'Multi reward': -1.5,
       'Bracket': 0,
+      'Bracket on 1panel line': 0,
       'Hands': 5,
-      'Move without action': 3,
-      'Downpress cost per limb': 0.05,
+      'Move without action': 5,
+      'Hold alternate feet for hits (onetime, short)': 5,
+      'Hold alternate feet for hits (onetime, long)': 1,
+      'Downpress cost per limb': 0,
     },
     'parameters': {
-      # Distance of 1000 mm = 1 cost
-      'Distance normalizer': 1000,
+      # Distance in mm = 1 cost
+      'Distance normalizer': 250,
       'Inversion distance threshold': 200,
       'Time threshold': 0.50,
       # Time of 200 ms = 1 cost
       'Time normalizer': 0.20,
-    },
-  },
-  'basicold': {
-    'costs': {
-      'Double step': 3,
-      'Inverted feet small': 0.1,
-      'Inverted feet big': 0.15,
-      'Inverted hands': 5,
-      'Hold footslide': 0.2,
-      'Hold footswitch': 3,
-      'Angle too open': 3,
-      'Angle duck': 0.01,
-      'Angle extreme duck': 3,
-      'Angle non-air inverted': 1,
-      'Jump': 0.75,
-      'No movement reward': -0.5,
-      # 'Multi reward': -10,
-      'Multi reward': -1.5,
-      'Bracket': 0,
-      'Hands': 5,
-      'Move without action': 3,
-      'Downpress cost per limb': 0.05,
-    },
-    'parameters': {
-      # Distance of 1000 mm = 1 cost
-      'Distance normalizer': 1000,
-      'Inversion distance threshold': 200,
-      'Time threshold': 0.75,
-      # Time of 250 ms = 1 cost
-      'Time normalizer': 0.25,
     },
   },
 }
@@ -129,6 +108,6 @@ bracketable_lines = set([
   '0000001100',
   '0000000110',
   '0000000101',
-  '0000110000'
-  '0001001000'
+  '0000110000',
+  '0001001000',
 ])

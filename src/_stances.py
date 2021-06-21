@@ -347,6 +347,22 @@ class Stances():
             zip(self.all_limbs, self.stance_to_limbposs(stance))}
 
 
+  def limbs_downpress(self, sa):
+    '''
+      Get limb indices with downpresses in stanceaction
+    '''
+    actions = sa[sa.index(';'):]
+    limbs = actions.split(',')
+    has_action = lambda limb_action: any(x in limb_action for x in list('123'))
+    return [i for i, la in enumerate(limbs) if has_action(la)]
+
+
+  def limbs_1(self, sa):
+    actions = sa[sa.index(';'):]
+    limbs = actions.split(',')
+    has_action = lambda limb_action: any(x in limb_action for x in list('1'))
+    return [i for i, la in enumerate(limbs) if has_action(la)]
+
 '''
   Testing
 '''

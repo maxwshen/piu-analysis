@@ -2,15 +2,15 @@
   Graph for Dijkstra's.
   Nodes are stance-actions at specific lines.
 '''
-import functools
+import sys, functools, itertools
 import numpy as np, pandas as pd
 from collections import defaultdict
 from typing import List, Dict, Set, Tuple
 
-import _memoizer, _params, _stances
+import _memoizer, _params, _stances, segment
 
 class Graph():
-  def __init__(self, mover, line_nodes, line_edges):
+  def __init__(self, mover, line_nodes, line_edges, annots, motifs):
     self.stats_d = defaultdict(lambda: 0)
     self.mover = mover    
     self.stances = _stances.Stances(style=mover.style)
@@ -28,98 +28,213 @@ class Graph():
     self.cost_dicts = defaultdict(lambda: {})
 
     init_sa = _params.init_stanceaction[mover.style]
-    self.init_node = get_node_name('init', init_sa)
-    self.final_node = get_node_name('final', init_sa)
+    default_tag = 'any-any-any'
+    self.init_node = get_node_name('init', init_sa, default_tag)
+    self.final_node = get_node_name('final', init_sa, default_tag)
     self.costs[self.init_node] = 0
+
+    self.path_consistent_annotations = set(['jackorfootswitch', 'jumporbracket'])
+    self.path_consistent_tags = set(['jack', 'footswitch', 'jump', 'bracket'])
+
+    self.beats = [self.line_nodes[x]['Beat'] for x in self.line_nodes]
+    self.annots, self.motifs = segment.filter_annots(self.beats, annots, motifs)
+    self.beat_to_motif = self.get_beat_to_motif()
+    self.beat_to_motiflen = self.get_beat_to_motif_len()
     pass
+
+
+  def get_beat_to_motif(self):
+    # beat -> section, motif_annotation
+    beat_to_motif = {}
+    for beat in self.beats:
+      for section in self.motifs:
+        if segment.beat_in_section(beat, section):
+          motif_annot = self.motifs[section]
+          beat_to_motif[beat] = (section, motif_annot)
+          break
+    return beat_to_motif
+
+
+  def get_beat_to_motif_len(self):
+    beat_to_motiflen = {}
+    for beat in self.beats:
+      for section in self.motifs:
+        if segment.beat_in_section(beat, section):
+          motif_len = len([b for b in self.beats
+                          if section[0] <= b <= section[1]])
+          beat_to_motiflen[beat] = motif_len
+          break
+    return beat_to_motiflen
 
 
   '''
     Graph functions
   '''
-  def node_generator(self, stance: str, line_node: str):
-    if line_node == 'final':
-      yield self.final_node
+  def node_generator(self, stance, tag, prev_sa, line_node):
+    aug_line = self.line_nodes[line_node]['Line with active holds']
+    beat = self.line_nodes[line_node]['Beat']
+
+    annot = self.annots[beat] if beat in self.annots else None
+    motif = self.beat_to_motif[beat] if beat in self.beat_to_motif else None
+    if motif is not None:
+      motif_section, motif_annot = motif
+      [motif_jfs, motif_twohits, motif_hold] = motif_annot.split('-')
+      motif_start, motif_end = motif_section
+
+    tag_jfs, tag_twohits, tag_hold = parse_tag(tag)
+
+    motif_branch = False
+    jfs, twohits, hold = 'any', 'any', 'any'
+    if motif:
+      if beat == motif_start:
+        motif_branch = True
+      else:
+        jfs = tag_jfs
+        twohits = tag_twohits
+        hold = tag_hold
+    
+    sas = self.stances.stanceaction_generator(stance, aug_line)
+    if motif_branch:
+      sas, ntags = self.motif_branch(prev_sa, sas, annot,
+          motif_jfs, motif_twohits, motif_hold)
     else:
-      aug_line = self.line_nodes[line_node]['Line with active holds']
-      for sa in self.stances.stanceaction_generator(stance, aug_line):
-        yield get_node_name(line_node, sa)
-    pass
+      sas = self.filter_stanceactions(prev_sa, sas, annot, jfs, twohits, hold)
+      ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
+
+    for sa, ntag in zip(sas, ntags):
+      yield get_node_name(line_node, sa, ntag)
 
 
   def edge_generator(self, node):
-    line_node, sa, stance, d = self.full_parse(node)
+    line_node, sa, tag, stance, d = self.full_parse(node)
     for line_node2 in self.line_edges[line_node]:
-      for node in self.node_generator(stance, line_node2):
-        yield node
-    pass
+      if line_node2 == 'final':
+        yield self.final_node
+      else:
+        for node in self.node_generator(stance, tag, sa, line_node2):
+          yield node
 
 
   def edge_cost(self, node1, node2, verbose = False):
-    '''
-      TODO: Add options to control which dynamic costs we use
-    '''
-    line_node1, sa1, s1, d1 = self.full_parse(node1)
-    line_node2, sa2, s2, d2 = self.full_parse(node2)
+    line_node1, sa1, tag1, s1, d1 = self.full_parse(node1)
+    line_node2, sa2, tag2, s2, d2 = self.full_parse(node2)
     if line_node2 == 'final':
       return {}
     time12 = self.timedelta(node1, node2)
+    beat = self.line_nodes[line_node2]['Beat']
+    motif_len = self.beat_to_motiflen.get(beat, None)
     cost_dict = _memoizer.get_edge_cost(self.mover, 
-        sa1, sa2, d1, d2, time12, line_node2, verbose=verbose)
-
-    cost_dict['fast_jacks'] = 0
-
-    # Dynamic cost functions
-    node0 = self.predecessors[node1]
-    if node0:
-      line_node0, sa0, s0, d0 = self.full_parse(node0)
-      time01 = self.timedelta(node0, node1)
-
-      # Fast jacks dynamic cost function
-      threshold = _params.jacks_footswitch_t_thresh
-      if time01 < threshold and time12 < threshold:
-        mv_cost01 = _memoizer.move_cost(self.mover, s0, s1, d0, d1)
-        mv_cost12 = _memoizer.move_cost(self.mover, s1, s2, d1, d2)
-        if mv_cost01 <= 0 and mv_cost12 <= 0:
-          cost_dict['fast_jacks'] = self.mover.fast_jacks_cost(d0, d1, d2, time01, time12)
-          self.stats_d['Dynamic cost: fast jacks'] += 1
-
-      # Implement other dynamic costs here
-      pass
+        sa1, sa2, d1, d2, time12, line_node2,
+        self.line_nodes[line_node2]['Line'], tag1, tag2,
+        motif_len, verbose=verbose)
     return cost_dict 
 
 
   def error_check(self, node1, node2):
-    line_node1, sa1 = parse_node_name(node1)
-    line_node2, sa2 = parse_node_name(node2)
+    line_node1, sa1, tag1 = parse_node_name(node1)
+    line_node2, sa2, tag2 = parse_node_name(node2)
     timedelta = self.timedelta(node1, node2)
     
     if timedelta < 0.001:
-      output_log('Notes are too close together, likely from very high bpm')
+      print('ERROR: Notes are too close together, likely from high bpm')
       sys.exit(1)
     return
 
 
   '''
-    Filtering
+    Filter stance actions - constrain Dijkstra paths
   '''
-  def filter_node(self, line_node, sa):
-    filters = [
-      self.filter_node_beginner,
-    ]
-    return any([f(line_node, sa) for f in filters])
+  def motif_branch(self, prev_sa, sas, annot,
+      motif_jfs, motif_twohits, motif_hold):
+    '''
+      At the beginning of a motif, create branching parallel paths
+      with tag.
+      For each branch, propose stance-actions compatible with first line
+    '''
+    combos = {'jackorfootswitch': ['jack', 'footswitch'],
+              'jumporbracket': ['jump', 'bracket'],
+              'jackoralternate': ['jack', 'alternate']}
+    get_combo = lambda motif: combos.get(motif, [motif])
+
+    out_sas, ntags = [], []
+    for jfs in get_combo(motif_jfs):
+      for twohits in get_combo(motif_twohits):
+        for hold in get_combo(motif_hold):
+          # Don't filter hold at branch
+          path_sas = self.filter_stanceactions(prev_sa, sas, annot,
+              jfs, twohits, 'any')
+          out_sas += path_sas
+          ntags += [f'{jfs}-{twohits}-{hold}']*len(path_sas)
+    return out_sas, ntags
 
 
-  def filter_node_beginner(self, line_node, sa):
-    remove = False
-    d = self.parse_sa(sa)
-    if self.mover.move_skillset == 'beginner':
-      remove = not _memoizer.beginner_ok(self.mover, get_stance_from_sa(sa), d)
-      if remove:
-        self.stats_d['Num. nodes skipped by beginner filtering'] += 1
-    return remove
+  def filter_stanceactions(self, prev_sa, sas, annot, jfs, twohits, hold):
+    '''
+      Filters stanceactions based on flags.
+        annot: ['', 'jackorfootswitch', 'alternate', 'jumporbracket', 'jump']
+        jfs (jack/footswitch): ['any', 'jack', 'footswitch']
+        twohits: ['any', 'jump',' 'bracket']
+        hold: ['any', 'jack', 'alternate']
+      Returns filtered sas and list of tags
+    '''
+    if hold in ['jack', 'alternate']:
+      return self.filter_hold(prev_sa, sas, hold)
+
+    if annot in ['jack', 'footswitch', 'jackorfootswitch']:
+      return self.filter_jackfootswitch(prev_sa, sas, jfs)
+    elif annot in ['jump', 'bracket', 'jumporbracket']:
+      return self.filter_twohits(sas, annot)
+    elif annot == 'alternate':
+      return self.filter_alternate(prev_sa, sas)
+    return sas
 
 
+  def filter_jackfootswitch(self, prev_sa, sas, jfs):
+    prev_limbs = self.stances.limbs_downpress(prev_sa)
+    if jfs == 'jack':
+      accept = lambda sa: self.stances.limbs_downpress(sa) == prev_limbs
+    elif jfs == 'footswitch':
+      accept = lambda sa: self.stances.limbs_downpress(sa) != prev_limbs
+    elif jfs in ['jackorfootswitch', 'any']:
+      accept = lambda sa: True
+    else:
+      print(f'ERROR: jfs is {jfs}')
+    return [sa for sa in sas if accept(sa)]
+
+
+  def filter_twohits(self, sas, twohits):
+    if twohits == 'jump':
+      accept = lambda sa: len(self.stances.limbs_downpress(sa)) == 2
+    elif twohits == 'bracket':
+      accept = lambda sa: len(self.stances.limbs_downpress(sa)) == 1
+    elif twohits in ['jumporbracket', 'any']:
+      accept = lambda sa: True
+    else:
+      print(f'ERROR: twohits is {twohits}')
+    return [sa for sa in sas if accept(sa)]
+
+
+  def filter_alternate(self, prev_sa, sas):
+    prev_limbs = self.stances.limbs_downpress(prev_sa)
+    accept = lambda sa: self.stances.limbs_downpress(sa) != prev_limbs
+    return [sa for sa in sas if accept(sa)]
+
+
+  def filter_hold(self, prev_sa, sas, hold):
+    prev_limbs = self.stances.limbs_1(prev_sa)
+    if hold == 'jack':
+      accept = lambda sa: self.stances.limbs_1(sa) == prev_limbs
+    elif hold == 'alternate':
+      accept = lambda sa: all(x not in prev_limbs
+          for x in self.stances.limbs_1(sa))
+    else:
+      accept = lambda sa: True
+    return [sa for sa in sas if accept(sa)]
+
+
+  '''
+    Filter edges
+  '''
   def filter_edge(self, node1, node2):
     # Ignore edges with heuristics
     filters = [
@@ -135,22 +250,23 @@ class Graph():
       Get unnecessary jump flag by memoization
       Use strings as keys; dicts are not hashable
     '''
-    line_node1, sa1, stance1, d1 = self.full_parse(node1)
-    line_node2, sa2, stance2, d2 = self.full_parse(node2)
+    line_node1, sa1, tag1, stance1, d1 = self.full_parse(node1)
+    line_node2, sa2, tag2, stance2, d2 = self.full_parse(node2)
     line2 = self.line_node_to_line(line_node2)
-    remove = _memoizer.unnecessary_jump(self.mover, stance1, stance2, d1, d2, line2)
+    remove = _memoizer.unnecessary_jump(self.mover,
+        stance1, stance2, d1, d2, line2)
     if remove:
       self.stats_d['Num. edges skipped by unnecessary jump'] += 1
     return remove
 
-
+  
   '''
     Helper
   '''
   @functools.lru_cache(maxsize=None)
   def timedelta(self, node1, node2):
-    ln1, sa1 = parse_node_name(node1)
-    ln2, sa2 = parse_node_name(node2)
+    ln1, sa1, tag1 = parse_node_name(node1)
+    ln2, sa2, tag2 = parse_node_name(node2)
     return self.line_nodes[ln2]['Time'] - self.line_nodes[ln1]['Time']
 
 
@@ -162,10 +278,10 @@ class Graph():
 
   @functools.lru_cache(maxsize=None)
   def full_parse(self, node: str):
-    line_node, sa = parse_node_name(node)
+    line_node, sa, tag = parse_node_name(node)
     s = get_stance_from_sa(sa)
     d = self.parse_sa(sa)
-    return line_node, sa, s, d
+    return line_node, sa, tag, s, d
 
 
   '''
@@ -175,7 +291,7 @@ class Graph():
     # Why did dijkstra find parent X for node, and not parent Y?
     # Inspect costs of all parent nodes
     # TODO - This was broken by changes to node_generator. Fix up
-    line_node, sa = parse_node_name(node)
+    line_node, sa, tag = parse_node_name(node)
     parent_lines = [l for l in self.line_nodes if line_node in self.line_edges[l]]
     parents = []
     for parent_line in parent_lines:
@@ -197,7 +313,7 @@ class Graph():
       - Manually open csv
       - Find a node to inspect
       Useful calls
-        line_node, sa = parse_node_name(node)
+        line_node, sa, tag = parse_node_name(node)
         list(self.node_generator(prev_stance, line_node))
         self.inspect_parents_of_node(node)
         self.edge_cost(node1, node2, verbose=True)
@@ -216,14 +332,20 @@ class Graph():
   Parsing
 '''
 @functools.lru_cache(maxsize=None)
-def get_node_name(line_node: str, sa: str) -> str:
-  return f'{line_node}:{sa}'
+def get_node_name(line_node, sa, tag) -> str:
+  return ':'.join([line_node, sa, tag])
 
 
 @functools.lru_cache(maxsize=None)
 def parse_node_name(node: str):
-  [line_node, sa] = node.split(':')
-  return line_node, sa
+  [line_node, sa, tag] = node.split(':')
+  return line_node, sa, tag
+
+
+@functools.lru_cache(maxsize=None)
+def parse_tag(tag):
+  [tag_jfs, tag_twohit, tag_hold] = tag.split('-')
+  return tag_jfs, tag_twohit, tag_hold
 
 
 @functools.lru_cache(maxsize=None)

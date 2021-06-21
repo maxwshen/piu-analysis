@@ -357,7 +357,7 @@ def main():
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
-  nm = 'Native - SHK S20 arcade'
+  # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
@@ -373,6 +373,7 @@ def main():
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
+  nm = '8 6 - DASU D21 arcade'
 
   subset_measures = 0
   # subset_measures = 7
