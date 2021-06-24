@@ -233,17 +233,12 @@ class Graph():
 
 
   def filter_hold(self, prev_sa, sas, hold):
-    '''
-      TODO - fix up
-      Issue: What if there are lines between 1s with just 4?
-        Need to subset to downpress lines?
-    '''
-    prev_limbs = self.stances.limbs_1(prev_sa)
+    prev_limbs = [limb for limb in self.stances.limbs_doing(prev_sa, list('13'))]
     if hold == 'jack':
-      accept = lambda sa: self.stances.limbs_1(sa) == prev_limbs
+      accept = lambda sa: self.stances.limbs_doing(sa, list('12')) == prev_limbs
     elif hold == 'alternate':
       accept = lambda sa: all(x not in prev_limbs
-          for x in self.stances.limbs_1(sa))
+          for x in self.stances.limbs_doing(sa, list('12')))
     else:
       accept = lambda sa: True
     return [sa for sa in sas if accept(sa)]

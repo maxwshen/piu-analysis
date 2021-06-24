@@ -357,10 +357,11 @@ class Stances():
     return [i for i, la in enumerate(limbs) if has_action(la)]
 
 
-  def limbs_1(self, sa):
+  def limbs_doing(self, sa, doing):
+    # doing = list('12')
     actions = sa[sa.index(';'):]
     limbs = actions.split(',')
-    has_action = lambda limb_action: any(x in limb_action for x in list('1'))
+    has_action = lambda limb_action: any(x in limb_action for x in doing)
     return [i for i, la in enumerate(limbs) if has_action(la)]
 
 '''

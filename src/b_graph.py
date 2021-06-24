@@ -341,7 +341,8 @@ def main():
   # nm = 'Everybody Got 2 Know - MAX S19 remix'
   # nm = 'Chicken Wing - BanYa S17 arcade'
   # nm = 'Hypnosis - BanYa S18 arcade'
-  nm = 'NoNoNo - Apink S14 arcade'
+  # nm = 'NoNoNo - Apink S14 arcade'
+  nm = 'Rage of Fire - MAX S16 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

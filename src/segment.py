@@ -683,7 +683,8 @@ def main():
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Chicken Wing - BanYa S17 arcade'
   # nm = 'Hypnosis - BanYa S18 arcade'
-  nm = 'NoNoNo - Apink S14 arcade'
+  # nm = 'NoNoNo - Apink S14 arcade'
+  nm = 'Rage of Fire - MAX S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
