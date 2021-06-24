@@ -144,7 +144,6 @@ def find_motifs(line_nodes, features, beats):
   sections = []
   MIN_MOTIF_LEN = 4
   INIT_SEED_LEN = 16
-
   lines = [line_nodes[k]['Line with active holds'] for k in line_nodes
             if line_nodes[k]['Beat'] in beats]
   all_motifs = get_active_hold_motifs(lines, features, beats)
@@ -636,7 +635,7 @@ def run_single(nm):
   # Remove multihit nodes
   ks = list(line_nodes.keys())
   for node in ks:
-    if 'multi' in node:
+    if any(x in node for x in ['multi', 'init', 'final']):
       del line_nodes[node]
 
   downpress_filter = lambda node: 'multi' not in node and \
@@ -685,7 +684,8 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
-  nm = 'Chicken Wing - BanYa S17 arcade'
+  # nm = 'Chicken Wing - BanYa S17 arcade'
+  nm = 'Hypnosis - BanYa S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
