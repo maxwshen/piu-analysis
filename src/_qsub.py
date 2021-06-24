@@ -1,4 +1,4 @@
-import _config, util
+import _config, util, subprocess
 import pandas as pd
 
 inp_dir = _config.DATA_DIR
@@ -32,12 +32,14 @@ def gen_qsubs(NAME, chart_fnm):
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -P regevlab -wd {_config.SRC_DIR} {sh_fn}')
+    qsub_commands.append(f'qsub -j y -V -P regevlab -l h_rt=1:00:00 -wd {_config.SRC_DIR} {sh_fn}')
 
   # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
+  commands_fn = qsubs_dir + '_commands.sh'
+  with open(commands_fn, 'w') as f:
     f.write('\n'.join(qsub_commands))
-
+  subprocess.check_output(f'chmod +x {commands_fn}', shell = True)
+  
   print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
   return
 
