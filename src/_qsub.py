@@ -48,5 +48,9 @@ def run_qsubs(chart_fnm, start, end, run_single):
   qdf = pd.read_csv(_config.DATA_DIR + chart_fnm + '.csv', index_col=0)
   qdfs = qdf.iloc[int(start) : int(end)]
   for i, row in qdfs.iterrows():
-    run_single(row['Name (unique)'])
+    try:
+      run_single(row['Name (unique)'])
+    except:
+      print('Failed', row['Name (unique)'])
+      pass
   return

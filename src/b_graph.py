@@ -99,8 +99,7 @@ def form_graph(nm, subset_measures = 0):
 
       line = _notelines.parse_line(line)
       if any(x not in set(list('01234')) for x in line):
-        print(f'ERROR: Bad symbol found in line, {line}')
-        sys.exit(1)
+        raise ValueError(f'Bad symbol found in line, {line}')
 
       if _notelines.has_notes(line):
         # Add active holds into line as 4
