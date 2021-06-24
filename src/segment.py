@@ -373,7 +373,10 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
   # Alternate 3->2 when not same pad
   for b1, b2 in zip(beats[:-1], beats[1:]):
     lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
-    [line1, line2] = lines_holds
+    try:
+      [line1, line2] = lines_holds
+    except:
+      import code; code.interact(local=dict(globals(), **locals()))
     line_len = len(lines_holds[0])
     if line2.replace('2', '3') != line1:
       if line1.count('0') == line_len-1 and '3' in line1:
@@ -629,6 +632,13 @@ def filter_annots(beats, unif_d, motifs):
 def run_single(nm):
   # Load lines
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir, nm)
+
+  # Remove multihit nodes
+  ks = list(line_nodes.keys())
+  for node in ks:
+    if 'multi' in node:
+      del line_nodes[node]
+
   downpress_filter = lambda node: 'multi' not in node and \
                              'init'  not in node and \
                              'final' not in node and \
@@ -668,13 +678,14 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Tepris - Doin S17 arcade'
-  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
+  nm = 'Chicken Wing - BanYa S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

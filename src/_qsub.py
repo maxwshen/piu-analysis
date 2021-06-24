@@ -50,6 +50,7 @@ def run_qsubs(chart_fnm, start, end, run_single):
   for i, row in qdfs.iterrows():
     try:
       run_single(row['Name (unique)'])
+      print('Success', row['Name (unique)'])
     except:
       print('Failed', row['Name (unique)'])
       pass

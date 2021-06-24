@@ -318,7 +318,7 @@ def run_single(sc_nm):
   print(f'Found {len(nodes)} nodes')
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump((nodes, edges_out, edges_in), f)
-  output_log('Success')
+  # output_log('Success')
   return
 
 
@@ -338,7 +338,8 @@ def main():
   # nm = 'Dabbi Doo - Ni-Ni S2 arcade'
   # nm = 'Boulafacet - Nightmare S22 arcade'
   # nm = 'Elvis - AOA S15 arcade'
-  nm = 'Everybody Got 2 Know - MAX S19 remix'
+  # nm = 'Everybody Got 2 Know - MAX S19 remix'
+  nm = 'Chicken Wing - BanYa S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

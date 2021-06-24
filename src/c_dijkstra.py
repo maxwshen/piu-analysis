@@ -192,7 +192,7 @@ def run_single(nm):
   df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
 
   # graph.interactive_debug()
-  output_log('Success')
+  # output_log('Success')
   return
 
 
