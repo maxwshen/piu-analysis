@@ -32,7 +32,7 @@ def gen_qsubs(NAME, chart_fnm):
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
+    qsub_commands.append(f'qsub -j y -V -P regevlab -wd {_config.SRC_DIR} {sh_fn}')
 
   # Save commands
   with open(qsubs_dir + '_commands.txt', 'w') as f:
