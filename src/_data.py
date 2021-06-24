@@ -262,5 +262,7 @@ class SSCFile():
       bpms = ''
       if 'BPMS' in scatt:
         bpms = scatt['BPMS']
+      if bpms == '':
+        bpms = self.global_attributes['BPMS']
       all_bpms.append(bpms)
     return all_bpms

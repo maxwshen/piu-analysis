@@ -1,7 +1,7 @@
 '''
     Logic re note lines from .ssc file
 '''
-import re
+import re, functools
 import _params
 
 def has_downpress(line):
@@ -50,17 +50,14 @@ def add_active_holds(line, active_holds, panel_to_idx):
       aug_line[idx] = '4'
   return ''.join(aug_line)
 
-
-def parse_line(line: str) -> str:
+@functools.lru_cache(maxsize=None)
+def parse_line(line):
   '''
     Handle lines like:
       0000F00000
       00{2|n|1|0}0000000    
       0000{M|n|1|0} -> 0
   '''
-  if 'F' not in line and '{' not in line:
-    return line
-
   ws = re.split('{|}', line)
   nl = ''
   for w in ws:
@@ -73,6 +70,7 @@ def parse_line(line: str) -> str:
   replace = {
     'F': '1',
     'M': '0',
+    '4': '2',
   }
   line = line.translate(str.maketrans(replace))
   return line

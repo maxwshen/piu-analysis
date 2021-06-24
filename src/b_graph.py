@@ -39,7 +39,7 @@ log_fn = ''
 ##
 # Functions
 ##
-def form_graph(nm: str, subset_measures = 0):
+def form_graph(nm, subset_measures = 0):
   '''
     Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
 
@@ -256,7 +256,7 @@ def update_time(time, beat, beat_increment, bpm, bpms):
   return time, beat, bpm, bpms  
 
 
-def parse_bpm(bpms: str) -> List[List]:
+def parse_bpm(bpms):
   '''
   '''
   bpm_list = []
@@ -267,7 +267,7 @@ def parse_bpm(bpms: str) -> List[List]:
   return bpm_list
 
 
-def get_init_bpm(beat: int, bpms: List):
+def get_init_bpm(beat, bpms):
   # Init bpm at beat = 0
   while beat >= bpms[0][0]:
     bpm = bpms[0][1]
@@ -329,7 +329,10 @@ def main():
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
   # nm = 'Tepris - Doin S17 arcade'
-  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Dawgs In Da House - CanBlaster (Miami Style) S17 arcade'
+  # nm = 'Dabbi Doo - Ni-Ni S2 arcade'
+  nm = 'Boulafacet - Nightmare S22 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
