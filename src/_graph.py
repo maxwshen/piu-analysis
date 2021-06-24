@@ -134,11 +134,18 @@ class Graph():
   def error_check(self, node1, node2):
     line_node1, sa1, tag1 = parse_node_name(node1)
     line_node2, sa2, tag2 = parse_node_name(node2)
+    ok = ['init', 'final']
+    if line_node1 in ok or line_node2 in ok:
+      return
+    line1 = self.line_nodes[line_node1]['Line with active holds']
+    line2 = self.line_nodes[line_node2]['Line with active holds']
     timedelta = self.timedelta(node1, node2)
     
-    if timedelta < 0.001:
-      print('ERROR: Notes are too close together, likely from high bpm')
-      sys.exit(1)
+    if line1.replace('1', '2') != line2:
+      if timedelta < 0.001:
+        print('ERROR: Notes are too close together, likely from high bpm')
+        # import code; code.interact(local=dict(globals(), **locals()))
+        sys.exit(1)
     return
 
 
