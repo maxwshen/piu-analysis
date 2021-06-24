@@ -372,10 +372,7 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
   # Alternate 3->2 when not same pad
   for b1, b2 in zip(beats[:-1], beats[1:]):
     lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
-    try:
-      [line1, line2] = lines_holds
-    except:
-      import code; code.interact(local=dict(globals(), **locals()))
+    [line1, line2] = lines_holds
     line_len = len(lines_holds[0])
     if line2.replace('2', '3') != line1:
       if line1.count('0') == line_len-1 and '3' in line1:
@@ -685,7 +682,8 @@ def main():
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Chicken Wing - BanYa S17 arcade'
-  nm = 'Hypnosis - BanYa S18 arcade'
+  # nm = 'Hypnosis - BanYa S18 arcade'
+  nm = 'NoNoNo - Apink S14 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

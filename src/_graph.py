@@ -95,10 +95,11 @@ class Graph():
     
     sas = self.stances.stanceaction_generator(stance, aug_line)
     if motif_branch:
-      sas, ntags = self.motif_branch(prev_sa, sas, annot,
+      sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
           motif_jfs, motif_twohits, motif_hold)
     else:
-      sas = self.filter_stanceactions(prev_sa, sas, annot, jfs, twohits, hold)
+      sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+          jfs, twohits, hold)
       ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
 
     for sa, ntag in zip(sas, ntags):
@@ -144,7 +145,7 @@ class Graph():
   '''
     Filter stance actions - constrain Dijkstra paths
   '''
-  def motif_branch(self, prev_sa, sas, annot,
+  def motif_branch(self, prev_sa, sas, aug_line, annot,
       motif_jfs, motif_twohits, motif_hold):
     '''
       At the beginning of a motif, create branching parallel paths
@@ -161,14 +162,14 @@ class Graph():
       for twohits in get_combo(motif_twohits):
         for hold in get_combo(motif_hold):
           # Don't filter hold at branch
-          path_sas = self.filter_stanceactions(prev_sa, sas, annot,
+          path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
               jfs, twohits, 'any')
           out_sas += path_sas
           ntags += [f'{jfs}-{twohits}-{hold}']*len(path_sas)
     return out_sas, ntags
 
 
-  def filter_stanceactions(self, prev_sa, sas, annot, jfs, twohits, hold):
+  def filter_stanceactions(self, prev_sa, sas, aug_line, annot, jfs, twohits, hold):
     '''
       Filters stanceactions based on flags.
         annot: ['', 'jackorfootswitch', 'alternate', 'jumporbracket', 'jump']
@@ -177,10 +178,11 @@ class Graph():
         hold: ['any', 'jack', 'alternate', 'free']
       Returns filtered sas and list of tags
     '''
-    if hold in ['jack', 'alternate']:
-      return self.filter_hold(prev_sa, sas, hold)
-    elif hold == 'free':
-      return sas
+    if '4' in aug_line:
+      if hold in ['jack', 'alternate']:
+        return self.filter_hold(prev_sa, sas, hold)
+      elif hold == 'free':
+        return sas
 
     if annot in ['jack', 'footswitch', 'jackorfootswitch']:
       return self.filter_jackfootswitch(prev_sa, sas, jfs)
@@ -231,6 +233,11 @@ class Graph():
 
 
   def filter_hold(self, prev_sa, sas, hold):
+    '''
+      TODO - fix up
+      Issue: What if there are lines between 1s with just 4?
+        Need to subset to downpress lines?
+    '''
     prev_limbs = self.stances.limbs_1(prev_sa)
     if hold == 'jack':
       accept = lambda sa: self.stances.limbs_1(sa) == prev_limbs

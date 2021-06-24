@@ -73,6 +73,8 @@ def dijkstra(graph):
   timer.end()
 
   if u != graph.final_node:
+    print('Error: Dijkstra terminated')
+    # import code; code.interact(local=dict(globals(), **locals()))
     raise Exception(f'Graph lacks path to final node. Traversed {len(visited)} nodes.')
 
   # Record memoization stats
@@ -202,7 +204,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Last Rebirth - SHK S15 arcade'
+  nm = 'NoNoNo - Apink S14 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
