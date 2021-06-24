@@ -100,6 +100,7 @@ def get_all_stepcharts_df():
   seen = defaultdict(lambda: 0)
   dup_nms = set(dup_nms)
   nms = list(mdf['Name'])
+  nms = [nm.replace('/', '') for nm in nms]
   for idx, nm in enumerate(nms):
     if nm in dup_nms:
       seen[nm] += 1

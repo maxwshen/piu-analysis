@@ -71,6 +71,7 @@ def parse_line(line):
     'F': '1',
     'M': '0',
     '4': '2',
+    '6': '2',
   }
   line = line.translate(str.maketrans(replace))
   return line

@@ -98,6 +98,10 @@ def form_graph(nm, subset_measures = 0):
       beat_increment = beats_per_measure / num_subbeats
 
       line = _notelines.parse_line(line)
+      if any(x not in set(list('01234')) for x in line):
+        print(f'ERROR: Bad symbol found in line, {line}')
+        sys.exit(1)
+
       if _notelines.has_notes(line):
         # Add active holds into line as 4
         aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
@@ -332,7 +336,9 @@ def main():
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Dawgs In Da House - CanBlaster (Miami Style) S17 arcade'
   # nm = 'Dabbi Doo - Ni-Ni S2 arcade'
-  nm = 'Boulafacet - Nightmare S22 arcade'
+  # nm = 'Boulafacet - Nightmare S22 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Everybody Got 2 Know - MAX S19 remix'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
