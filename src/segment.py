@@ -11,7 +11,7 @@ from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
 import _movement, _params, _memoizer, _stances, _notelines, _stepcharts
-import _graph, b_graph, segment_edit
+import _graph, b_graph, segment_edit, _qsub
 
 # Default params
 inp_dir = _config.OUT_PLACE + f'b_graph/'
@@ -389,6 +389,16 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
       if line2.count('0') == line_len-1 and '1' in line2:
         ds[b2] = 'alternate'
 
+  # Force same foot on 1->2 with same pad
+  for b1, b2 in zip(beats[:-1], beats[1:]):
+    lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
+    [line1, line2] = lines_holds
+    line_len = len(lines_holds[0])
+    if line2.replace('2', '1') == line1:
+      if line1.count('0') == line_len-1 and '1' in line1:
+        if line2.count('0') == line_len-1 and '2' in line2:
+          ds[b2] = 'same'
+
   return ds
 
 
@@ -613,61 +623,11 @@ def filter_annots(beats, unif_d, motifs):
   return unif_d, new_motifs
 
 
-# qsub
-def gen_qsubs():
-  # Generate qsub shell scripts and commands for easy parallelization
-  print('Generating qsub scripts...')
-  qsubs_dir = _config.QSUBS_DIR + NAME + '/'
-  util.ensure_dir_exists(qsubs_dir)
-  qsub_commands = []
-
-  num_scripts = 0
-  for idx in range(0, 10):
-    command = f'python {NAME}.py {idx}'
-    script_id = NAME.split('_')[0]
-
-    # Write shell scripts
-    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
-    with open(sh_fn, 'w') as f:
-      f.write(f'#!/bin/bash\n{command}\n')
-    num_scripts += 1
-
-    # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
-
-  # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
-    f.write('\n'.join(qsub_commands))
-
-  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
-  return
-
-
-@util.time_dec
-def main():
-  '''
-
-  '''
-  print(NAME)
-  
-  # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Tepris - Doin S17 arcade'
-  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
-  # nm = '8 6 - DASU S20 arcade'
-  # nm = 'Loki - Lotze S21 arcade'
-  # nm = 'King of Sales - Norazo S21 arcade'
-  # nm = 'Native - SHK S20 arcade'
-  # nm = 'Sorceress Elise - YAHPP S23 arcade'
-
-  # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  # nm = 'Loki - Lotze D19 arcade'
-  # nm = 'Trashy Innocence - Last Note. D16 arcade'
-  # nm = '8 6 - DASU D21 arcade'
-  # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
-
-  # Load lindes
+'''
+  Run
+'''
+def run_single(nm):
+  # Load lines
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir, nm)
   downpress_filter = lambda node: 'multi' not in node and \
                              'init'  not in node and \
@@ -701,5 +661,44 @@ def main():
   return
 
 
+@util.time_dec
+def main():
+  print(NAME)
+  
+  # Test: Single stepchart
+  # nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
+  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = '8 6 - DASU S20 arcade'
+  # nm = 'Loki - Lotze S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'Native - SHK S20 arcade'
+  # nm = 'Sorceress Elise - YAHPP S23 arcade'
+
+  # Doubles
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Loki - Lotze D19 arcade'
+  # nm = 'Trashy Innocence - Last Note. D16 arcade'
+  # nm = '8 6 - DASU D21 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
+
+  run_single(nm)
+  return
+
+
 if __name__ == '__main__':
-  main()
+  if len(sys.argv) == 1:
+    main()
+  else:
+    if sys.argv[1] == 'gen_qsubs':
+      _qsub.gen_qsubs(NAME, sys.argv[2])
+    elif sys.argv[1] == 'run_qsubs':
+      _qsub.run_qsubs(
+        chart_fnm = sys.argv[2],
+        start = sys.argv[3],
+        end = sys.argv[4],
+        run_single = run_single,
+      )
+    elif sys.argv[1] == 'run_single':
+      run_single(sys.argv[2])

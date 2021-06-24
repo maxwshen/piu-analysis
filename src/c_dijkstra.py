@@ -10,7 +10,7 @@ from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
-import _movement, _params, _memoizer, _stances
+import _movement, _params, _memoizer, _stances, _qsub
 import _graph, b_graph, segment, segment_edit
 
 # Default params
@@ -161,9 +161,6 @@ def is_final_node(node):
 '''
   IO
 '''
-
-
-
 def output_log(message):
   print(message)
   with open(log_fn, 'w') as f:
@@ -171,32 +168,31 @@ def output_log(message):
   return
 
 
-def gen_qsubs():
-  # Generate qsub shell scripts and commands for easy parallelization
-  print('Generating qsub scripts...')
-  qsubs_dir = _config.QSUBS_DIR + NAME + '/'
-  util.ensure_dir_exists(qsubs_dir)
-  qsub_commands = []
+'''
+  Run
+'''
+def run_single(nm):
+  # move_skillset = 'beginner'
+  move_skillset = 'basic'
 
-  num_scripts = 0
-  for idx in range(0, 10):
-    command = f'python {NAME}.py {idx}'
-    script_id = NAME.split('_')[0]
+  global log_fn
+  log_fn = out_dir + f'{nm} {move_skillset}.log'
+  util.exists_empty_fn(log_fn)
+  print(nm, move_skillset)
 
-    # Write shell scripts
-    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
-    with open(sh_fn, 'w') as f:
-      f.write(f'#!/bin/bash\n{command}\n')
-    num_scripts += 1
+  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
+  annots, motifs = segment.load_annotations(inp_dir_segment, nm)
 
-    # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
+  steptype = line_nodes['init']['Steptype']
+  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
+  graph = _graph.Graph(mover, line_nodes, line_edges_out, annots, motifs)
 
-  # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
-    f.write('\n'.join(qsub_commands))
+  graph = dijkstra(graph)
+  df = backtrack_annotate(graph)
+  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
 
-  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
+  # graph.interactive_debug()
+  output_log('Success')
   return
 
 
@@ -206,7 +202,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Tepris - Doin S17 arcade'
+  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = '1950 - SLAM S23 arcade'
@@ -232,31 +229,22 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
-
-  # move_skillset = 'beginner'
-  move_skillset = 'basic'
-
-  global log_fn
-  log_fn = out_dir + f'{nm} {move_skillset}.log'
-  util.exists_empty_fn(log_fn)
-  print(nm, move_skillset)
-
-  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
-  annots, motifs = segment.load_annotations(inp_dir_segment, nm)
-
-  steptype = line_nodes['init']['Steptype']
-  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
-  graph = _graph.Graph(mover, line_nodes, line_edges_out, annots, motifs)
-
-  graph = dijkstra(graph)
-  df = backtrack_annotate(graph)
-  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
-
-  graph.interactive_debug()
-
-  output_log('Success')
+  run_single(nm)
   return
 
 
 if __name__ == '__main__':
-  main()
+  if len(sys.argv) == 1:
+    main()
+  else:
+    if sys.argv[1] == 'gen_qsubs':
+      _qsub.gen_qsubs(NAME, sys.argv[2])
+    elif sys.argv[1] == 'run_qsubs':
+      _qsub.run_qsubs(
+        chart_fnm = sys.argv[2],
+        start = sys.argv[3],
+        end = sys.argv[4],
+        run_single = run_single,
+      )
+    elif sys.argv[1] == 'run_single':
+      run_single(sys.argv[2])

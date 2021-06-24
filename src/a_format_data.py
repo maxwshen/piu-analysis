@@ -14,7 +14,7 @@ util.ensure_dir_exists(out_dir)
 ##
 # Functions
 ##
-def get_all_stepcharts_df() -> None:
+def get_all_stepcharts_df():
   '''
     Loads and filters stepcharts from .ssc files
     Outputs
@@ -138,40 +138,8 @@ def get_all_stepcharts_df() -> None:
 
   with open(out_dir + f'bpms.pkl', 'wb') as f:
     pickle.dump(all_bpms_d, f)
-
   return
 
-
-##
-# qsub
-##
-def gen_qsubs():
-  # Generate qsub shell scripts and commands for easy parallelization
-  print('Generating qsub scripts...')
-  qsubs_dir = _config.QSUBS_DIR + NAME + '/'
-  util.ensure_dir_exists(qsubs_dir)
-  qsub_commands = []
-
-  num_scripts = 0
-  for idx in range(0, 10):
-    command = f'python {NAME}.py {idx}'
-    script_id = NAME.split('_')[0]
-
-    # Write shell scripts
-    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
-    with open(sh_fn, 'w') as f:
-      f.write(f'#!/bin/bash\n{command}\n')
-    num_scripts += 1
-
-    # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
-
-  # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
-    f.write('\n'.join(qsub_commands))
-
-  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
-  return
 
 ##
 # Main

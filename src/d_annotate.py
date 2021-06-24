@@ -10,7 +10,7 @@ import sys, os, pickle, fnmatch, datetime, subprocess, functools, re
 import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
-import b_graph, segment
+import b_graph, segment, _qsub
 import _notelines, _movement
 
 # Default params
@@ -25,7 +25,7 @@ mover = None
 
 # min. lines in a globally annotated section
 GLOBAL_MIN_LINES_SHORT = 4
-GLOBAL_MIN_LINES_LONG = 4
+GLOBAL_MIN_LINES_LONG = 8
 
 '''
   Parsing
@@ -646,7 +646,7 @@ def filter_short_runs(idxs, n, filt_len):
   x Single stair
   x Double stair
   x Broken doubles stairs (missing any of the last six notes)
-  - Spin (or do with raw lines?)
+  x Spin (or do with raw lines?)
 '''
 def bracket_run(df):
   idxs = []
@@ -863,36 +863,24 @@ def spin_allowed(base_angle, query_angle, spin_orientation):
   return False
 
 
-
-
 '''
+  Run
 '''
-def gen_qsubs():
-  # Generate qsub shell scripts and commands for easy parallelization
-  print('Generating qsub scripts...')
-  qsubs_dir = _config.QSUBS_DIR + NAME + '/'
-  util.ensure_dir_exists(qsubs_dir)
-  qsub_commands = []
+def run_single(nm):
+  move_skillset = 'basic'
+  print(nm, move_skillset)
 
-  num_scripts = 0
-  for idx in range(0, 10):
-    command = f'python {NAME}.py {idx}'
-    script_id = NAME.split('_')[0]
+  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
 
-    # Write shell scripts
-    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
-    with open(sh_fn, 'w') as f:
-      f.write(f'#!/bin/bash\n{command}\n')
-    num_scripts += 1
+  steptype = line_nodes['init']['Steptype']
+  global mover
+  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
 
-    # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
-
-  # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
-    f.write('\n'.join(qsub_commands))
-
-  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
+  df = pd.read_csv(inp_dir_c + f'{nm} {move_skillset}.csv', index_col=0)
+  df = annotate_general(df)
+  df = annotate_local(df)
+  df = annotate_global(df)
+  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
   return
 
 
@@ -902,7 +890,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Tepris - Doin S17 arcade'
+  nm = 'Last Rebirth - SHK S15 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -931,27 +920,22 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
-
-  move_skillset = 'basic'
-  print(nm, move_skillset)
-
-  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
-  annots, motifs = segment.load_annotations(inp_dir_segment, nm)
-
-  steptype = line_nodes['init']['Steptype']
-  global mover
-  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
-
-  df = pd.read_csv(inp_dir_c + f'{nm} {move_skillset}.csv', index_col=0)
-
-  df = annotate_general(df)
-
-  df = annotate_local(df)
-  df = annotate_global(df)
-
-  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
+  run_single(nm)
   return
 
 
 if __name__ == '__main__':
-  main()
+  if len(sys.argv) == 1:
+    main()
+  else:
+    if sys.argv[1] == 'gen_qsubs':
+      _qsub.gen_qsubs(NAME, sys.argv[2])
+    elif sys.argv[1] == 'run_qsubs':
+      _qsub.run_qsubs(
+        chart_fnm = sys.argv[2],
+        start = sys.argv[3],
+        end = sys.argv[4],
+        run_single = run_single,
+      )
+    elif sys.argv[1] == 'run_single':
+      run_single(sys.argv[2])

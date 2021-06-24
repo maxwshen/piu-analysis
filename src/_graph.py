@@ -188,6 +188,8 @@ class Graph():
       return self.filter_twohits(sas, annot)
     elif annot == 'alternate':
       return self.filter_alternate(prev_sa, sas)
+    elif annot == 'same':
+      return self.filter_same(prev_sa, sas)
     return sas
 
 
@@ -219,6 +221,12 @@ class Graph():
   def filter_alternate(self, prev_sa, sas):
     prev_limbs = self.stances.limbs_downpress(prev_sa)
     accept = lambda sa: self.stances.limbs_downpress(sa) != prev_limbs
+    return [sa for sa in sas if accept(sa)]
+
+
+  def filter_same(self, prev_sa, sas):
+    prev_limbs = self.stances.limbs_downpress(prev_sa)
+    accept = lambda sa: self.stances.limbs_downpress(sa) == prev_limbs
     return [sa for sa in sas if accept(sa)]
 
 

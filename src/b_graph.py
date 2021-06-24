@@ -13,7 +13,7 @@ import pandas as pd
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
 
-import _notelines
+import _notelines, _qsub
 
 # Default params
 inp_dir_a = _config.OUT_PLACE + f'a_format_data/'
@@ -294,41 +294,30 @@ def load_data(inp_dir, sc_nm):
   return line_nodes, line_edges_out, line_edges_in
 
 
-##
-# qsub
-##
-def gen_qsubs():
-  # Generate qsub shell scripts and commands for easy parallelization
-  print('Generating qsub scripts...')
-  qsubs_dir = _config.QSUBS_DIR + NAME + '/'
-  util.ensure_dir_exists(qsubs_dir)
-  qsub_commands = []
+'''
+  Run
+'''
+def run_single(sc_nm):
+  timing_judge = 'piu nj'
 
-  num_scripts = 0
-  for idx in range(0, 10):
-    command = f'python {NAME}.py {idx}'
-    script_id = NAME.split('_')[0]
+  print(sc_nm, timing_judge)
+  global log_fn
+  log_fn = out_dir + f'{sc_nm} {timing_judge}.log'
 
-    # Write shell scripts
-    sh_fn = qsubs_dir + f'q_{script_id}_{idx}.sh'
-    with open(sh_fn, 'w') as f:
-      f.write(f'#!/bin/bash\n{command}\n')
-    num_scripts += 1
+  nodes, edges_out, edges_in, stance = form_graph(sc_nm)
 
-    # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -wd {_config.SRC_DIR} {sh_fn}')
+  # Faster than forming graph.
+  # More efficient to just run this for each timing judge
+  nodes, edges_out, edges_in = propose_multihits(nodes,
+      edges_out, edges_in, stance, timing_judge=timing_judge)
 
-  # Save commands
-  with open(qsubs_dir + '_commands.txt', 'w') as f:
-    f.write('\n'.join(qsub_commands))
-
-  print(f'Wrote {num_scripts} shell scripts to {qsubs_dir}')
+  print(f'Found {len(nodes)} nodes')
+  with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
+    pickle.dump((nodes, edges_out, edges_in), f)
+  output_log('Success')
   return
 
 
-##
-# Main
-##
 @util.time_dec
 def main():
   print(NAME)
@@ -339,7 +328,8 @@ def main():
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
-  nm = 'Tepris - Doin S17 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
+  nm = 'Last Rebirth - SHK S15 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -377,25 +367,22 @@ def main():
   subset_measures = 0
   # subset_measures = 7
 
-  timing_judge = 'piu nj'
-
-  print(nm, timing_judge)
-  global log_fn
-  log_fn = out_dir + f'{nm} {timing_judge}.log'
-
-  nodes, edges_out, edges_in, stance = form_graph(nm,
-      subset_measures=subset_measures)
-
-  # Faster than forming graph. More efficient to just run this for each timing judge
-  nodes, edges_out, edges_in = propose_multihits(nodes,
-      edges_out, edges_in, stance, timing_judge=timing_judge)
-
-  print(f'Found {len(nodes)} nodes')
-  with open(out_dir + f'{nm}.pkl', 'wb') as f:
-    pickle.dump((nodes, edges_out, edges_in), f)
-  output_log('Success')
+  run_single(nm)
   return
 
 
 if __name__ == '__main__':
-  main()
+  if len(sys.argv) == 1:
+    main()
+  else:
+    if sys.argv[1] == 'gen_qsubs':
+      _qsub.gen_qsubs(NAME, sys.argv[2])
+    elif sys.argv[1] == 'run_qsubs':
+      _qsub.run_qsubs(
+        chart_fnm = sys.argv[2],
+        start = sys.argv[3],
+        end = sys.argv[4],
+        run_single = run_single,
+      )
+    elif sys.argv[1] == 'run_single':
+      run_single(sys.argv[2])
