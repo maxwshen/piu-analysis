@@ -189,17 +189,6 @@ def get_active_hold_motifs(lines, features, beats):
   return all_motifs
 
 
-def has_overlap(motifs):
-  ranges = []
-  for motif in motifs:
-    for r in motifs[motif]:
-      if range_in_sections(r[0], r[1], ranges):
-        return True
-      else:
-        ranges.append(r)
-  return False
-
-
 def get_enriched_motifs(lines, features, beats, motif_len, sections):
   '''
     Returns a dict. motif_id: list of beat sections.
@@ -233,13 +222,6 @@ def get_enriched_motifs(lines, features, beats, motif_len, sections):
   extended_dd = extend_seeds_and_prune(lines, features, beats,
       renamed_dd, motif_len)
   return extended_dd
-
-
-def rename_keys(name, dd):
-  renamed_dd = {}
-  for i, (k, v) in enumerate(dd.items()):
-    renamed_dd[f'{name}-{i}'] = v
-  return renamed_dd
 
 
 def extend_seeds_and_prune(lines, features, beats, motifs, motif_len):
@@ -276,6 +258,27 @@ def extend_seeds_and_prune(lines, features, beats, motifs, motif_len):
       extended_motifs[f'{motif_len+add_len}-{rand_id}'] = extended_rs
 
   return extended_motifs
+
+
+'''
+  Motifs - helper functions
+'''
+def rename_keys(name, dd):
+  renamed_dd = {}
+  for i, (k, v) in enumerate(dd.items()):
+    renamed_dd[f'{name}-{i}'] = v
+  return renamed_dd
+
+
+def has_overlap(motifs):
+  ranges = []
+  for motif in motifs:
+    for r in motifs[motif]:
+      if range_in_sections(r[0], r[1], ranges):
+        return True
+      else:
+        ranges.append(r)
+  return False
 
 
 def get_rand_string(length):
@@ -336,7 +339,7 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
     lines = get_key_in_section(line_nodes, beats, usec, 'Line')
     lines_holds = get_key_in_section(line_nodes, beats, usec, 'Line with active holds')
 
-    if single_hit_alternating(fts):
+    if single_hit_alternating(lines_holds, fts):
       annot = 'alternate'
     # Decide 2hits as jumps or brackets
     elif is_twohit(lines_holds, fts):
@@ -367,19 +370,81 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
       else:
         ds[beat] = 'jumporbracket'
     
-  # Annotate single 3->2
+  # Alternate 3->2 when not same pad
   for b1, b2 in zip(beats[:-1], beats[1:]):
     lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
+    [line1, line2] = lines_holds
     line_len = len(lines_holds[0])
-    if lines_holds[0].count('0') == line_len-1 and '3' in lines_holds[0]:
-      if lines_holds[1].count('0') == line_len-1 and '2' in lines_holds[1]:
+    if line2.replace('2', '3') != line1:
+      if line1.count('0') == line_len-1 and '3' in line1:
+        if line2.count('0') == line_len-1 and '2' in line2:
+          ds[b2] = 'alternate'
+
+  # Alternate 3->1
+  for b1, b2 in zip(beats[:-1], beats[1:]):
+    lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
+    [line1, line2] = lines_holds
+    line_len = len(lines_holds[0])
+    if line1.count('0') == line_len-1 and '3' in line1:
+      if line2.count('0') == line_len-1 and '1' in line2:
         ds[b2] = 'alternate'
 
   return ds
 
 
-def single_hit_alternating(fts):
+def struct_motifs(line_nodes, features, beats, motifs, level):
+  '''
+    Local consistency within motifs. Do not compare across motif instances.
+  '''
+  ds = {}
+  for motif in motifs:
+    for section in motifs[motif]:
+      lines = get_key_in_section(line_nodes, beats, section, 'Line')
+      lines_holds = get_key_in_section(line_nodes, beats, section, 'Line with active holds')
+      bs = get_key_in_section(line_nodes, beats, section, 'Beat')
+      fts = [features[beats.index(b)] for b in bs]
+
+      jfs, twohit, hold = 'any', 'any', 'any'
+      # 2-hits
+      twohitlines = get_twohit_lines(lines_holds, fts)
+      if len(twohitlines) > 0:
+        if level < _params.bracket_level_threshold:
+          twohit = 'jump'
+        elif _notelines.frac_bracketable(twohitlines) < 1:
+          twohit = 'jump'
+        else:
+          twohit = 'jumporbracket'
+
+      # Jacks
+      if num_jacks(lines, fts) > 0:
+        jfs = 'jackorfootswitch'
+
+      # Hold
+      lines_holds = get_key_in_section(line_nodes, beats, section,
+          'Line with active holds')
+      if any('4' in lineh for lineh in lines_holds):
+        if level < _params.hold_bracket_level_threshold:
+          hold = 'jack'
+        else:
+          hold = 'jackoralternateorfree'
+      
+      ds[section] = f'{jfs}-{twohit}-{hold}'
+  return ds
+
+
+
+'''
+  Struct uniform - helper functions
+'''
+def single_hit_alternating(lines_with_holds, fts):
   # Truncate beat since
+  if len(lines_with_holds) == 2:
+    # Do not alternate on 1->2 on same pad, and 3->2 on same pad
+    [line1, line2] = lines_with_holds
+    if line1 == line2.replace('2', '1'):
+      return False
+    if line1 == line2.replace('2', '3'):
+      return False
   trunc_fts = [ft[:-1] for ft in fts[1:]]
   signature = np.array([1, 0, 0, 0, 0])
   matches_sig = lambda x: all(x == signature)
@@ -418,54 +483,14 @@ def get_twohit_lines(lines_holds, fts):
   return [line for line, ft in zip(lines_holds, fts) if is_twohit([line], [ft])]
 
 
-def struct_motifs(line_nodes, features, beats, motifs, level):
-  '''
-    Local consistency within motifs. Do not compare across motif instances.
-  '''
-  ds = {}
-  for motif in motifs:
-    for section in motifs[motif]:
-      lines = get_key_in_section(line_nodes, beats, section, 'Line')
-      lines_holds = get_key_in_section(line_nodes, beats, section, 'Line with active holds')
-      bs = get_key_in_section(line_nodes, beats, section, 'Beat')
-      fts = [features[beats.index(b)] for b in bs]
-
-      jfs, twohit, hold = 'any', 'any', 'any'
-      # 2-hits
-      twohitlines = get_twohit_lines(lines_holds, fts)
-      if len(twohitlines) > 0:
-        if level < _params.bracket_level_threshold:
-          twohit = 'jump'
-        elif _notelines.frac_bracketable(twohitlines) < 1:
-          twohit = 'jump'
-        else:
-          twohit = 'jumporbracket'
-
-      # Jacks
-      if num_jacks(lines, fts) > 0:
-        jfs = 'jackorfootswitch'
-
-      # Hold
-      lines_holds = get_key_in_section(line_nodes, beats, section,
-          'Line with active holds')
-      if any('4' in lineh for lineh in lines_holds):
-        if level < _params.hold_bracket_level_threshold:
-          hold = 'jack'
-        else:
-          hold = 'jackoralternate'
-      
-      ds[section] = f'{jfs}-{twohit}-{hold}'
-  return ds
-
-
+'''
+  Helper
+'''
 def get_key_in_section(line_nodes, beats, section, key):
   return [line_nodes[k][key] for k in line_nodes
           if beat_in_section(line_nodes[k]['Beat'], section)]
 
 
-'''
-  Helper
-'''
 def beat_in_section(beat, section):
   return section[0] <= beat <= section[1]
 
@@ -583,7 +608,7 @@ def filter_annots(beats, unif_d, motifs):
       if tag_twohits in ['jump', 'bracket', 'jumporbracket']:
         if 'jumporbracket' in annots:
           new_motifs[section] = tag
-      if tag_hold in ['jackoralternate']:
+      if tag_hold in ['jackoralternateorfree']:
         new_motifs[section] = tag
   return unif_d, new_motifs
 
@@ -627,17 +652,20 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Tepris - Doin S17 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Native - SHK S20 arcade'
+  # nm = 'Sorceress Elise - YAHPP S23 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
-  nm = '8 6 - DASU D21 arcade'
+  # nm = '8 6 - DASU D21 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
 
   # Load lindes
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir, nm)
@@ -654,7 +682,6 @@ def main():
   print('Coverage with uniform sections:')
   calc_coverage(dp_beats, uniform_sections, {})
 
-
   filter = lambda node: 'multi' not in node and \
                         'init'  not in node and \
                         'final' not in node
@@ -663,7 +690,6 @@ def main():
 
   # Form and save data structure
   all_motifs = find_motifs(line_nodes, features, beats)
-  # import code; code.interact(local=dict(globals(), **locals()))
   unif_ds, motif_ds = form_data_struct(nm, line_nodes,
       features, beats, uniform_sections, all_motifs)
   # print('Coverage with uniform sections + motifs:')

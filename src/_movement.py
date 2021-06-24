@@ -73,7 +73,7 @@ class Movement():
   '''
     Helper
   '''
-  def parse_stanceaction(self, sa: str) -> dict:
+  def parse_stanceaction(self, sa):
     '''
       TODO - Consider moving LRU cache from c_dijkstra to here?
     '''
@@ -97,7 +97,7 @@ class Movement():
   '''
     Costs
   '''
-  def angle_cost(self, d: dict, inv_cost: float) -> float:
+  def angle_cost(self, d, inv_cost):
     '''
       Todo -- more, beyond angle? 
       e.g., penalize heel in backswing
@@ -130,7 +130,7 @@ class Movement():
     return cost
 
 
-  def foot_inversion_cost(self, d: dict):
+  def foot_inversion_cost(self, d):
     '''
       Penalize if the right foot is left of left foot by a large distance
       Inversion distance threshold = 185 mm (distance from center to corner). Basically only penalize 180 twists. Penalty should be less than a double step so that we prefer to do a 180 twist than double step once, but prefer to double step to avoid multiple 180 twists
@@ -151,7 +151,7 @@ class Movement():
     return cost
 
 
-  def hand_inversion_cost(self, d: dict):
+  def hand_inversion_cost(self, d):
     '''
       Penalize if the right hand is left of left hand
     '''
@@ -169,7 +169,35 @@ class Movement():
     return cost
 
 
-  def hold_change_cost(self, d1: dict, d2: dict):
+  def hold_footswitch_cost(self, d1, d2):
+    '''
+      Penalize switching limb/part on a hold
+    '''
+    cost = 0
+    for limb in d2['limb_to_pos']:
+      if limb in d1['limb_to_pos']:
+        prev_ha = d1['limb_to_heel_action'][limb]
+        prev_ta = d1['limb_to_toe_action'][limb]
+      else:
+        prev_ha = '-'
+        prev_ta = '-'
+
+      curr_ha = d2['limb_to_heel_action'][limb]
+      curr_ta = d2['limb_to_toe_action'][limb]
+
+      if prev_ha in self.prev_hold or prev_ta in self.prev_hold:
+        if curr_ta not in self.ok_hold and curr_ha not in self.ok_hold:
+          cost += self.costs['Hold footswitch']
+
+      if prev_ha not in self.prev_hold and prev_ta not in self.prev_hold:
+        if curr_ta == '3' or curr_ha == '3':
+          cost += 100
+
+    if self.verbose: print(f'Hold footswitch cost: {cost}')
+    return cost
+
+
+  def hold_footslide_cost(self, d1, d2):
     '''
       Penalize switching limb/part on a hold
     '''
@@ -193,19 +221,11 @@ class Movement():
         if curr_ha == '4':
           cost += self.costs['Hold footslide']
 
-      if prev_ha in self.prev_hold or prev_ta in self.prev_hold:
-        if curr_ta not in self.ok_hold and curr_ha not in self.ok_hold:
-          cost += self.costs['Hold footswitch']
-
-      if prev_ha not in self.prev_hold and prev_ta not in self.prev_hold:
-        if curr_ta == '3' or curr_ha == '3':
-          cost += 100
-
-    if self.verbose: print(f'Hold change cost: {cost}')
+    if self.verbose: print(f'Hold footslide cost: {cost}')
     return cost
 
 
-  def foot_pos_cost(self, d: dict) -> float:
+  def foot_pos_cost(self, d):
     '''
       Sum over limbs
     '''
@@ -217,13 +237,15 @@ class Movement():
     return cost
 
 
-  def move_cost(self, d1: dict, d2: dict) -> float:
+  def move_cost(self, d1, d2):
     '''
       Sum over limbs, distance moved by
       - foot center
       - average of heel and toe
 
       Only grant no movement reward for basic heel toe and air positions, not for bracket positions (deprecated - grant reward)
+
+      Do not grant no-movement reward when alternating heel and toe on same foot
     '''
     cost = 0
     has_bracket = False
@@ -254,6 +276,15 @@ class Movement():
       if d2['limb_to_pos'][limb] in self.bracket_pos:
         has_bracket = True
 
+      # Do not grant no-movement reward when alternating heel and toe on same foot
+      if any(x in d1['limb_to_heel_action'][limb] for x in list('12')):
+        if any(x in d2['limb_to_toe_action'][limb] for x in list('12')):
+          cost += self.costs['Toe-heel alternate']
+
+      if any(x in d1['limb_to_toe_action'][limb] for x in list('12')):
+        if any(x in d2['limb_to_heel_action'][limb] for x in list('12')):
+          cost += self.costs['Toe-heel alternate']
+
     # if has_bracket and cost == 0:
     #   cost = 0.01
 
@@ -267,82 +298,7 @@ class Movement():
     return cost
 
 
-  def double_step_cost(self, d1: dict, d2: dict, time = None) -> float:
-    '''
-      Indirectly reward longer time since last foot movement. Cannot directly penalize by time since last foot movement in current graph representation
-
-      Add cost only when (AND)
-      - a single foot is used twice
-      - only one foot is used both times
-      - no limb is in a hold (unless time is very short)
-      # Maybe add
-      - the other limb is not in a hold
-    '''
-    cost = 0
-    num_limbs_doubling = 0
-    num_limbs_prev = 0
-    num_limbs_now = 0
-    num_limbs_hold = 0
-    limbs_curr_hold = set()
-    limbs_curr_press = set()
-    for limb in d2['limb_to_pos']:
-      if limb not in d1['limb_to_heel_action']:
-        continue
-
-      prev_heel = d1['limb_to_heel_action'][limb] in self.doublestep_prev
-      prev_toe = d1['limb_to_toe_action'][limb] in self.doublestep_prev
-      curr_heel = d2['limb_to_heel_action'][limb] in self.doublestep_curr
-      curr_toe = d2['limb_to_toe_action'][limb] in self.doublestep_curr
-
-      prev_step = prev_heel or prev_toe
-      curr_step = curr_heel or curr_toe
-
-      if prev_step and curr_step:
-        num_limbs_doubling += 1
-      if prev_step:
-        num_limbs_prev += 1
-      if curr_step:
-        num_limbs_now += 1
-        limbs_curr_press.add(limb)
-
-      curr_heel_hold = d2['limb_to_heel_action'][limb] in self.ok_hold
-      curr_toe_hold = d2['limb_to_toe_action'][limb] in self.ok_hold
-      if curr_heel_hold or curr_toe_hold:
-        num_limbs_hold += 1
-        limbs_curr_hold.add(limb)
-
-    '''
-      Score double stepping
-    '''
-    hold_and_press_same_limb = bool(len(limbs_curr_press.intersection(limbs_curr_hold)))
-
-    if num_limbs_doubling == 1 and num_limbs_prev == 1 and num_limbs_now == 1:
-      # if time <= _params.jacks_footswitch_t_thresh:
-      #   cost += self.costs['Double step']
-      if num_limbs_hold == 0:
-        cost += self.costs['Double step']
-      elif num_limbs_hold > 0:
-        if hold_and_press_same_limb:
-          cost += self.costs['Double step']
-
-    if time is not None:
-      if 0.001 < time < self.params['Time threshold']:
-        '''
-          Ex. normalizer = 300 ms, then
-          400 ms since = 3/4 cost
-          100 ms since = 3 cost
-        '''
-        # time_factor = self.params['Time normalizer'] / time
-        time_factor = 1
-        cost *= time_factor
-      elif time >= self.params['Time threshold']:
-        cost = 0
-
-    if self.verbose: print(f'Double step cost (may not apply): {cost}')
-    return cost
-
-
-  def double_step_cost_v2(self, d1, d2):
+  def double_step_cost(self, d1, d2):
     '''
       Straightforward definition of double step: A limb is used on two neighboring lines.
       Can be altered based on time in downstream code.
@@ -391,7 +347,7 @@ class Movement():
     return cost
 
 
-  def jump_cost(self, d1: dict, d2: dict) -> float:
+  def jump_cost(self, d1, d2):
     '''
       Jump: Both feet change position or using both feet
       E.g., not a jump is if 1 foot has the same position and action as before.
@@ -417,7 +373,7 @@ class Movement():
     return cost
 
 
-  def bracket_cost(self, d: dict) -> float:
+  def bracket_cost(self, d):
     '''
       Sum over limbs
     '''
@@ -430,7 +386,7 @@ class Movement():
     return cost
 
 
-  def hands_cost(self, d: dict) -> float:
+  def hands_cost(self, d):
     '''
       Sum over limbs
     '''
@@ -441,7 +397,7 @@ class Movement():
     return cost
 
 
-  def move_without_action_cost(self, d1: dict, d2: dict) -> float:
+  def move_without_action_cost(self, d1, d2):
     cost = 0
     for limb in ['Left foot', 'Right foot']:
       prev_pos = d1['limb_to_pos'][limb]
@@ -458,7 +414,7 @@ class Movement():
     return cost
 
 
-  def downpress_cost(self, d: dict) -> float:
+  def downpress_cost(self, d):
     cost = 0
     for limb in ['Left foot', 'Right foot']:
       heel_action = d['limb_to_heel_action'][limb]
@@ -477,23 +433,21 @@ class Movement():
   '''
     Primary
   '''
-  def get_cost_from_ds(self, d1: dict, d2: dict, verbose = False):
+  def get_cost_from_ds(self, d1, d2, verbose = False):
     '''
     '''
     self.verbose = verbose
 
     inv_cost = self.foot_inversion_cost(d2)
     mv_cost = self.move_cost(d1, d2)
-
-    # ds_cost = self.double_step_cost(d1, d2, time)
-    ds_cost = self.double_step_cost_v2(d1, d2)
-
+    ds_cost = self.double_step_cost(d1, d2)
     cost = {
       'foot_inversion'      : inv_cost,
       'angle'               : self.angle_cost(d2, inv_cost),
       'hand_inversion'      : self.hand_inversion_cost(d2),
       'foot_position'       : self.foot_pos_cost(d2),
-      'hold_change'         : self.hold_change_cost(d1, d2),
+      'hold_footslide'      : self.hold_footslide_cost(d1, d2),
+      'hold_footswitch'     : self.hold_footswitch_cost(d1, d2),
       'move'                : mv_cost,
       'jump'                : self.jump_cost(d1, d2),
       'bracket'             : self.bracket_cost(d2),
@@ -506,7 +460,7 @@ class Movement():
     return cost
 
 
-  def get_cost_from_text(self, sa1: str, sa2: str, verbose = False) -> float:
+  def get_cost_from_text(self, sa1, sa2, verbose = False):
     '''
     '''
     self.verbose = verbose
@@ -519,7 +473,7 @@ class Movement():
   '''
     Heuristic node/edge pruning
   '''
-  def unnecessary_jump(self, d1: dict, d2: dict, line: str) -> bool:
+  def unnecessary_jump(self, d1, d2, line):
     # Detect if unnecessary jump
     has_one_press = lambda line: line.count('0') == len(line) - 1
     has_downpress = lambda line: any([dp in line for dp in self.downpress])
@@ -529,7 +483,7 @@ class Movement():
     return False
 
 
-  def beginner_ok(self, d2: dict) -> bool:
+  def beginner_ok(self, d2):
     '''
       Filter all stances other than air-X
     '''
@@ -543,7 +497,7 @@ class Movement():
   '''
     Cost modifiers using line node
   '''
-  def multihit_modifier(self, d1: dict, d2: dict, node_nm: str) -> float:
+  def multihit_modifier(self, d1, d2, node_nm):
     '''
       Apply multihit reward only if brackets are involved
       Remove jump penalty if applied
@@ -593,6 +547,12 @@ class Movement():
           cost += self.costs['Hold alternate feet for hits (onetime, short)']
         else:
           cost += self.costs['Hold alternate feet for hits (onetime, long)']
+      elif tag2_hold == 'free' and tag1_hold != 'free':
+        if motif_len <= _params.hold_tap_line_threshold:
+          cost += self.costs['Hold free feet for hits (onetime, short)']
+        else:
+          cost += self.costs['Hold free feet for hits (onetime, long)']        
+
     return cost
 
 

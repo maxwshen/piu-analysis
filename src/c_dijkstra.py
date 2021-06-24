@@ -206,11 +206,9 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  # nm = 'Super Fantasy - SHK S7 arcade'
-  # nm = 'Super Fantasy - SHK S4 arcade'
+  nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
-  # nm = 'Super Fantasy - SHK S10 arcade'
   # nm = '1950 - SLAM S23 arcade'
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
@@ -232,7 +230,8 @@ def main():
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
-  nm = '8 6 - DASU D21 arcade'
+  # nm = '8 6 - DASU D21 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
 
   # move_skillset = 'beginner'
   move_skillset = 'basic'

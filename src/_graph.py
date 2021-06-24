@@ -153,7 +153,7 @@ class Graph():
     '''
     combos = {'jackorfootswitch': ['jack', 'footswitch'],
               'jumporbracket': ['jump', 'bracket'],
-              'jackoralternate': ['jack', 'alternate']}
+              'jackoralternateorfree': ['jack', 'alternate', 'free']}
     get_combo = lambda motif: combos.get(motif, [motif])
 
     out_sas, ntags = [], []
@@ -174,11 +174,13 @@ class Graph():
         annot: ['', 'jackorfootswitch', 'alternate', 'jumporbracket', 'jump']
         jfs (jack/footswitch): ['any', 'jack', 'footswitch']
         twohits: ['any', 'jump',' 'bracket']
-        hold: ['any', 'jack', 'alternate']
+        hold: ['any', 'jack', 'alternate', 'free']
       Returns filtered sas and list of tags
     '''
     if hold in ['jack', 'alternate']:
       return self.filter_hold(prev_sa, sas, hold)
+    elif hold == 'free':
+      return sas
 
     if annot in ['jack', 'footswitch', 'jackorfootswitch']:
       return self.filter_jackfootswitch(prev_sa, sas, jfs)

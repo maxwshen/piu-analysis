@@ -82,7 +82,6 @@ def form_graph(nm: str, subset_measures = 0):
     'Beat': beat,
     'Measure': 0,
     'BPM': bpm,
-    'Previous panels': [],
     'Steptype': steptype,
     'Timing judge': 'None',
   }
@@ -141,7 +140,6 @@ def form_graph(nm: str, subset_measures = 0):
     'Line with active holds': '',
     'Measure': np.inf,
     'BPM': 0,
-    'Previous panels': [],
   }
   edges_out[prev_node_nm].append('final')
   edges_in['final'].append(prev_node_nm)
@@ -204,7 +202,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
         'Line with active holds': joint_aug_line,
         'Measure': last_node['Measure'],
         'BPM': last_node['BPM'],
-        'Previous panels': last_node['Previous panels'],
       }
       edges_out[new_node_nm] = edges_out[last_node_nm]
       for n in edges_out[last_node_nm]:
@@ -342,6 +339,7 @@ def main():
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
+  nm = 'Tepris - Doin S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -373,7 +371,8 @@ def main():
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
-  nm = '8 6 - DASU D21 arcade'
+  # nm = '8 6 - DASU D21 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
 
   subset_measures = 0
   # subset_measures = 7
