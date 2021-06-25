@@ -694,7 +694,8 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'HYPERCUBE - MAX S15 arcade'
-  nm = 'Setsuna Trip - Last Note. S16 arcade'
+  # nm = 'Setsuna Trip - Last Note. S16 arcade'
+  nm = 'Uranium - Memme S19 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

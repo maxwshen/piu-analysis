@@ -216,13 +216,15 @@ def one_hot_encode(df, ft, cats):
     cols.append(col)
   
   global annots
-  annots.remove(ft)
-  annots += cols
-
   global annot_types
-  del annot_types[ft]
-  for col in cols:
-    annot_types[col] = bool
+  # Only edit 1st time, when running multiple times with qsub
+  if ft in annots:
+    annots.remove(ft)
+    annots += cols
+
+    del annot_types[ft]
+    for col in cols:
+      annot_types[col] = bool
   return
 
 
@@ -263,7 +265,8 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Last Rebirth - SHK S15 arcade'
+  nm = 'Uranium - Memme S19 arcade'
+  # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
