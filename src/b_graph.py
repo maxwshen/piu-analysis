@@ -349,7 +349,8 @@ def main():
   # nm = 'Forgotten Vampire - WyvernP S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
   # nm = 'HYPERCUBE - MAX S15 arcade'
-  nm = 'Prime Time - Cashew S23 remix'
+  # nm = 'Prime Time - Cashew S23 remix'
+  nm = 'Setsuna Trip - Last Note. S16 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

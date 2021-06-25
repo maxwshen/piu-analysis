@@ -163,7 +163,7 @@ def find_motifs(line_nodes, features, beats):
 
 def get_active_hold_motifs(lines, features, beats):
   # Annotates contiguous holds: 2 -> 4 -> 3
-  # Starts on first 1
+  # Starts on first 1 or 2
   all_motifs = {}
   i, j = 0, 1
   in_hold = False
@@ -180,6 +180,8 @@ def get_active_hold_motifs(lines, features, beats):
         num_found += 1
     else:
       if bool('4' in lines[i] or '2' in lines[i]) and '1' in lines[i]:
+        in_hold = True
+      elif '4' in lines[i] and '2' in lines[i]:
         in_hold = True
       else:
         i += 1
@@ -690,8 +692,9 @@ def main():
   # nm = 'I Want U - MAX S19 arcade'
   # nm = 'Forgotten Vampire - WyvernP S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
-  nm = 'Prime Time - Cashew S23 remix'
+  # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'HYPERCUBE - MAX S15 arcade'
+  nm = 'Setsuna Trip - Last Note. S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

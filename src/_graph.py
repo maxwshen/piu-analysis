@@ -196,9 +196,12 @@ class Graph():
       Returns filtered sas and list of tags
     '''
     if '4' in aug_line:
-      if hold in ['jack', 'alternate']:
-        return self.filter_hold(prev_sa, sas, hold)
-      elif hold == 'free':
+      if any(x in aug_line for x in list('12')):
+        if hold in ['jack', 'alternate']:
+          return self.filter_hold(prev_sa, sas, hold)
+        elif hold == 'free':
+          return sas
+      else:
         return sas
 
     if annot in ['jack', 'footswitch', 'jackorfootswitch']:

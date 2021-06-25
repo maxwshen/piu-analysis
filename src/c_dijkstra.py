@@ -74,6 +74,8 @@ def dijkstra(graph):
 
   if u != graph.final_node:
     print('Error: Dijkstra terminated')
+    last_beat = max(float(x) for x in visited_line_nodes if x != 'init')
+    print(f'Last beat: {last_beat}')
     import code; code.interact(local=dict(globals(), **locals()))
     raise Exception(f'Graph lacks path to final node. Traversed {len(visited)} nodes.')
 
@@ -211,7 +213,8 @@ def main():
   # nm = 'I Want U - MAX S19 arcade'
   # nm = 'Forgotten Vampire - WyvernP S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
-  nm = 'Prime Time - Cashew S23 remix'
+  nm = 'Setsuna Trip - Last Note. S16 arcade'
+  # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'HYPERCUBE - MAX S15 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Tepris - Doin S17 arcade'
