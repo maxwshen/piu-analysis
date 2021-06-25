@@ -687,7 +687,8 @@ def main():
   # nm = 'Rage of Fire - MAX S16 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Obelisque - ESTi x M2U S17 arcade'
-  nm = 'I Want U - MAX S19 arcade'
+  # nm = 'I Want U - MAX S19 arcade'
+  nm = 'Forgotten Vampire - WyvernP S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

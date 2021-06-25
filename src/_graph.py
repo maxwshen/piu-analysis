@@ -142,11 +142,16 @@ class Graph():
     timedelta = self.timedelta(node1, node2)
     
     # Forgive fast 1->2 and fast 2->3
-    if line1.replace('1', '2') != line2 and line1.replace('2', '3') != line2:
-      if timedelta < 0.001:
-        print('ERROR: Notes are too close together, likely from high bpm')
-        # import code; code.interact(local=dict(globals(), **locals()))
-        sys.exit(1)
+    if line1.replace('1', '2') == line2:
+      return
+    
+    if line1.replace('2', '3').replace('4', '3') == line2:
+      return
+
+    if timedelta < 0.001:
+      print(f'ERROR: Notes are too close together, likely from high bpm. {line1} {line2}')
+      # import code; code.interact(local=dict(globals(), **locals()))
+      sys.exit(1)
     return
 
 
