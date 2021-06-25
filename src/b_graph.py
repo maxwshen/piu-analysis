@@ -344,7 +344,8 @@ def main():
   # nm = 'NoNoNo - Apink S14 arcade'
   # nm = 'Rage of Fire - MAX S16 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
-  nm = 'Obelisque - ESTi x M2U S17 arcade'
+  # nm = 'Obelisque - ESTi x M2U S17 arcade'
+  nm = 'I Want U - MAX S19 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
