@@ -317,5 +317,7 @@ if __name__ == '__main__':
         end = sys.argv[4],
         run_single = run_single,
       )
+    elif sys.argv[1] == 'gen_qsubs_remainder':
+      _qsub.gen_qsubs_remainder(NAME, sys.argv[2])
     elif sys.argv[1] == 'run_single':
       run_single(sys.argv[2])
