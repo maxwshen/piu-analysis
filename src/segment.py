@@ -685,7 +685,8 @@ def main():
   # nm = 'Hypnosis - BanYa S18 arcade'
   # nm = 'NoNoNo - Apink S14 arcade'
   # nm = 'Rage of Fire - MAX S16 arcade'
-  nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  # nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  nm = 'Obelisque - ESTi x M2U S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

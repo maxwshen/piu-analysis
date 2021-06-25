@@ -141,6 +141,7 @@ class Graph():
     line2 = self.line_nodes[line_node2]['Line with active holds']
     timedelta = self.timedelta(node1, node2)
     
+    # Forgive fast 1->2
     if line1.replace('1', '2') != line2:
       if timedelta < 0.001:
         print('ERROR: Notes are too close together, likely from high bpm')
@@ -240,9 +241,14 @@ class Graph():
 
 
   def filter_hold(self, prev_sa, sas, hold):
+    '''
+      TODO - Bigger problem is that I assumed implicitly that hold motifs would only start at the first downpress and end.
+      Right now, hold motifs are longer than assumed, which is why these bugs are happening.
+    '''
     prev_limbs = [limb for limb in self.stances.limbs_doing(prev_sa, list('13'))]
+    holding_limb = [limb for limb in self.stances.limbs_doing(prev_sa, list('4'))]
     if hold == 'jack':
-      accept = lambda sa: self.stances.limbs_doing(sa, list('12')) == prev_limbs
+      accept = lambda sa: self.stances.limbs_doing(sa, list('12')) != holding_limb
     elif hold == 'alternate':
       accept = lambda sa: all(x not in prev_limbs
           for x in self.stances.limbs_doing(sa, list('12')))
