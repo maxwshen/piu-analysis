@@ -697,7 +697,8 @@ def main():
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
-  nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
+  # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
+  nm = 'Mr. Larpus - BanYa S22 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

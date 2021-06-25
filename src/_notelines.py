@@ -4,6 +4,14 @@
 import re, functools
 import _params
 
+def singlesdoubles(line):
+  if len(line.replace('`', '')) == 5:
+    return 'singles'
+  elif len(line.replace('`', '')) == 10:
+    return 'doubles'
+  raise Exception(f'Bad line {line}')
+
+
 def has_downpress(line):
   return num_downpress(line) > 0
 

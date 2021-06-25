@@ -1,4 +1,5 @@
 import numpy as np
+import _notelines
 
 mover = None
 get_ds = None
@@ -152,7 +153,7 @@ def bracket_jump_run(df):
 def side3_singles(df):
   lines = list(df['Line with active holds'])
   lines = [x.replace('`', '') for x in lines]
-  if len(lines[0]) != 5:
+  if _notelines.singlesdoubles(lines[0]) != 'singles':
     return [False]*len(df)
 
   left_accept = lambda line: line[-2:] == '00'
@@ -168,7 +169,7 @@ def side3_singles(df):
 def mid4_doubles(df):
   lines = list(df['Line with active holds'])
   lines = [x.replace('`', '') for x in lines]
-  if len(lines[0]) != 10:
+  if _notelines.singlesdoubles(lines[0]) != 'doubles':
     return [False]*len(df)
 
   accept = lambda line: re.search('000....000', line) and any(x in line for x in list('1234'))
@@ -181,7 +182,7 @@ def mid6_doubles(df):
   # Note - can be redundant with mid4; modify chart tags accordingly
   lines = list(df['Line with active holds'])
   lines = [x.replace('`', '') for x in lines]
-  if len(lines[0]) != 10:
+  if _notelines.singlesdoubles(lines[0]) != 'doubles':
     return [False]*len(df)
 
   accept = lambda line: re.search('00......00', line) and any(x in line for x in list('1234'))
@@ -279,9 +280,10 @@ def jump_run(df):
 
 
 def singles_stair(df):
-  if len(df['Line'][0]) == 5:
+  sd = _notelines.singlesdoubles(df['Line'].iloc[0])
+  if sd == 'singles':
     return singles_stair_in_singles(df)
-  else:
+  elif sd == 'doubles':
     return singles_stair_in_doubles(df)
 
 
