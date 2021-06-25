@@ -681,6 +681,7 @@ def main():
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'Follow me - SHK S9 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Chicken Wing - BanYa S17 arcade'
@@ -698,7 +699,8 @@ def main():
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

@@ -250,6 +250,17 @@ def run_single(nm):
   df = annotate_general(df)
   df = annotate_local(df)
   df = annotate_global(df)
+
+  # Annotate solo diagonal twists
+  twists = df['Twist angle']
+  solo_diag = [True] if twists[0] == 'diagonal' else [False]
+  for i in range(1, len(twists)):
+    if twists[i] == 'diagonal' and twists[i-1] not in ['90', '180']:
+      solo_diag.append(True)
+    else:
+      solo_diag.append(False)
+  df['Twist solo diagonal'] = solo_diag
+
   df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
 
   # Featurize for chart tagging, clustering, and predicting difficulty
@@ -268,7 +279,7 @@ def main():
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
@@ -289,10 +300,12 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'Follow me - SHK S9 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

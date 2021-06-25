@@ -230,7 +230,14 @@ class Graph():
 
   def filter_twohits(self, sas, twohits):
     if twohits == 'jump':
-      accept = lambda sa: len(self.stances.limbs_downpress(sa)) == 2
+      def accept(sa):
+        two_feet = len(self.stances.limbs_downpress(sa)) == 2
+        d = self.parse_sa(sa)
+        not_bracket = True
+        for foot in ['Left foot', 'Right foot']:
+          if d['limb_to_pos'][foot] in self.mover.bracket_pos:
+            not_bracket = False
+        return two_feet and not_bracket
     elif twohits == 'bracket':
       accept = lambda sa: len(self.stances.limbs_downpress(sa)) == 1
     elif twohits in ['jumporbracket', 'any']:

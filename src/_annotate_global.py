@@ -90,12 +90,20 @@ def bracket_drill(df):
   i, j = 0, 1
   while j < len(df):
     row1, row2 = df.iloc[i], df.iloc[j]
+    d1, d2 = get_ds(row1, row2)
     is_bracket = row1['Line'].count('1') == 2 and row2['Line'].count('1') == 2
-    if is_bracket:
+    feet = ['Left foot', 'Right foot']
+    brackets1 = all(d1['limb_to_pos'][foot] in mover.bracket_pos for foot in feet)
+    brackets2 = all(d2['limb_to_pos'][foot] in mover.bracket_pos for foot in feet)
+    if is_bracket and brackets1 and brackets2:
       # valid start for drill
       k = j + 1
       while k < len(df):
         rowk = df.iloc[k]
+        _, d = get_ds(None, rowk)
+        bracketsk = all(d['limb_to_pos'][foot] in mover.bracket_pos for foot in feet)
+        if not bracketsk:
+          break
         # Must repeat first two lines
         if (k - i) % 2 == 0:
           same_as = rowk['Line'] == row1['Line']

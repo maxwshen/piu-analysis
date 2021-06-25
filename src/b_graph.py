@@ -354,7 +354,10 @@ def main():
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'Follow me - SHK S9 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -376,7 +379,6 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'

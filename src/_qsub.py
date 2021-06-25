@@ -65,7 +65,7 @@ def gen_qsubs_remainder(NAME, chart_fnm):
 
   num_scripts = 0
   for i in range(0, len(qdf), num_per_run):
-    out_fn = names[i] + '.csv'
+    out_fn = names[i] + ' basic.csv'
     if out_fn in fns:
       continue
 
