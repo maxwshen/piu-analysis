@@ -51,8 +51,7 @@ def run_qsubs(chart_fnm, start, end, run_single):
     try:
       run_single(row['Name (unique)'])
       print('Success', row['Name (unique)'])
-    except e:
-      print(e)
+    except:
       print('Failed', row['Name (unique)'])
       pass
   return
