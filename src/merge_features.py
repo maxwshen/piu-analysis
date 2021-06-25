@@ -9,7 +9,7 @@ def main():
 
   mdf = pd.DataFrame()
   for fn in fns:
-    df = pd.read_csv(fn)
+    df = pd.read_csv(inp_dir + fn, index_col=0)
     mdf = mdf.append(df)
   
   mdf.to_csv(inp_dir + f'features.csv')
