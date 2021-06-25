@@ -265,7 +265,9 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Uranium - Memme S19 arcade'
+  # nm = 'Uranium - Memme S19 arcade'
+  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'

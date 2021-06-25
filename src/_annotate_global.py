@@ -151,6 +151,7 @@ def bracket_jump_run(df):
 
 def side3_singles(df):
   lines = list(df['Line with active holds'])
+  lines = [x.replace('`', '') for x in lines]
   if len(lines[0]) != 5:
     return [False]*len(df)
 
@@ -166,6 +167,7 @@ def side3_singles(df):
 
 def mid4_doubles(df):
   lines = list(df['Line with active holds'])
+  lines = [x.replace('`', '') for x in lines]
   if len(lines[0]) != 10:
     return [False]*len(df)
 
@@ -178,6 +180,7 @@ def mid4_doubles(df):
 def mid6_doubles(df):
   # Note - can be redundant with mid4; modify chart tags accordingly
   lines = list(df['Line with active holds'])
+  lines = [x.replace('`', '') for x in lines]
   if len(lines[0]) != 10:
     return [False]*len(df)
 

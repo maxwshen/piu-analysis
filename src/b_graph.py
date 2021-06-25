@@ -350,8 +350,10 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
   # nm = 'HYPERCUBE - MAX S15 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
-  nm = 'Uranium - Memme S19 arcade'
+  # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
+  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
