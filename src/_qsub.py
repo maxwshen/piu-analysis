@@ -56,7 +56,7 @@ def gen_qsubs_remainder(NAME, chart_fnm, extension):
   out_dir = _config.OUT_PLACE + NAME + '/'
   fns = set(os.listdir(out_dir))
 
-  qdf = pd.read_csv(inp_dir + f'{chart_fnm}{extension}', index_col=0)
+  qdf = pd.read_csv(inp_dir + f'{chart_fnm}.csv', index_col=0)
   names = qdf['Name (unique)']
   num_per_run = len(names) // MAX_QSUB_PROCESSES
   if num_per_run * MAX_QSUB_PROCESSES < len(names):
@@ -64,7 +64,7 @@ def gen_qsubs_remainder(NAME, chart_fnm, extension):
 
   num_scripts = 0
   for i in range(0, len(qdf), num_per_run):
-    out_fn = names[i] + '.csv'
+    out_fn = names[i] + extension
     if out_fn in fns:
       continue
 
