@@ -152,9 +152,7 @@ class SSCFile():
    Support
   '''
   def __annotate_stepchart(self, atts: dict):
-    '''
-      Annotates custom stepchart attributes, using description and other attributes
-    '''
+    # Annotates custom stepchart attributes, using description and other attributes
     get_att = lambda q: atts[q] if q in atts else '-'
     song_nm = self.global_attributes['TITLE']
     stepstype = get_att('STEPSTYPE')
@@ -246,23 +244,20 @@ class SSCFile():
     return df
 
 
-  def get_stepchart_notes(self) -> List[str]:
-    '''
-      Get all stepchart notes as a list of strings
-    '''
+  def get_stepchart_notes(self):
+    # Get all stepchart notes as a list of strings
     return self.sc_notes
 
 
-  def get_bpms(self) -> List[str]:
-    '''
-      Get all stepchart bpms as a list of strings
-    '''
+  def get_attribute(self, att):
+    # Get all stepchart bpms as a list of strings
+    # BPMS, TICKCOUNTS
     all_bpms = []
     for scatt in self.sc_attributes:
       bpms = ''
-      if 'BPMS' in scatt:
-        bpms = scatt['BPMS']
+      if att in scatt:
+        bpms = scatt[att]
       if bpms == '':
-        bpms = self.global_attributes['BPMS']
+        bpms = self.global_attributes[att]
       all_bpms.append(bpms)
     return all_bpms

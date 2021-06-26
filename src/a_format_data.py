@@ -26,6 +26,7 @@ def get_all_stepcharts_df():
   mdf = pd.DataFrame()
   all_notes = []
   all_bpms = []
+  all_ticks = []
   timer = util.Timer(total=len(df))
   for idx, row in df.iterrows():
     ssc_fn = row['Files']
@@ -35,11 +36,9 @@ def get_all_stepcharts_df():
     mdf = mdf.append(sc_df, ignore_index=True)
 
     # Same order as mdf
-    sc_notes = sc.get_stepchart_notes()
-    all_notes += sc_notes
-
-    bpms = sc.get_bpms()
-    all_bpms += bpms
+    all_notes += sc.get_stepchart_notes()
+    all_bpms += sc.get_attribute('BPMS')
+    all_ticks += sc.get_attribute('TICKCOUNTS')
 
     timer.update()
 
@@ -116,29 +115,26 @@ def get_all_stepcharts_df():
   print(f'Total: {len(mdf)} stepcharts ...')
   mdf.to_csv(out_dir + f'all_stepcharts.csv')
 
-  # Handle notes -- filter, then convert to dict
-  all_notes_d = {}
-  print(f'Filtering notes ...')
+  filter_saves = {
+    'notes': all_notes,
+    'bpms': all_bpms,
+    'tickcounts': all_ticks,
+  }
+  for name, all_d in filter_saves.items():
+    filter_and_save(name, all_d, mdf)
+  return
+
+
+def filter_and_save(name, all_data, mdf):
+  # Filter, then convert to dict
+  all_d = {}
+  print(f'Filtering {name} ...')
   timer = util.Timer(total = len(mdf))
   for idx, row in mdf.iterrows():
-    notes = all_notes[row['Stepchart index']]
-    all_notes_d[row['Name (unique)']] = notes
+    all_d[row['Name (unique)']] = all_data[row['Stepchart index']]
     timer.update()
-
-  with open(out_dir + f'notes.pkl', 'wb') as f:
-    pickle.dump(all_notes_d, f)
-
-  # Handle bpms -- filter, then convert to dict
-  all_bpms_d = {}
-  print(f'Filtering bpms ...')
-  timer = util.Timer(total = len(mdf))
-  for idx, row in mdf.iterrows():
-    bpms = all_bpms[row['Stepchart index']]
-    all_bpms_d[row['Name (unique)']] = bpms
-    timer.update()
-
-  with open(out_dir + f'bpms.pkl', 'wb') as f:
-    pickle.dump(all_bpms_d, f)
+  with open(out_dir + f'{name}.pkl', 'wb') as f:
+    pickle.dump(all_d, f)
   return
 
 

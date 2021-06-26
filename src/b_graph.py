@@ -266,7 +266,9 @@ def parse_bpm(bpms):
   bpm_list = []
   for line in bpms.split(','):
     [beat, bpm] = line.split('=')
-    bpm_list.append([float(beat), float(bpm)])
+    if float(bpm) < 10000:
+      # Ignore bpm speedups for visual gimmicks
+      bpm_list.append([float(beat), float(bpm)])
   bpm_list.append([np.inf, 0])
   return bpm_list
 
@@ -352,14 +354,14 @@ def main():
   # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
-  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  nm = 'Chicken Wing - BanYa S7 arcade'
+  # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
