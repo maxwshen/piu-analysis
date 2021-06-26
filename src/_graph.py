@@ -142,12 +142,15 @@ class Graph():
     timedelta = self.timedelta(node1, node2)
     
     # Forgive fast 1/3->2 and fast 2/4->3
-    bad = False
-    for c1, c2 in zip(line1, line2):
-      if c2 == '2' and c1 not in list('13'):
-        bad = True
-      if c2 == '3' and c1 not in list('24'):
-        bad = True
+    if '1' not in line2:
+      bad = False
+      for c1, c2 in zip(line1, line2):
+        if c2 == '2' and c1 not in list('13'):
+          bad = True
+        if c2 == '3' and c1 not in list('24'):
+          bad = True
+      if not bad:
+        return
 
     if self.line_nodes[line_node2]['BPM'] >= 1000 or timedelta < 0.001:
       print(f'ERROR: Notes are too close together, likely from high bpm. {line1} {line2}')
