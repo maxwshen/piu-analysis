@@ -358,7 +358,8 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

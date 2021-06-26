@@ -48,6 +48,7 @@ movement_costs = {
       'Multi reward': -1.5,
       # Unused, since only air-X allowed
       'Bracket': 5,
+      'Bracket on 1panel line': 5,
       'Hands': 5,
       'Move without action': 5,
       'Hold alternate feet for hits (onetime, short)': 5,
@@ -58,7 +59,7 @@ movement_costs = {
     },
     'parameters': {
       # Distance of 1000 mm = 1 cost
-      'Distance normalizer': 250,
+      'Distance normalizer': 1000,
       'Inversion distance threshold': 200,
       'Time threshold': 5,
       # Time of 250 ms = 1 cost
