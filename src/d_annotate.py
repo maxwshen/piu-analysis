@@ -11,7 +11,7 @@ import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
 import b_graph, segment, _qsub
-import _notelines, _movement
+import _notelines, _movement, _stepcharts
 
 # Default params
 inp_dir_b = _config.OUT_PLACE + 'b_graph/'
@@ -21,6 +21,7 @@ NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
+scinfo = _stepcharts.SCInfo()
 mover = None
 
 import _annotate_local, _annotate_global
@@ -235,6 +236,9 @@ def run_single(nm):
   move_skillset = 'basic'
   print(nm, move_skillset)
 
+  level = scinfo.name_to_level[nm]
+  move_skillset = _movement.level_to_moveskillset(level)
+
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
 
   steptype = line_nodes['init']['Steptype']
@@ -246,7 +250,7 @@ def run_single(nm):
   _annotate_local.get_ds = get_ds
   _annotate_global.get_ds = get_ds
 
-  df = pd.read_csv(inp_dir_c + f'{nm} {move_skillset}.csv', index_col=0)
+  df = pd.read_csv(inp_dir_c + f'{nm}.csv', index_col=0)
   df = annotate_general(df)
   df = annotate_local(df)
   df = annotate_global(df)
@@ -260,13 +264,16 @@ def run_single(nm):
     else:
       solo_diag.append(False)
   df['Twist solo diagonal'] = solo_diag
+  if 'Twist solo diagonal' not in annots:
+    annots.append('Twist solo diagonal')
+    annot_types['Twist solo diagonal'] = bool
 
-  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
+  df.to_csv(out_dir + f'{nm}.csv')
 
   # Featurize for chart tagging, clustering, and predicting difficulty
   fts = featurize(df)
   df_fts = pd.DataFrame(fts, index=[nm])
-  df_fts.to_csv(out_dir + f'{nm}_{move_skillset}_features.csv')
+  df_fts.to_csv(out_dir + f'{nm}_features.csv')
   return
 
 

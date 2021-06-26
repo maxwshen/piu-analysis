@@ -11,7 +11,9 @@ from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
 import _movement, _params, _memoizer, _stances, _qsub
-import _graph, b_graph, segment, segment_edit
+import _graph, b_graph, segment, segment_edit, _stepcharts
+
+scinfo = _stepcharts.SCInfo()
 
 # Default params
 inp_dir_b = _config.OUT_PLACE + 'b_graph/'
@@ -176,13 +178,14 @@ def output_log(message):
   Run
 '''
 def run_single(nm):
-  # move_skillset = 'beginner'
-  move_skillset = 'basic'
 
   global log_fn
-  log_fn = out_dir + f'{nm} {move_skillset}.log'
+  log_fn = out_dir + f'{nm}.log'
   util.exists_empty_fn(log_fn)
-  print(nm, move_skillset)
+  print(nm)
+
+  level = scinfo.name_to_level[nm]
+  move_skillset = _movement.level_to_moveskillset(level)
 
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
   annots, motifs = segment.load_annotations(inp_dir_segment, nm)
@@ -193,7 +196,7 @@ def run_single(nm):
 
   graph = dijkstra(graph)
   df = backtrack_annotate(graph)
-  df.to_csv(out_dir + f'{nm} {move_skillset}.csv')
+  df.to_csv(out_dir + f'{nm}.csv')
 
   # graph.interactive_debug()
   # output_log('Success')
@@ -266,5 +269,7 @@ if __name__ == '__main__':
         end = sys.argv[4],
         run_single = run_single,
       )
+    elif sys.argv[1] == 'gen_qsubs_remainder':
+      _qsub.gen_qsubs_remainder(NAME, sys.argv[2])
     elif sys.argv[1] == 'run_single':
       run_single(sys.argv[2])

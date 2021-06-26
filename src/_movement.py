@@ -8,6 +8,13 @@ from typing import List, Dict, Set, Tuple
 
 import _positions, _notelines, _graph
 
+
+def level_to_moveskillset(level):
+  if level <= 11:
+    return 'beginner'
+  else:
+    return 'basic'  
+
 '''
   Movement
 '''

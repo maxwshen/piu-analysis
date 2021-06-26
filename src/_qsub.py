@@ -45,8 +45,7 @@ def gen_qsubs(NAME, chart_fnm):
 
 
 def gen_qsubs_remainder(NAME, chart_fnm):
-  # TODO - only gen qsubs for stepcharts with no output file in folder
-  # Generate qsub shell scripts and commands for easy parallelization
+  # Only gen qsubs for unsubmmited jobs, by 
   print('Generating qsub scripts...')
   qsubs_dir = _config.QSUBS_DIR + NAME + '/'
   util.ensure_dir_exists(qsubs_dir)
@@ -65,7 +64,7 @@ def gen_qsubs_remainder(NAME, chart_fnm):
 
   num_scripts = 0
   for i in range(0, len(qdf), num_per_run):
-    out_fn = names[i] + ' basic.csv'
+    out_fn = names[i] + '.csv'
     if out_fn in fns:
       continue
 

@@ -5,7 +5,7 @@ import pandas as pd
 inp_dir = _config.OUT_PLACE + 'd_annotate/'
 
 def main():
-  fns = [fn for fn in os.listdir(inp_dir) if 'features' in fn]
+  fns = [fn for fn in os.listdir(inp_dir) if '_features' in fn]
 
   timer = util.Timer(total=len(fns))
   mdf = pd.DataFrame()
@@ -14,7 +14,7 @@ def main():
     mdf = mdf.append(df)
     timer.update()
   
-  mdf.to_csv(inp_dir + f'features.csv')
+  mdf.to_csv(_config.OUT_PLACE + f'features.csv')
   return
 
 
