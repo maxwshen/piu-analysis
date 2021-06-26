@@ -26,8 +26,9 @@ def run(df):
   for i in range(1, len(df)):
     row1, row2 = df.iloc[i-1], df.iloc[i]
     if row2['Annotation'] == 'alternate' and '1' in row2['Line']:
-      idxs.add(i-1)
-      idxs.add(i)
+      if not row2['Drill']:
+        idxs.add(i-1)
+        idxs.add(i)
   res = filter_short_runs(idxs, len(df), GLOBAL_MIN_LINES_LONG)  
   return res
 
@@ -451,9 +452,9 @@ def spin_allowed(base_angle, query_angle, spin_orientation):
 #
 funcs = {
   # Line only
+  'Drill':                  drill,
   'Run':                    run,
   'Hold run':               hold_run,
-  'Drill':                  drill,
   'Bracket drill':          bracket_drill,
   'Irregular rhythm':       irregular_rhythm,
   'Bracket jump run':       bracket_jump_run,

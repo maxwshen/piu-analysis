@@ -4,6 +4,7 @@ import pandas as pd
 
 inp_dir = _config.OUT_PLACE + 'd_annotate/'
 
+
 def main():
   fns = [fn for fn in os.listdir(inp_dir) if '_features' in fn]
 

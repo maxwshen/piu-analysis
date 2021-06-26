@@ -357,7 +357,8 @@ def main():
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Follow me - SHK S9 arcade'
+  # nm = 'Follow me - SHK S9 arcade'
+  nm = 'Death Moon - SHK S22 shortcut'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

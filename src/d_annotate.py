@@ -24,18 +24,15 @@ util.ensure_dir_exists(out_dir)
 scinfo = _stepcharts.SCInfo()
 mover = None
 
-import _annotate_local, _annotate_global
-local_funcs = _annotate_local.funcs
-global_funcs = _annotate_global.funcs
+import _annotate_local, _annotate_global, _annotate_post
 
-annots = list(local_funcs.keys()) + list(global_funcs.keys())
 annot_types = _annotate_local.annot_types
 annot_types.update(_annotate_global.annot_types)
+annot_types.update(_annotate_post.annot_types)
 
 add_annots = {
   'Notes per second since downpress': float,
 }
-annots += list(add_annots.keys())
 annot_types.update(add_annots)
 
 
@@ -114,7 +111,7 @@ def annotate_local(df):
     prev_row = None if i == 0 else df.iloc[i-1]
     row = df.iloc[i]
 
-    for name, func in local_funcs.items():
+    for name, func in _annotate_local.funcs.items():
       res = func(prev_row, row)
       cdd[name].append(res)
 
@@ -123,13 +120,9 @@ def annotate_local(df):
   return df
 
 
-def annotate_global(df):
-  cdd = {}
-  for name, func in global_funcs.items():
-    res = func(df)
-    cdd[name] = res
-  for col in cdd:
-    df[col] = cdd[col]
+def annotate_global(df, funcs):
+  for name, func in funcs.items():
+    df[name] = func(df)
   return df
 
 
@@ -174,7 +167,7 @@ def featurize(df):
     float: float_featurize,
   }
   all_stats = {}
-  for annot in annots:
+  for annot in annot_types:
     f = type_to_featurizer[annot_types[annot]]
     stats = f(dfs, annot)
     all_stats.update(stats)
@@ -182,15 +175,48 @@ def featurize(df):
 
 
 def bool_featurize(df, col):
-  nps = np.array(df[df[col]]['Notes per second since downpress'])
+  nps_col = 'Notes per second since downpress'
+  nps = np.array(df[df[col]][nps_col])
   if len(nps) == 0:
     nps = np.array([np.nan])
+  ts_ranges, ts_lens = get_true_segment_lens(list(df[col]))
+
+  if ts_lens:
+    start, end = ts_ranges[np.argmax(ts_lens)]
+    nps_of_longest = np.mean(df[nps_col].iloc[start:end])
+    max_len = max(ts_lens)
+  else:
+    nps_of_longest = 0
+    max_len = 0
+
   stats = {
-    f'{col} - frequency': sum(df[col]) / len(df),
-    f'{col} - 50% nps':   nan_to_zero(np.nanmedian(nps)),
-    f'{col} - 80% nps':   nan_to_zero(np.nanpercentile(nps, 80)), 
-    f'{col} - 99% nps':   nan_to_zero(np.nanpercentile(nps, 99)), 
+    f'{col} - frequency':         sum(df[col]) / len(df),
+    f'{col} - 50% nps':           nan_to_zero(np.nanmedian(nps)),
+    f'{col} - 80% nps':           nan_to_zero(np.nanpercentile(nps, 80)), 
+    f'{col} - 99% nps':           nan_to_zero(np.nanpercentile(nps, 99)), 
+    f'{col} - max len':           max_len,
+    f'{col} - nps of longest':    nps_of_longest,
   }
+
+  twist_stats = [
+    'Hold', 'Hold taps', 'Splits', 'Jump', 'Bracket', 'Double step',
+    'Hold tap single foot', 'Run', 'Drill', 'Hold run', 'Side3 singles',
+    'Mid4 doubles', 'Mid6 doubles', 'Irregular rhythm',
+  ]
+  if col in twist_stats:
+    dfs = df[df[col] == True]
+    if len(dfs) > 0:
+      pct_twist_90p = sum(dfs['Twist angle'].isin(['90', 'diagonal', '180'])) / len(dfs)
+      pct_twist_diagp = sum(dfs['Twist angle'].isin(['diagonal', '180'])) / len(dfs)
+    else:
+      pct_twist_90p = 0
+      pct_twist_diagp = 0
+    add_stats = {
+      f'{col} - % 90+ twist':       pct_twist_90p, 
+      f'{col} - % diagonal+ twist': pct_twist_diagp, 
+    }
+    stats.update(add_stats)
+
   return stats
 
 
@@ -209,6 +235,26 @@ def nan_to_zero(x):
   return 0 if np.isnan(x) else x
 
 
+def get_true_segment_lens(vec):
+  # vec: list of bools
+  ranges, lens = [], []
+  i = 0
+  inrun = False
+  while i < len(vec):
+    if vec[i]:
+      j = i + 1
+      while j < len(vec):
+        if vec[j]:
+          j += 1
+        else:
+          break
+      lens.append(j - i)
+      ranges.append((i, j))
+      i = j + 1
+    i += 1
+  return ranges, lens
+
+
 def one_hot_encode(df, ft, cats):
   cols = []
   for cat in cats:
@@ -216,13 +262,9 @@ def one_hot_encode(df, ft, cats):
     df[col] = (df[ft] == cat)
     cols.append(col)
   
-  global annots
   global annot_types
   # Only edit 1st time, when running multiple times with qsub
-  if ft in annots:
-    annots.remove(ft)
-    annots += cols
-
+  if ft in annot_types:
     del annot_types[ft]
     for col in cols:
       annot_types[col] = bool
@@ -251,22 +293,11 @@ def run_single(nm):
   _annotate_global.get_ds = get_ds
 
   df = pd.read_csv(inp_dir_c + f'{nm}.csv', index_col=0)
+
   df = annotate_general(df)
   df = annotate_local(df)
-  df = annotate_global(df)
-
-  # Annotate solo diagonal twists
-  twists = df['Twist angle']
-  solo_diag = [True] if twists[0] == 'diagonal' else [False]
-  for i in range(1, len(twists)):
-    if twists[i] == 'diagonal' and twists[i-1] not in ['90', '180']:
-      solo_diag.append(True)
-    else:
-      solo_diag.append(False)
-  df['Twist solo diagonal'] = solo_diag
-  if 'Twist solo diagonal' not in annots:
-    annots.append('Twist solo diagonal')
-    annot_types['Twist solo diagonal'] = bool
+  df = annotate_global(df, _annotate_global.funcs)
+  df = annotate_global(df, _annotate_post.funcs)
 
   df.to_csv(out_dir + f'{nm}.csv')
 
@@ -307,7 +338,8 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Follow me - SHK S9 arcade'
+  # nm = 'Follow me - SHK S9 arcade'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'
