@@ -241,7 +241,7 @@ def parse_warps(warps):
 
 
 def beat_in_any_warp(beat, warps):
-  in_warp = lambda beat, warp: warp[0] <= beat < warp[1]
+  in_warp = lambda beat, warp: warp[0] < beat < warp[1]
   return any(in_warp(beat, warp) for warp in warps)
 
 
@@ -412,7 +412,8 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  nm = 'Obliteration - ATAS S17 arcade'
+  # nm = 'Obliteration - ATAS S17 arcade'
+  nm = 'Fresh - Aspektz S14 arcade infinity'
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
