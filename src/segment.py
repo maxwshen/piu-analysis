@@ -175,11 +175,16 @@ def get_active_hold_motifs(lines, features, beats):
     if in_hold:
       if '4' in lines[j]:
         j += 1
-      elif '3' in lines[j]:
+      elif '3' in lines[j] and '4' not in lines[j]:
         all_motifs[f'hold-{num_found}'] = [(beats[i], beats[j-1])]
         in_hold = False
         i, j = j+1, j+2
         num_found += 1
+      else:
+        print('\nERROR: Detected unresolved hold')
+        print(lines[i:j+1])
+        print(beats[i:j+1])
+        import code; code.interact(local=dict(globals(), **locals()))
     else:
       if bool('4' in lines[i] or '2' in lines[i]) and '1' in lines[i]:
         in_hold = True
@@ -689,10 +694,11 @@ def main():
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Fresh - Aspektz S14 arcade infinity'
-  nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
+  # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
+  # nm = 'Log In - SHK S20 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
-  # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Chicken Wing - BanYa S17 arcade'
@@ -712,6 +718,14 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+
+  # Test: has warps
+  # nm = 'Log In - SHK S20 arcade'
+  # nm = 'Obliteration - ATAS S17 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
+  # nm = 'Full Moon - Dreamcatcher S22 arcade'
+  nm = 'Wedding Crashers - SHK S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

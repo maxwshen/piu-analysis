@@ -115,10 +115,14 @@ def form_graph(nm, subset_measures = None):
         if a == '2':
           active_holds.add(p)
         if a == '3':
-          try:
+          if p in active_holds:
             active_holds.remove(p)
-          except:
+          else:
+            prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
+            print('Bad hold', beat, line)
+            print('\n'.join(prev_lines[-10:]))
             import code; code.interact(local=dict(globals(), **locals()))
+            raise Exception('Bad hold')
 
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
@@ -236,12 +240,13 @@ def parse_warps(warps):
     [beat, num_beats] = line.split('=')
     beat = float(beat)
     num_beats = float(num_beats)
-    warps_list.append([beat, beat + num_beats])
+    warps_list.append([round(beat, 3), round(beat + num_beats, 3)])
   return warps_list
 
 
 def beat_in_any_warp(beat, warps):
-  in_warp = lambda beat, warp: warp[0] < beat < warp[1]
+  # Round to handle beats like 1/3, 2/3
+  in_warp = lambda beat, warp: warp[0] <= round(beat, 3) < warp[1]
   return any(in_warp(beat, warp) for warp in warps)
 
 
@@ -270,13 +275,14 @@ def parse_lines_with_warps(measures, warps):
         warped_beat += beat_increment
       else:
         if set(line) == set(list('03')):
-          # TODO - Handle hold releases in warped lines
-          warp_release_time = 0.01
-          prev_beat = warped_beat - beat_increment
-          release_beat = prev_beat + warp_release_time
-          beats_to_lines[release_beat] = line
-          beats_to_increments[prev_beat] = warp_release_time
-          beats_to_increments[release_beat] = beat_increment - warp_release_time
+          prev_beat = list(beats_to_lines.keys())[-1]
+          prev_line = beats_to_lines[prev_beat]
+          if prev_line.replace('2', '3') == line:
+            warp_release_time = 0.01
+            release_beat = prev_beat + warp_release_time
+            beats_to_lines[release_beat] = line
+            beats_to_increments[prev_beat] = warp_release_time
+            beats_to_increments[release_beat] = beat_increment - warp_release_time
 
       unwarped_beat += beat_increment
   return beats_to_lines, beats_to_increments
@@ -398,7 +404,6 @@ def main():
   # nm = 'Dawgs In Da House - CanBlaster (Miami Style) S17 arcade'
   # nm = 'Dabbi Doo - Ni-Ni S2 arcade'
   # nm = 'Boulafacet - Nightmare S22 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Everybody Got 2 Know - MAX S19 remix'
   # nm = 'Chicken Wing - BanYa S17 arcade'
   # nm = 'Hypnosis - BanYa S18 arcade'
@@ -421,13 +426,19 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  # nm = 'Obliteration - ATAS S17 arcade'
   # nm = 'Fresh - Aspektz S14 arcade infinity'
-  nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
+  # nm = 'Log In - SHK S20 arcade'
+  # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
-  # nm = 'Wedding Crashers - SHK S16 arcade'
+  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Gotta Be You - 2NE1 S15 arcade'
+  # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
+  # nm = 'Full Moon - Dreamcatcher S22 arcade'
+  # nm = 'Log In - SHK S20 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
