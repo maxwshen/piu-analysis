@@ -39,7 +39,7 @@ log_fn = ''
 ##
 # Functions
 ##
-def form_graph_v2(nm, subset_measures = None):
+def form_graph(nm, subset_measures = None):
   '''
     Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
 
@@ -121,7 +121,7 @@ def form_graph_v2(nm, subset_measures = None):
       # import code; code.interact(local=dict(globals(), **locals()))
 
     bi = beats_to_increments[beat]
-    time, bpm, bpms = update_time_v2(time, beat, bi, bpm, bpms)
+    time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
     timer.update()
 
   # Add terminal node and edges
@@ -130,194 +130,6 @@ def form_graph_v2(nm, subset_measures = None):
     'Beat': np.inf,
     'Line': '',
     'Line with active holds': '',
-    'BPM': 0,
-  }
-  edges_out[prev_node_nm].append('final')
-  edges_in['final'].append(prev_node_nm)
-  edges_out['final'] = []
-
-  return nodes, dict(edges_out), dict(edges_in), stance
-
-
-def update_time_v2(time, beat, beat_increment, bpm, bpms):
-  '''
-    After processing line, update bpm, and time
-    Important: Update time before bpm.
-  '''
-  next_bpm_update_beat = bpms[0][0]
-  next_note_beat = beat + beat_increment
-
-  while next_bpm_update_beat <= next_note_beat:
-    # 1 or more bpm updates before next note line.
-    # For each bpm update, update beat, time (using bpm+beat), and bpm.
-    bi = next_bpm_update_beat - beat
-    time += bi * (60 / bpm)
-    beat += bi
-    if beat >= bpms[0][0]:
-      # print(beat, bpms)
-      bpm = bpms[0][1]
-      bpms = bpms[1:]
-      next_bpm_update_beat = bpms[0][0]
-    assert bpm is not None, 'ERROR: Failed to set bpm'
-
-  # No more bpm updates before next note line.
-  # Update time. No need to update beat, bpm.
-  if beat < next_note_beat:
-    bi = next_note_beat - beat
-    time += bi * (60 / bpm)
-  assert bpm is not None, 'ERROR: Failed to set bpm'
-  # print(beat, bpm)
-  return time, bpm, bpms  
-
-
-def parse_warps(warps):
-  warps_list = []
-  for line in warps.split(','):
-    [beat, num_beats] = line.split('=')
-    beat = float(beat)
-    num_beats = float(num_beats)
-    warps_list.append([beat, beat + num_beats])
-  return warps_list
-
-
-def beat_in_any_warp(beat, warps):
-  in_warp = lambda beat, warp: warp[0] <= beat < warp[1]
-  return any(in_warp(beat, warp) for warp in warps)
-
-
-def parse_lines_with_warps(measures, warps):
-  beats_per_measure = 4
-  beats_to_lines = {}
-  beats_to_increments = {}
-
-  warped_beat, unwarped_beat = 0, 0
-  for measure_num, measure in enumerate(measures):
-    lines = measure.split('\n')
-    lines = [line for line in lines if '//' not in line]
-    num_subbeats = len(lines)
-
-    for lidx, line in enumerate(lines):
-      beat_increment = beats_per_measure / num_subbeats
-
-      line = _notelines.parse_line(line)
-      if any(x not in set(list('01234')) for x in line):
-        print(f'Error: Bad symbol found in line, {line}')
-        raise ValueError(f'Bad symbol found in line, {line}')
-      
-      if not beat_in_any_warp(unwarped_beat, warps):
-        beats_to_lines[warped_beat] = line
-        beats_to_increments[warped_beat] = beat_increment
-        warped_beat += beat_increment
-
-      unwarped_beat += beat_increment
-  return beats_to_lines, beats_to_increments
-
-
-#
-def form_graph(nm, subset_measures = None):
-  '''
-    Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
-
-    Notes format: https://github.com/stepmania/stepmania/wiki/sm.
-  '''
-  try:
-    atts = sc_df[sc_df['Name (unique)'] == nm].iloc[0]
-  except IndexError:
-    print(f'ERROR: Failed to find stepchart {nm}')
-    sys.exit(1)
-
-  if 'S' in atts['Steptype simple']:
-    steptype = 'singles'
-  elif 'D' in atts['Steptype simple']:
-    steptype = 'doubles'
-  stance = stance_store[steptype]
-
-  notes = all_notes[nm]
-  measures = [s.strip() for s in notes.split(',')]
-  bpms = parse_bpm(all_bpms[nm])
-  beats_per_measure = 4
-
-  # Testing
-  if subset_measures:
-    print(f'WARNING: Subsetting to {subset_measures} measures.')
-    measures = measures[:subset_measures]
-
-  beat = 0
-  time = 0     # units = seconds
-  bpm = None
-  active_holds = set()
-  nodes = dict()
-  edges_out = defaultdict(list)
-  edges_in = defaultdict(list)
-
-  bpm, bpms = get_init_bpm(beat, bpms)
-
-  nodes['init'] = {
-    'Time': time,
-    'Beat': beat,
-    'Measure': 0,
-    'BPM': bpm,
-    'Steptype': steptype,
-    'Timing judge': 'None',
-  }
-  prev_node_nm = 'init'
-  edges_in['init'] = []
-
-  timer = util.Timer(total=len(measures))
-  for measure_num, measure in enumerate(measures):
-    lines = measure.split('\n')
-    lines = [line for line in lines if '//' not in line]
-    num_subbeats = len(lines)
-    note_type = num_subbeats
-    for lidx, line in enumerate(lines):
-      beat_increment = beats_per_measure / num_subbeats
-
-      line = _notelines.parse_line(line)
-      if any(x not in set(list('01234')) for x in line):
-        print(f'Error: Bad symbol found in line, {line}')
-        raise ValueError(f'Bad symbol found in line, {line}')
-
-      if _notelines.has_notes(line):
-        # Add active holds into line as 4
-        aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
-
-        node_nm = f'{beat}'
-        nodes[node_nm] = {
-          'Time': time,
-          'Beat': beat,
-          'Line': line,
-          'Line with active holds': aug_line,
-          'Measure': measure_num + 1,   # 0-based to 1-based
-          'BPM': bpm,
-        }
-
-        # Annotate edges for line
-        edges_out[prev_node_nm].append(node_nm)
-        edges_in[node_nm].append(prev_node_nm)
-        prev_node_nm = node_nm
-
-        active_panel_to_action = stance.line_to_panel_to_action(line)
-        for p in active_panel_to_action:
-          a = active_panel_to_action[p]
-          if a == '2':
-            active_holds.add(p)
-          if a == '3':
-            active_holds.remove(p)
-
-        # print(time, bpm, beat, line, active_holds)
-        # import code; code.interact(local=dict(globals(), **locals()))
-
-      time, beat, bpm, bpms = update_time(time, beat, beat_increment, bpm, bpms)
-
-    timer.update()
-
-  # Add terminal node and edges
-  nodes['final'] = {
-    'Time': np.inf,
-    'Beat': np.inf,
-    'Line': '',
-    'Line with active holds': '',
-    'Measure': np.inf,
     'BPM': 0,
   }
   edges_out[prev_node_nm].append('final')
@@ -400,12 +212,59 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
   return nodes, edges_out, edges_in
 
 
+
+'''
+  Warping
+'''
+def parse_warps(warps):
+  warps_list = []
+  for line in warps.split(','):
+    [beat, num_beats] = line.split('=')
+    beat = float(beat)
+    num_beats = float(num_beats)
+    warps_list.append([beat, beat + num_beats])
+  return warps_list
+
+
+def beat_in_any_warp(beat, warps):
+  in_warp = lambda beat, warp: warp[0] <= beat < warp[1]
+  return any(in_warp(beat, warp) for warp in warps)
+
+
+def parse_lines_with_warps(measures, warps):
+  beats_per_measure = 4
+  beats_to_lines = {}
+  beats_to_increments = {}
+
+  warped_beat, unwarped_beat = 0, 0
+  for measure_num, measure in enumerate(measures):
+    lines = measure.split('\n')
+    lines = [line for line in lines if '//' not in line]
+    num_subbeats = len(lines)
+
+    for lidx, line in enumerate(lines):
+      beat_increment = beats_per_measure / num_subbeats
+
+      line = _notelines.parse_line(line)
+      if any(x not in set(list('01234')) for x in line):
+        print(f'Error: Bad symbol found in line, {line}')
+        raise ValueError(f'Bad symbol found in line, {line}')
+      
+      if not beat_in_any_warp(unwarped_beat, warps):
+        beats_to_lines[warped_beat] = line
+        beats_to_increments[warped_beat] = beat_increment
+        warped_beat += beat_increment
+
+      unwarped_beat += beat_increment
+  return beats_to_lines, beats_to_increments
+
+
 '''
   BPM, beat, and time logic
 '''
 def update_time(time, beat, beat_increment, bpm, bpms):
   '''
-    After processing line, update beat, bpm, and time
+    After processing line, update bpm, and time
     Important: Update time before bpm.
   '''
   next_bpm_update_beat = bpms[0][0]
@@ -425,14 +284,13 @@ def update_time(time, beat, beat_increment, bpm, bpms):
     assert bpm is not None, 'ERROR: Failed to set bpm'
 
   # No more bpm updates before next note line.
-  # Update beat, time. No need to update bpm.
+  # Update time. No need to update beat, bpm.
   if beat < next_note_beat:
     bi = next_note_beat - beat
     time += bi * (60 / bpm)
-    beat += bi
   assert bpm is not None, 'ERROR: Failed to set bpm'
   # print(beat, bpm)
-  return time, beat, bpm, bpms  
+  return time, bpm, bpms  
 
 
 def parse_bpm(bpms):
@@ -485,8 +343,7 @@ def run_single(sc_nm):
   global log_fn
   log_fn = out_dir + f'{sc_nm} {timing_judge}.log'
 
-  # nodes, edges_out, edges_in, stance = form_graph(sc_nm)
-  nodes, edges_out, edges_in, stance = form_graph_v2(sc_nm)
+  nodes, edges_out, edges_in, stance = form_graph(sc_nm)
 
   # Faster than forming graph.
   # More efficient to just run this for each timing judge
