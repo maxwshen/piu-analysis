@@ -186,17 +186,20 @@ def bool_featurize(df, col):
     start, end = ts_ranges[np.argmax(ts_lens)]
     nps_of_longest = np.mean(df[nps_col].iloc[start:end])
     max_len = max(ts_lens)
+    time_longest = max_len / nps_of_longest
   else:
     nps_of_longest = 0
     max_len = 0
+    time_longest = 0
 
   stats = {
     f'{col} - frequency':         sum(df[col]) / len(df),
     f'{col} - 50% nps':           nan_to_zero(np.nanmedian(nps)),
     f'{col} - 80% nps':           nan_to_zero(np.nanpercentile(nps, 80)), 
     f'{col} - 99% nps':           nan_to_zero(np.nanpercentile(nps, 99)), 
-    f'{col} - max len':           max_len,
+    f'{col} - max len lines':     max_len,
     f'{col} - nps of longest':    nps_of_longest,
+    f'{col} - max len sec':       time_longest,
   }
 
   twist_stats = [

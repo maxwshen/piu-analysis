@@ -115,7 +115,10 @@ def form_graph(nm, subset_measures = None):
         if a == '2':
           active_holds.add(p)
         if a == '3':
-          active_holds.remove(p)
+          try:
+            active_holds.remove(p)
+          except:
+            import code; code.interact(local=dict(globals(), **locals()))
 
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
@@ -408,7 +411,8 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Obliteration - ATAS S17 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
