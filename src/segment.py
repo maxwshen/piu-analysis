@@ -65,7 +65,7 @@ def featurize(line_nodes, downpress_nodes):
     xs.append(x)
     beats.append(d['Beat'])
 
-  assert beats == sorted(beats), 'Beats is not sorted by default'
+  assert beats == sorted(beats), 'ERROR: Beats is not sorted by default'
   return xs, beats
 
 
@@ -169,7 +169,9 @@ def get_active_hold_motifs(lines, features, beats):
   in_hold = False
   found_hit = False
   num_found = 0
+  # import code; code.interact(local=dict(globals(), **locals()))
   while i < len(beats) and j < len(beats):
+    # print(i, j)
     if in_hold:
       if '4' in lines[j]:
         j += 1
@@ -686,7 +688,8 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  nm = 'Fresh - Aspektz S14 arcade infinity'
+  # nm = 'Fresh - Aspektz S14 arcade infinity'
+  nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'

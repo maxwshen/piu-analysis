@@ -268,6 +268,15 @@ def parse_lines_with_warps(measures, warps):
         beats_to_lines[warped_beat] = line
         beats_to_increments[warped_beat] = beat_increment
         warped_beat += beat_increment
+      else:
+        if set(line) == set(list('03')):
+          # TODO - Handle hold releases in warped lines
+          warp_release_time = 0.01
+          prev_beat = warped_beat - beat_increment
+          release_beat = prev_beat + warp_release_time
+          beats_to_lines[release_beat] = line
+          beats_to_increments[prev_beat] = warp_release_time
+          beats_to_increments[release_beat] = beat_increment - warp_release_time
 
       unwarped_beat += beat_increment
   return beats_to_lines, beats_to_increments
@@ -413,7 +422,8 @@ def main():
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Obliteration - ATAS S17 arcade'
-  nm = 'Fresh - Aspektz S14 arcade infinity'
+  # nm = 'Fresh - Aspektz S14 arcade infinity'
+  nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
