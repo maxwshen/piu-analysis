@@ -208,7 +208,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'NoNoNo - Apink S14 arcade'
   # nm = 'Rage of Fire - MAX S16 arcade'
@@ -223,7 +223,7 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
-  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'HYPERCUBE - MAX S15 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'

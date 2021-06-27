@@ -103,7 +103,7 @@ def is_doublestep(row1, row2):
 
 
 def twist_angle(row1, row2) -> str:
-  # ['none', '90', 'diagonal', '180']
+  # ['none', '90', 'close diagonal', 'far diagonal', '180']
   d1, d2 = get_ds(row1, row2)
   body_angle = row2['Body angle']
   angle = min(body_angle, 360 - body_angle)
@@ -113,7 +113,13 @@ def twist_angle(row1, row2) -> str:
   elif 90 - leniency <= angle <= 90 + leniency:
     return '90'
   elif 90 + leniency < angle <= 180 - leniency:
-    return 'diagonal'
+    lpos = np.array(mover.pos_to_center[d2['limb_to_pos']['Left foot']])
+    rpos = np.array(mover.pos_to_center[d2['limb_to_pos']['Right foot']])
+    threshold_mm = 250
+    if np.linalg.norm(lpos - rpos) < threshold_mm:
+      return 'close diagonal'
+    else:
+      return 'far diagonal'
   else:
     return '180'
 

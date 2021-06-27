@@ -218,6 +218,8 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
 '''
 def parse_warps(warps):
   warps_list = []
+  if warps == '':
+    return warps_list
   for line in warps.split(','):
     [beat, num_beats] = line.split('=')
     beat = float(beat)
@@ -362,7 +364,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -398,7 +400,7 @@ def main():
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
-  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Wedding Crashers - SHK S16 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

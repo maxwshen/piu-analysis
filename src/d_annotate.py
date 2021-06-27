@@ -158,7 +158,8 @@ def featurize(df):
 
     Use 'Has downpress adj.', which counts 1->2 as 1 downpress, not 2. This aligns the nm. downpress lines with user expectations
   '''
-  one_hot_encode(df, 'Twist angle', ['90', 'diagonal', '180'])
+  one_hot_encode(df, 'Twist angle',
+      ['none', '90', 'close diagonal', 'far diagonal', '180'])
 
   dfs = df[df['Has downpress adj.']]
 
@@ -206,14 +207,20 @@ def bool_featurize(df, col):
   if col in twist_stats:
     dfs = df[df[col] == True]
     if len(dfs) > 0:
-      pct_twist_90p = sum(dfs['Twist angle'].isin(['90', 'diagonal', '180'])) / len(dfs)
-      pct_twist_diagp = sum(dfs['Twist angle'].isin(['diagonal', '180'])) / len(dfs)
+      num_twist_90p = sum(dfs['Twist angle'].isin(
+          ['90', 'close diagonal', 'far diagonal', '180'])) / len(dfs)
+      num_twist_diagp = sum(dfs['Twist angle'].isin(
+          ['close diagonal', 'far diagonal', '180'])) / len(dfs)
+      num_twist_diagfarp = sum(dfs['Twist angle'].isin(
+          ['far diagonal', '180'])) / len(dfs)
     else:
-      pct_twist_90p = 0
-      pct_twist_diagp = 0
+      num_twist_90p = 0
+      num_twist_diagp = 0
+      num_twist_diagfarp = 0
     add_stats = {
-      f'{col} - % 90+ twist':       pct_twist_90p, 
-      f'{col} - % diagonal+ twist': pct_twist_diagp, 
+      f'{col} - % 90+ twist':           num_twist_90p, 
+      f'{col} - % diagonal+ twist':     num_twist_diagp, 
+      f'{col} - % far diagonal+ twist': num_twist_diagfarp, 
     }
     stats.update(add_stats)
 
@@ -313,7 +320,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
@@ -338,7 +345,7 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
