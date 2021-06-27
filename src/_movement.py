@@ -105,10 +105,6 @@ class Movement():
     Costs
   '''
   def angle_cost(self, d, inv_cost):
-    '''
-      Todo -- more, beyond angle? 
-      e.g., penalize heel in backswing
-    '''
     cost = 0
 
     left_angle = self.pos_to_rotation[d['limb_to_pos']['Left foot']]

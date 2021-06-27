@@ -180,6 +180,16 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
       if _notelines.num_downpress(joint_line) == _notelines.num_downpress(node['Line']):
         continue
 
+      # Do not propose multihits that require hands -- very slow
+      # This means we currently cannot handle staggered hands
+      sd = _notelines.singlesdoubles(joint_line)
+      if sd == 'singles':
+        if _notelines.num_downpress(joint_line) >= 4:
+          continue
+      if sd == 'doubles':
+        if _notelines.num_downpress(joint_line) >= 5:
+          continue
+
       # Combine line
       aug_lines = [node['Line with active holds']] + \
                   [nodes[nm]['Line with active holds'] for nm in hits]
@@ -191,7 +201,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
         'Beat': last_node['Beat'],
         'Line': joint_line,
         'Line with active holds': joint_aug_line,
-        'Measure': last_node['Measure'],
         'BPM': last_node['BPM'],
       }
       edges_out[new_node_nm] = edges_out[last_node_nm]
@@ -364,7 +373,10 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'London Bridge - SCI Guyz S11 arcade'
+  # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
+  # nm = 'Xeroize - FE S24 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
   # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -396,7 +408,7 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps

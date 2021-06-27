@@ -25,7 +25,7 @@ class Graph():
 
     self.predecessors = defaultdict(lambda: None)
     self.costs = defaultdict(lambda: np.inf)
-    self.cost_dicts = defaultdict(lambda: {})
+    self.cost_dicts = defaultdict(lambda: dict())
 
     init_sa = _params.init_stanceaction[mover.style]
     default_tag = 'any-any-any'
@@ -315,6 +315,7 @@ class Graph():
     # Ignore edges with heuristics
     filters = [
       self.filter_edge_unnecessary_jump,
+      self.filter_jump_jump_crossover,
     ]
     if not filters:
       return False
@@ -334,6 +335,23 @@ class Graph():
     if remove:
       self.stats_d['Num. edges skipped by unnecessary jump'] += 1
     return remove
+
+
+  def filter_jump_jump_crossover(self, node1, node2):
+    '''
+      If two lines are both jumps, second line should not have a crossover.
+    '''
+    if 'init' in node1:
+      return False
+    line_node1, sa1, tag1, stance1, d1 = self.full_parse(node1)
+    line_node2, sa2, tag2, stance2, d2 = self.full_parse(node2)
+    prev_jump = self.cost_dicts[node1]['jump'] > 0
+    if prev_jump:
+      if self.mover.foot_inversion_cost(d2) > 0:
+        if self.mover.jump_cost(d1, d2) > 0:
+          # print(f'Filtered jump jump crossover')
+          return True
+    return False
 
   
   '''

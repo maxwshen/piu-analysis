@@ -674,7 +674,10 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'London Bridge - SCI Guyz S11 arcade'
+  # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
+  # nm = 'Xeroize - FE S24 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -682,7 +685,7 @@ def main():
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
