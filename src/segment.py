@@ -722,10 +722,11 @@ def main():
   # Test: has warps
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Elvis - AOA S15 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
-  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'V3 - Beautiful Day S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

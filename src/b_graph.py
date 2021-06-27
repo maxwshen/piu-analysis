@@ -246,8 +246,17 @@ def parse_warps(warps):
 
 def beat_in_any_warp(beat, warps):
   # Round to handle beats like 1/3, 2/3
-  in_warp = lambda beat, warp: warp[0] <= round(beat, 3) < warp[1]
+  # Ending needs to be in warp: Obliteration S17
+  # Beginning needs to be in warp: V3 S17
+  # But sometimes lines are duplicated: Elvis S15
+  # in_warp = lambda beat, warp: warp[0] <= round(beat, 3) < warp[1]
+  in_warp = lambda beat, warp: warp[0] < round(beat, 3) < warp[1]
   return any(in_warp(beat, warp) for warp in warps)
+
+
+def beat_begins_any_warp(beat, warps):
+  begins_warp = lambda beat, warp: warp[0] == round(beat, 3)
+  return any(begins_warp(beat, warp) for warp in warps)
 
 
 def parse_lines_with_warps(measures, warps):
@@ -272,7 +281,8 @@ def parse_lines_with_warps(measures, warps):
       if not beat_in_any_warp(unwarped_beat, warps):
         beats_to_lines[warped_beat] = line
         beats_to_increments[warped_beat] = beat_increment
-        warped_beat += beat_increment
+        if not beat_begins_any_warp(unwarped_beat, warps):
+          warped_beat += beat_increment
       else:
         if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
@@ -432,13 +442,16 @@ def main():
   # nm = 'Chicken Wing - BanYa S7 arcade'
 
   # Test: Has warps
-  nm = 'Wedding Crashers - SHK S16 arcade'
+  # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Gotta Be You - 2NE1 S15 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
+
+  # Test: Failures
+  # nm = 'V3 - Beautiful Day S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
