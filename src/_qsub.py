@@ -32,7 +32,12 @@ def gen_qsubs(NAME, chart_fnm):
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -P regevlab -l h_rt=1:00:00,h_vmem=4G -wd {_config.SRC_DIR} {sh_fn} &')
+    if NAME == 'c_dijkstra':
+      vmem = 'h_vmem=4G'
+    else:
+      vmem = 'h_vmem=1G'
+
+    qsub_commands.append(f'qsub -j y -V -P regevlab -l h_rt=1:00:00,{vmem} -wd {_config.SRC_DIR} {sh_fn} &')
 
   # Save commands
   commands_fn = qsubs_dir + '_commands.sh'
@@ -79,7 +84,12 @@ def gen_qsubs_remainder(NAME, chart_fnm, extension):
     num_scripts += 1
 
     # Write qsub commands
-    qsub_commands.append(f'qsub -j y -V -P regevlab -l h_rt=1:00:00,h_vmem=4G -wd {_config.SRC_DIR} {sh_fn} &')
+    if NAME == 'c_dijkstra':
+      vmem = 'h_vmem=4G'
+    else:
+      vmem = 'h_vmem=1G'
+
+    qsub_commands.append(f'qsub -j y -V -P regevlab -l h_rt=1:00:00,{vmem} -wd {_config.SRC_DIR} {sh_fn} &')
 
   # Save commands
   commands_fn = qsubs_dir + '_commands.sh'
