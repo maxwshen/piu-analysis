@@ -68,9 +68,34 @@ class Graph():
 
 
   '''
+    Skip redundant cross-product between hands lines: too slow otherwise
+  '''
+  def detect_redundant_hands(self, prev_stance, prev_line, aug_line):
+    prev_hands = len(prev_stance.split(',')) == 4
+    onetotwo = prev_line.replace('1', '2') == aug_line
+    twotothree = prev_line.replace('2', '3').replace('4', '3') == aug_line
+    return prev_hands and (onetotwo or twotothree), onetotwo, twotothree
+
+
+  def copy_hand_sa(self, prev_sa, onetotwo, twotothree):
+    [prev_stance, prev_action] = prev_sa.split(';')
+    if onetotwo:
+      new_action = prev_action.replace('1', '2')
+    if twotothree:
+      new_action = prev_action.replace('2', '3').replace('4', '3')
+    return ';'.join([prev_stance, new_action])
+
+
+  '''
     Graph functions
   '''
-  def node_generator(self, stance, tag, prev_sa, line_node):
+  def node_generator(self, prev_node, line_node):
+    # Input: previous graph node (specific stance-action) to next line
+    prev_line_node, prev_sa, prev_tag, prev_stance, prev_d = self.full_parse(prev_node)
+    if prev_line_node != 'init':
+      prev_line = self.line_nodes[prev_line_node]['Line with active holds']
+    else:
+      prev_line = ''
     aug_line = self.line_nodes[line_node]['Line with active holds']
     beat = self.line_nodes[line_node]['Beat']
 
@@ -81,7 +106,7 @@ class Graph():
       [motif_jfs, motif_twohits, motif_hold] = motif_annot.split('-')
       motif_start, motif_end = motif_section
 
-    tag_jfs, tag_twohits, tag_hold = parse_tag(tag)
+    tag_jfs, tag_twohits, tag_hold = parse_tag(prev_tag)
 
     motif_branch = False
     jfs, twohits, hold = 'any', 'any', 'any'
@@ -92,18 +117,25 @@ class Graph():
         jfs = tag_jfs
         twohits = tag_twohits
         hold = tag_hold
-    
-    sas = self.stances.stanceaction_generator(stance, aug_line)
-    if motif_branch:
-      sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
-          motif_jfs, motif_twohits, motif_hold)
-    else:
-      sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
-          jfs, twohits, hold)
-      ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
 
-    for sa, ntag in zip(sas, ntags):
-      yield get_node_name(line_node, sa, ntag)
+    redundant_hands, onetotwo, twotothree = self.detect_redundant_hands(prev_stance, prev_line, aug_line)
+    if redundant_hands:
+      # Do not cross product hand stances -- too large
+      copied_hand_sa = self.copy_hand_sa(prev_sa, onetotwo, twotothree)
+      yield get_node_name(line_node, copied_hand_sa, f'{jfs}-{twohits}-{hold}')
+    else:
+      # Typical case
+      sas = self.stances.stanceaction_generator(prev_stance, aug_line)
+      if motif_branch:
+        sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
+            motif_jfs, motif_twohits, motif_hold)
+      else:
+        sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+            jfs, twohits, hold)
+        ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
+
+      for sa, ntag in zip(sas, ntags):
+        yield get_node_name(line_node, sa, ntag)
 
 
   def edge_generator(self, node):
@@ -112,7 +144,7 @@ class Graph():
       if line_node2 == 'final':
         yield self.final_node
       else:
-        for node in self.node_generator(stance, tag, sa, line_node2):
+        for node in self.node_generator(node, line_node2):
           yield node
 
 
