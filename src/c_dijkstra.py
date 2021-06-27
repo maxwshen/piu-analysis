@@ -92,7 +92,7 @@ def dijkstra(graph):
 
 def backtrack_annotate(graph) -> pd.DataFrame:
   # Assumes graph.predecessors and graph.costs are populated by dijkstra
-  cols = ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']
+  cols = ['Time', 'Beat', 'Line', 'Line with active holds', 'BPM']
 
   node = graph.predecessors[graph.final_node]
   if node is None:
@@ -223,7 +223,7 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
-  # nm = 'Wedding Crashers - SHK S16 arcade'
+  nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'HYPERCUBE - MAX S15 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
@@ -242,7 +242,7 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'

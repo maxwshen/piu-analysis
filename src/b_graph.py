@@ -22,9 +22,9 @@ out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
 # Load data
-# TODO - Unify into single data structure
 all_notes = pickle.load(open(inp_dir_a + f'notes.pkl', 'rb'))
 all_bpms = pickle.load(open(inp_dir_a + f'bpms.pkl', 'rb'))
+all_warps = pickle.load(open(inp_dir_a + f'warps.pkl', 'rb'))
 
 sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col=0)
 
@@ -39,7 +39,182 @@ log_fn = ''
 ##
 # Functions
 ##
-def form_graph(nm, subset_measures = 0):
+def form_graph_v2(nm, subset_measures = None):
+  '''
+    Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
+
+    Notes format: https://github.com/stepmania/stepmania/wiki/sm.
+  '''
+  try:
+    atts = sc_df[sc_df['Name (unique)'] == nm].iloc[0]
+  except IndexError:
+    print(f'ERROR: Failed to find stepchart {nm}')
+    sys.exit(1)
+
+  if 'S' in atts['Steptype simple']:
+    steptype = 'singles'
+  elif 'D' in atts['Steptype simple']:
+    steptype = 'doubles'
+  stance = stance_store[steptype]
+
+  notes = all_notes[nm]
+  measures = [s.strip() for s in notes.split(',')]
+  bpms = parse_bpm(all_bpms[nm])
+
+  # Testing
+  if subset_measures:
+    print(f'WARNING: Subsetting to {subset_measures} measures.')
+    measures = measures[:subset_measures]
+
+  beat = 0
+  time = 0     # units = seconds
+  bpm = None
+  active_holds = set()
+  nodes = dict()
+  edges_out = defaultdict(list)
+  edges_in = defaultdict(list)
+
+  bpm, bpms = get_init_bpm(beat, bpms)
+
+  warps = parse_warps(all_warps[nm])
+  beat_to_lines, beats_to_increments = parse_lines_with_warps(measures, warps)
+
+  nodes['init'] = {
+    'Time': time,
+    'Beat': beat,
+    'BPM': bpm,
+    'Steptype': steptype,
+    'Timing judge': 'None',
+  }
+  prev_node_nm = 'init'
+  edges_in['init'] = []
+
+  timer = util.Timer(total=len(beat_to_lines))
+  for beat, line in beat_to_lines.items():
+    if _notelines.has_notes(line):
+      # Add active holds into line as 4
+      aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
+
+      node_nm = f'{beat}'
+      nodes[node_nm] = {
+        'Time': time,
+        'Beat': beat,
+        'Line': line,
+        'Line with active holds': aug_line,
+        'BPM': bpm,
+      }
+
+      # Annotate edges for line
+      edges_out[prev_node_nm].append(node_nm)
+      edges_in[node_nm].append(prev_node_nm)
+      prev_node_nm = node_nm
+
+      active_panel_to_action = stance.line_to_panel_to_action(line)
+      for p in active_panel_to_action:
+        a = active_panel_to_action[p]
+        if a == '2':
+          active_holds.add(p)
+        if a == '3':
+          active_holds.remove(p)
+
+      # print(time, bpm, beat, line, active_holds)
+      # import code; code.interact(local=dict(globals(), **locals()))
+
+    bi = beats_to_increments[beat]
+    time, bpm, bpms = update_time_v2(time, beat, bi, bpm, bpms)
+    timer.update()
+
+  # Add terminal node and edges
+  nodes['final'] = {
+    'Time': np.inf,
+    'Beat': np.inf,
+    'Line': '',
+    'Line with active holds': '',
+    'BPM': 0,
+  }
+  edges_out[prev_node_nm].append('final')
+  edges_in['final'].append(prev_node_nm)
+  edges_out['final'] = []
+
+  return nodes, dict(edges_out), dict(edges_in), stance
+
+
+def update_time_v2(time, beat, beat_increment, bpm, bpms):
+  '''
+    After processing line, update bpm, and time
+    Important: Update time before bpm.
+  '''
+  next_bpm_update_beat = bpms[0][0]
+  next_note_beat = beat + beat_increment
+
+  while next_bpm_update_beat <= next_note_beat:
+    # 1 or more bpm updates before next note line.
+    # For each bpm update, update beat, time (using bpm+beat), and bpm.
+    bi = next_bpm_update_beat - beat
+    time += bi * (60 / bpm)
+    beat += bi
+    if beat >= bpms[0][0]:
+      # print(beat, bpms)
+      bpm = bpms[0][1]
+      bpms = bpms[1:]
+      next_bpm_update_beat = bpms[0][0]
+    assert bpm is not None, 'ERROR: Failed to set bpm'
+
+  # No more bpm updates before next note line.
+  # Update time. No need to update beat, bpm.
+  if beat < next_note_beat:
+    bi = next_note_beat - beat
+    time += bi * (60 / bpm)
+  assert bpm is not None, 'ERROR: Failed to set bpm'
+  # print(beat, bpm)
+  return time, bpm, bpms  
+
+
+def parse_warps(warps):
+  warps_list = []
+  for line in warps.split(','):
+    [beat, num_beats] = line.split('=')
+    beat = float(beat)
+    num_beats = float(num_beats)
+    warps_list.append([beat, beat + num_beats])
+  return warps_list
+
+
+def beat_in_any_warp(beat, warps):
+  in_warp = lambda beat, warp: warp[0] <= beat < warp[1]
+  return any(in_warp(beat, warp) for warp in warps)
+
+
+def parse_lines_with_warps(measures, warps):
+  beats_per_measure = 4
+  beats_to_lines = {}
+  beats_to_increments = {}
+
+  warped_beat, unwarped_beat = 0, 0
+  for measure_num, measure in enumerate(measures):
+    lines = measure.split('\n')
+    lines = [line for line in lines if '//' not in line]
+    num_subbeats = len(lines)
+
+    for lidx, line in enumerate(lines):
+      beat_increment = beats_per_measure / num_subbeats
+
+      line = _notelines.parse_line(line)
+      if any(x not in set(list('01234')) for x in line):
+        print(f'Error: Bad symbol found in line, {line}')
+        raise ValueError(f'Bad symbol found in line, {line}')
+      
+      if not beat_in_any_warp(unwarped_beat, warps):
+        beats_to_lines[warped_beat] = line
+        beats_to_increments[warped_beat] = beat_increment
+        warped_beat += beat_increment
+
+      unwarped_beat += beat_increment
+  return beats_to_lines, beats_to_increments
+
+
+#
+def form_graph(nm, subset_measures = None):
   '''
     Assumes 4/4 time signature (other time sigs are extremely rare, and assumed to be filtered out)
 
@@ -266,7 +441,7 @@ def parse_bpm(bpms):
   bpm_list = []
   for line in bpms.split(','):
     [beat, bpm] = line.split('=')
-    if float(bpm) < 10000:
+    if float(bpm) < 999:
       # Ignore bpm speedups for visual gimmicks
       bpm_list.append([float(beat), float(bpm)])
   bpm_list.append([np.inf, 0])
@@ -310,7 +485,8 @@ def run_single(sc_nm):
   global log_fn
   log_fn = out_dir + f'{sc_nm} {timing_judge}.log'
 
-  nodes, edges_out, edges_in, stance = form_graph(sc_nm)
+  # nodes, edges_out, edges_in, stance = form_graph(sc_nm)
+  nodes, edges_out, edges_in, stance = form_graph_v2(sc_nm)
 
   # Faster than forming graph.
   # More efficient to just run this for each timing judge
@@ -356,14 +532,16 @@ def main():
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
-  # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
+
+  # Test: Has warps
+  nm = 'Wedding Crashers - SHK S16 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -396,9 +574,6 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
-
-  subset_measures = 0
-  # subset_measures = 7
 
   run_single(nm)
   return

@@ -24,9 +24,7 @@ def get_all_stepcharts_df():
   df = _data.datasets['all']
   print(f'Importing {len(df)} .ssc files ...')
   mdf = pd.DataFrame()
-  all_notes = []
-  all_bpms = []
-  all_ticks = []
+  all_attributes = defaultdict(list)
   timer = util.Timer(total=len(df))
   for idx, row in df.iterrows():
     ssc_fn = row['Files']
@@ -35,10 +33,11 @@ def get_all_stepcharts_df():
     sc_df = sc.get_stepchart_info()
     mdf = mdf.append(sc_df, ignore_index=True)
 
-    # Same order as mdf
-    all_notes += sc.get_stepchart_notes()
-    all_bpms += sc.get_attribute('BPMS')
-    all_ticks += sc.get_attribute('TICKCOUNTS')
+    # Same order as mdf. Keys will be output file: f'{key}.pkl'
+    all_attributes['notes'] += sc.get_stepchart_notes()
+    all_attributes['bpms'] += sc.get_attribute('BPMS')
+    all_attributes['tickcounts'] += sc.get_attribute('TICKCOUNTS')
+    all_attributes['warps'] += sc.get_attribute('WARPS')
 
     timer.update()
 
@@ -115,12 +114,7 @@ def get_all_stepcharts_df():
   print(f'Total: {len(mdf)} stepcharts ...')
   mdf.to_csv(out_dir + f'all_stepcharts.csv')
 
-  filter_saves = {
-    'notes': all_notes,
-    'bpms': all_bpms,
-    'tickcounts': all_ticks,
-  }
-  for name, all_d in filter_saves.items():
+  for name, all_d in all_attributes.items():
     filter_and_save(name, all_d, mdf)
   return
 

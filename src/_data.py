@@ -251,13 +251,13 @@ class SSCFile():
 
   def get_attribute(self, att):
     # Get all stepchart bpms as a list of strings
-    # BPMS, TICKCOUNTS
-    all_bpms = []
+    # BPMS, TICKCOUNTS, WARPS
+    all_atts = []
     for scatt in self.sc_attributes:
-      bpms = ''
+      atts = ''
       if att in scatt:
-        bpms = scatt[att]
-      if bpms == '':
-        bpms = self.global_attributes[att]
-      all_bpms.append(bpms)
-    return all_bpms
+        atts = scatt[att]
+      if atts == '':
+        atts = self.global_attributes.get(att, '')
+      all_atts.append(atts)
+    return all_atts
