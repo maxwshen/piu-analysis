@@ -6,7 +6,7 @@
   In other scripts, nodes = stance-actions.
 '''
 import _config, _data, _stances, util, pickle, _params
-import sys, os, re, fnmatch, datetime, subprocess
+import sys, os, re, fnmatch, datetime, subprocess, copy
 import numpy as np
 from collections import defaultdict, Counter
 import pandas as pd
@@ -78,6 +78,7 @@ def form_graph(nm, subset_measures = None):
 
   warps = parse_warps(all_warps[nm])
   beat_to_lines, beats_to_increments = parse_lines_with_warps(measures, warps)
+  bpms = warp_bpms(warps, bpms)
 
   nodes['init'] = {
     'Time': time,
@@ -302,6 +303,9 @@ def parse_lines_with_warps(measures, warps):
   # Filter repeated hold releases from warping
   # This occurs from visual gimmicks where holds advance instantly, but do not completely disappear
   beats_to_lines, beats_to_increments = filter_repeated_hold_releases(beats_to_lines, beats_to_increments)
+
+  # Add in empty lines for warps for proper bpm parsing
+  beats_to_lines, beats_to_increments = add_empty_lines(beats_to_lines, beats_to_increments)
   return beats_to_lines, beats_to_increments
 
 
@@ -327,6 +331,58 @@ def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
   return filt_beats_to_lines, filt_beats_to_incs
 
 
+def add_empty_lines(beats_to_lines, beats_to_incs):
+  '''
+    Every beat + its increment should be a key in both dicts
+  '''
+  example_line = list(beats_to_lines.values())[0]
+  empty_line = '0'*len(example_line)
+
+  add_beats_to_lines = {}
+  add_beats_to_incs = {}
+  beats = set(beats_to_incs.keys())
+  for beat in beats_to_incs:
+    next_beat = beat + beats_to_incs[beat]
+    if next_beat not in beats:
+      next_beats = [b for b in beats if b > beat]
+      if next_beats:
+        min_next_beat = min(next_beats)
+        min_inc = min([beats_to_incs[beat], beats_to_incs[min_next_beat]])
+
+        nb = beat + min_inc
+        while nb < min_next_beat:
+          add_beats_to_lines[nb] = empty_line
+          add_beats_to_incs[nb] = min_inc
+          nb += min_inc
+
+  beats_to_lines.update(add_beats_to_lines)
+  beats_to_incs.update(add_beats_to_incs)
+
+  sorted_beats = sorted(list(beats_to_lines.keys()))
+  beats_to_lines = {k: beats_to_lines[k] for k in sorted_beats}
+  beats_to_incs = {k: beats_to_incs[k] for k in sorted_beats}
+
+  return beats_to_lines, beats_to_incs
+
+
+def warp_bpms(warps, bpms):
+  adj_bpms = []
+  for beat, bpm in bpms:
+    new_start = beat - total_warp_beat(beat, warps)
+    adj_bpms.append((new_start, bpm))
+  return adj_bpms
+
+
+def total_warp_beat(beat, warps):
+  tot = 0
+  for start, end in warps:
+    if end <= beat:
+      tot += end - start
+    elif start <= end <= beat:
+      tot += beat - start
+  return tot
+
+
 '''
   BPM, beat, and time logic
 '''
@@ -337,6 +393,10 @@ def update_time(time, beat, beat_increment, bpm, bpms):
   '''
   next_bpm_update_beat = bpms[0][0]
   next_note_beat = beat + beat_increment
+
+  orig_time = copy.copy(time)
+
+  print(time, beat, beat_increment, bpm, bpms)
 
   while next_bpm_update_beat <= next_note_beat:
     # 1 or more bpm updates before next note line.
@@ -358,6 +418,9 @@ def update_time(time, beat, beat_increment, bpm, bpms):
     time += bi * (60 / bpm)
   assert bpm is not None, 'ERROR: Failed to set bpm'
   # print(beat, bpm)
+  if time < orig_time:
+    print('ERROR: Time decreased')
+    raise Exception('ERROR: Time decreased')
   return time, bpm, bpms  
 
 
@@ -479,7 +542,9 @@ def main():
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Time for the moon night - GFRIEND S16 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
-  nm = 'Acquaintance - Outsider S17 arcade'
+  # nm = 'Poseidon - Quree S20 arcade'
+  # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
+  # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Elvis - AOA S15 arcade'
@@ -487,6 +552,7 @@ def main():
 
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'
+  nm = 'Death Moon - SHK S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

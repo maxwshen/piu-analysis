@@ -586,7 +586,15 @@ def save_annotations(sc_nm, line_nodes, unif_ds, motif_ds):
       dd['Motif'].append(motif_annot)
 
   df = pd.DataFrame(dd)
-  
+
+  # Check beat and time are monotonically ascending
+  require_monotonic = ['Beat', 'Time']
+  for col in require_monotonic:
+    data = list(df[col])
+    if data != sorted(data):
+      print(f'ERROR: {col} not monotonic')
+      # raise Exception()
+
   excel_refmt = lambda s: f'`{s}'
   df['Line'] = [excel_refmt(s) for s in df['Line']]
   df['Line with active holds'] = [excel_refmt(s) for s in df['Line with active holds']]
@@ -723,7 +731,12 @@ def main():
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
-  nm = 'Acquaintance - Outsider S17 arcade'
+  # nm = 'Poseidon - Quree S20 arcade'
+  # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
+  nm = 'Death Moon - SHK S17 arcade'
+
+  # Fixed
+  # nm = 'Acquaintance - Outsider S17 arcade'
 
   # Test: Visual gimmicks
   # nm = 'Obliteration - ATAS S17 arcade'
