@@ -720,10 +720,14 @@ def main():
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
 
-  # Test: has warps
+  # Test: failures
   # nm = 'Log In - SHK S20 arcade'
+  # nm = 'Good Night - Dreamcatcher S17 arcade'
+  nm = 'Acquaintance - Outsider S17 arcade'
+
+  # Test: Visual gimmicks
   # nm = 'Obliteration - ATAS S17 arcade'
-  nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'

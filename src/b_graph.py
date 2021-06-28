@@ -264,6 +264,7 @@ def parse_lines_with_warps(measures, warps):
   beats_to_lines = {}
   beats_to_increments = {}
 
+  prev_dp_line = ''
   warped_beat, unwarped_beat = 0, 0
   for measure_num, measure in enumerate(measures):
     lines = measure.split('\n')
@@ -283,12 +284,13 @@ def parse_lines_with_warps(measures, warps):
         beats_to_increments[warped_beat] = beat_increment
         if not beat_begins_any_warp(unwarped_beat, warps):
           warped_beat += beat_increment
+        if set(line) != set('0'):
+          prev_dp_line = line
       else:
         # If hold release occurs within warp, add as new line
         if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
-          prev_line = beats_to_lines[prev_beat]
-          if prev_line.replace('2', '3') == line:
+          if prev_dp_line.replace('2', '3') == line:
             warp_release_time = 0.001
             release_beat = prev_beat + warp_release_time
             beats_to_lines[release_beat] = line
@@ -475,7 +477,9 @@ def main():
   # nm = 'God Mode feat. skizzo - Nato S20 arcade'
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
-  nm = 'Time for the moon night - GFRIEND S16 arcade'
+  # nm = 'Time for the moon night - GFRIEND S16 arcade'
+  # nm = 'Good Night - Dreamcatcher S17 arcade'
+  nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Elvis - AOA S15 arcade'
