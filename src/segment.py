@@ -733,7 +733,8 @@ def main():
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
-  nm = 'Death Moon - SHK S17 arcade'
+  # nm = 'Death Moon - SHK S17 arcade'
+  nm = 'Elvis - AOA S15 arcade'
 
   # Fixed
   # nm = 'Acquaintance - Outsider S17 arcade'

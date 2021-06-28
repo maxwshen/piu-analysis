@@ -396,8 +396,6 @@ def update_time(time, beat, beat_increment, bpm, bpms):
 
   orig_time = copy.copy(time)
 
-  print(time, beat, beat_increment, bpm, bpms)
-
   while next_bpm_update_beat <= next_note_beat:
     # 1 or more bpm updates before next note line.
     # For each bpm update, update beat, time (using bpm+beat), and bpm.
@@ -547,12 +545,12 @@ def main():
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'
-  nm = 'Death Moon - SHK S17 arcade'
+  # nm = 'Death Moon - SHK S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
