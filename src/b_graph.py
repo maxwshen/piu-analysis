@@ -284,18 +284,45 @@ def parse_lines_with_warps(measures, warps):
         if not beat_begins_any_warp(unwarped_beat, warps):
           warped_beat += beat_increment
       else:
+        # If hold release occurs within warp, add as new line
         if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
           prev_line = beats_to_lines[prev_beat]
           if prev_line.replace('2', '3') == line:
-            warp_release_time = 0.01
+            warp_release_time = 0.001
             release_beat = prev_beat + warp_release_time
             beats_to_lines[release_beat] = line
             beats_to_increments[prev_beat] = warp_release_time
             beats_to_increments[release_beat] = beat_increment - warp_release_time
 
       unwarped_beat += beat_increment
+
+  # Filter repeated hold releases from warping
+  # This occurs from visual gimmicks where holds advance instantly, but do not completely disappear
+  beats_to_lines, beats_to_increments = filter_repeated_hold_releases(beats_to_lines, beats_to_increments)
   return beats_to_lines, beats_to_increments
+
+
+def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
+  '''
+    Ignoring empty lines, filter out duplicated hold release lines
+    These can only arise from inserting hold releases during warps
+  '''
+  nonempty_btol = {k: v for k, v in beats_to_lines.items() if set(v) != set('0')}
+  beats = list(nonempty_btol.keys())
+  assert beats == sorted(beats), 'ERROR: Beats are not sorted by default'
+  ok_beats = []
+  lines = list(nonempty_btol.values())
+  for i in range(len(lines) - 1):
+    line1, line2 = lines[i], lines[i+1]
+    if set(line1) == set(list('03')) and line1 == line2:
+      pass
+    else:
+      ok_beats.append(beats[i])
+
+  filt_beats_to_lines = {k: v for k, v in beats_to_lines.items() if k in ok_beats}
+  filt_beats_to_incs = {k: v for k, v in beats_to_incs.items() if k in ok_beats}
+  return filt_beats_to_lines, filt_beats_to_incs
 
 
 '''
@@ -444,10 +471,13 @@ def main():
   # Test: Has warps
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Gotta Be You - 2NE1 S15 arcade'
-  # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
+  # nm = 'Cross Time - Brandy S18 arcade'
+  # nm = 'God Mode feat. skizzo - Nato S20 arcade'
+  # nm = 'Sarabande - MAX S20 arcade'
+  nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
-  nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Failures
