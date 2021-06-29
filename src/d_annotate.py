@@ -210,20 +210,36 @@ def bool_featurize(df, col):
   if col in twist_stats:
     dfs = df[df[col] == True]
     if len(dfs) > 0:
-      num_twist_90p = sum(dfs['Twist angle'].isin(
+      pct_twist_nop = sum(dfs['Twist angle'] == 'none') / len(dfs)
+      pct_twist_90p = sum(dfs['Twist angle'].isin(
           ['90', 'close diagonal', 'far diagonal', '180'])) / len(dfs)
-      num_twist_diagp = sum(dfs['Twist angle'].isin(
+      pct_twist_diagp = sum(dfs['Twist angle'].isin(
           ['close diagonal', 'far diagonal', '180'])) / len(dfs)
-      num_twist_diagfarp = sum(dfs['Twist angle'].isin(
+      pct_twist_diagfarp = sum(dfs['Twist angle'].isin(
           ['far diagonal', '180'])) / len(dfs)
     else:
-      num_twist_90p = 0
-      num_twist_diagp = 0
-      num_twist_diagfarp = 0
+      pct_twist_nop = 0
+      pct_twist_90p = 0
+      pct_twist_diagp = 0
+      pct_twist_diagfarp = 0
     add_stats = {
-      f'{col} - % 90+ twist':           num_twist_90p, 
-      f'{col} - % diagonal+ twist':     num_twist_diagp, 
-      f'{col} - % far diagonal+ twist': num_twist_diagfarp, 
+      f'{col} - % no twist':            pct_twist_nop, 
+      f'{col} - % 90+ twist':           pct_twist_90p, 
+      f'{col} - % diagonal+ twist':     pct_twist_diagp, 
+      f'{col} - % far diagonal+ twist': pct_twist_diagfarp, 
+    }
+    stats.update(add_stats)
+
+  move_stats = [
+    'Jump', 'Jump run', 'Run', 'Double step', 'Hold run', 
+  ]
+  if col in move_stats:
+    dfs = df[df[col] == True]
+    dists = np.array(dfs['Travel (mm)'])
+    add_stats = {
+      f'{col} - mean travel (mm)': np.nanmean(dists), 
+      f'{col} - 80% travel (mm)':  np.nanpercentile(dists, 80), 
+      f'{col} - 95% travel (mm)':  np.nanpercentile(dists, 95), 
     }
     stats.update(add_stats)
 
@@ -234,10 +250,12 @@ def float_featurize(df, col):
   # ex: Travel (mm)
   data = np.array(df[col])
   stats = {
-    f'{col} - 50%': nan_to_zero(np.nanmedian(data)),
-    f'{col} - 80%': nan_to_zero(np.nanpercentile(data, 80)), 
-    f'{col} - 99%': nan_to_zero(np.nanpercentile(data, 99)), 
+    f'{col} - mean': nan_to_zero(np.nanmean(data)),
+    f'{col} - 50%':  nan_to_zero(np.nanmedian(data)),
+    f'{col} - 80%':  nan_to_zero(np.nanpercentile(data, 80)), 
+    f'{col} - 99%':  nan_to_zero(np.nanpercentile(data, 99)), 
   }
+  import code; code.interact(local=dict(globals(), **locals()))
   return stats
 
 
@@ -324,14 +342,13 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Tepris - Doin S17 arcade'
-  # nm = 'Super Fantasy - SHK S7 arcade'
-  # nm = 'Super Fantasy - SHK S4 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
@@ -350,7 +367,7 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'

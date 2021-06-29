@@ -530,6 +530,7 @@ def main():
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
 
   # Test: Has warps
   # nm = 'Wedding Crashers - SHK S16 arcade'
@@ -545,7 +546,7 @@ def main():
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Log In - SHK S20 arcade'
-  nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Failures

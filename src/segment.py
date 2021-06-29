@@ -727,6 +727,7 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
 
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'
@@ -734,7 +735,7 @@ def main():
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
-  nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
 
   # Fixed
   # nm = 'Acquaintance - Outsider S17 arcade'
