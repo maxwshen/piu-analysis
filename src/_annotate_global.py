@@ -129,22 +129,30 @@ def bracket_drill(df):
 def irregular_rhythm(df):
   # Time since is not a power of 2 of previous time since previous downpress
   # Epsilon needed to account for bpm changes
+  # OR, not quarter/8th/16th etc note.
   epsilon = 0.05
   epsilon_close = lambda query, target: target-epsilon <= query <= target+epsilon
   res = [False]
   ts = list(df['Time since downpress'])
+  bs = list(df['Beat since downpress'])
   has_dp = list(df['Has downpress'])
   ints = list(range(-10, 10))
   time_since_dp_at_prev_dp = ts[0]
   for i in range(1, len(ts)):
+    time_since_dp = ts[i]
+    beat_since_dp = bs[i]
     if has_dp[i]:
       if time_since_dp_at_prev_dp == 0:
         ratio = 0
       else:
-        ratio = np.log2(ts[i] / time_since_dp_at_prev_dp)
-      regular = any(epsilon_close(ratio, i) for i in ints)
-      time_since_dp_at_prev_dp = ts[i]
-      res.append(not regular)
+        ratio = np.log2(time_since_dp / time_since_dp_at_prev_dp)
+      irregular_time = not any(epsilon_close(ratio, i) for i in ints)
+
+      log_beat = np.log2(beat_since_dp)
+      atypical_rhythm = not any(epsilon_close(log_beat, i) for i in ints)
+
+      res.append(irregular_time or atypical_rhythm)
+      time_since_dp_at_prev_dp = time_since_dp
     else:
       res.append(False)
   return res
@@ -168,10 +176,12 @@ def side3_singles(df):
   left_accept = lambda line: line[-2:] == '00'
   left_idxs = [i for i, line in enumerate(lines) if left_accept(line)]
   left_res = filter_short_runs(left_idxs, len(lines), GLOBAL_MIN_LINES_LONG)
+  left_res = filter_run_by_num_downpress(df, left_res, GLOBAL_MIN_LINES_LONG)
 
   right_accept = lambda line: line[:2] == '00'
   right_idxs = [i for i, line in enumerate(lines) if right_accept(line)]
   right_res = filter_short_runs(right_idxs, len(lines), GLOBAL_MIN_LINES_LONG)
+  right_res = filter_run_by_num_downpress(df, right_res, GLOBAL_MIN_LINES_LONG)
   return [bool(l or r) for l, r in zip(left_res, right_res)]
 
 
@@ -200,6 +210,17 @@ def mid6_doubles(df):
   return res
 
 
+def filter_run_by_num_downpress(df, bool_list, min_dp):
+  # Filter runs if they do not have enough downpresses
+  ranges = bools_to_ranges(bool_list)
+  filt = []
+  for start, end in ranges:
+    num_dp = sum(df['Has downpress adj.'].iloc[start:end])
+    if num_dp >= min_dp:
+      filt += [i for i in range(start, end)]
+  return filter_short_runs(filt, len(df), 1)
+
+
 def filter_short_runs(idxs, n, filt_len):
   # From a list of indices, constructs a list of bools
   # where an index is True only if it is part of a long run
@@ -222,6 +243,23 @@ def filter_short_runs(idxs, n, filt_len):
       i = j
   return res
 
+
+def bools_to_ranges(bools):
+  '''
+    List of bools -> list of idxs of True chains
+  '''
+  ranges = []
+  i = 0
+  while i < len(bools):
+    if bools[i]:
+      j = i + 1
+      while bools[j] and j < len(bools):
+        j += 1
+      ranges.append((i, j))
+      i = j + 1
+    else:
+      i += 1
+  return ranges
 
 '''
   Global - line + movement. Needs larger context -- filter out <X in a row
@@ -321,6 +359,7 @@ def singles_stair_in_singles(df):
   # Uses downpress lines only, compare to panels
   dp_lines = df[df['Has downpress']]['Line with active holds']
   dp_lines = [line.replace('`', '') for line in dp_lines]
+  all_idxs = df.index
   dp_idxs = df[df['Has downpress']].index
   ltr = ['10000', '01000', '00100', '00010', '00001']
   rtl = ltr[::-1]
@@ -330,6 +369,10 @@ def singles_stair_in_singles(df):
     translated_lines = [line.replace('2', '1') for line in temp_lines]
     translated_lines = [line.replace('4', '0') for line in translated_lines]
     if translated_lines == ltr or translated_lines == rtl:
+      # # Get idxs of all lines in between downpress idxs
+      # stair_idxs = [idx for idx in all_idxs if dp_idxs[i] <= idx <= dp_idxs[i+5]]
+      # idxs += stair_idxs
+      # # Just add downpress lines in stair 
       idxs += list(dp_idxs[i:i+5])
   res = filter_short_runs(idxs, len(df), 1)
   return res

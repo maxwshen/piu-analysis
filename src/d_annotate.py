@@ -62,20 +62,29 @@ def parse_sa(sa):
 def annotate_general(df):
   td = np.array(df['Time'].iloc[1:]) - np.array(df['Time'].iloc[:-1])
   df['Time since'] = [0] + list(td)
+  bd = np.array(df['Beat'].iloc[1:]) - np.array(df['Beat'].iloc[:-1])
+  df['Beat since'] = [0] + list(bd)
 
-  tsd = [0]
-  buffer = 0
+  dd = {
+    'Time since downpress': [0],
+    'Beat since downpress': [0],
+  }
+  time_buffer, beat_buffer = 0, 0
   for i in range(1, len(df)):
     row = df.iloc[i]
     prev_line = df['Line with active holds'].iloc[i-1]
     line = row['Line with active holds']
-    buffer += row['Time since']
+    time_buffer += row['Time since']
+    beat_buffer += row['Beat since']
     if _notelines.has_downpress(line) and prev_line.replace('1', '2') != line:
-      tsd.append(buffer)
-      buffer = 0
+      dd['Time since downpress'].append(time_buffer)
+      dd['Beat since downpress'].append(beat_buffer)
+      time_buffer, beat_buffer = 0, 0
     else:
-      tsd.append(buffer)
-  df['Time since downpress'] = tsd
+      dd['Time since downpress'].append(time_buffer)
+      dd['Beat since downpress'].append(beat_buffer)
+  for col in dd:
+    df[col] = dd[col]
 
   df['Has downpress'] = [_notelines.has_downpress(line) for line in df['Line']]
 
@@ -255,7 +264,6 @@ def float_featurize(df, col):
     f'{col} - 80%':  nan_to_zero(np.nanpercentile(data, 80)), 
     f'{col} - 99%':  nan_to_zero(np.nanpercentile(data, 99)), 
   }
-  import code; code.interact(local=dict(globals(), **locals()))
   return stats
 
 
@@ -343,6 +351,7 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'

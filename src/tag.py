@@ -1,0 +1,225 @@
+'''
+    Tag charts
+'''
+import _config, util
+import sys, os, pickle, fnmatch, datetime, subprocess, functools, re
+import numpy as np, pandas as pd
+from collections import defaultdict, Counter
+
+import _qsub, _stepcharts
+
+# Default params
+inp_dir_a = _config.OUT_PLACE + 'a_format_data/'
+inp_dir_d = _config.OUT_PLACE + 'd_annotate/'
+NAME = util.get_fn(__file__)
+out_dir = _config.OUT_PLACE + NAME + '/'
+util.ensure_dir_exists(out_dir)
+
+scinfo = _stepcharts.SCInfo()
+
+CONTEXT_LOWER = -3
+CONTEXT_UPPER = 0
+
+
+'''
+'''
+def tag_chart(context_df, nm):
+  row = context_df[context_df['Name (unique)'] == nm].iloc[0]
+  found_tags = {}
+  for tag in get_tags(context_df):
+    adjectives = get_stats(row, context_df, tag)
+    if len(adjectives) > 0:
+      found_tags[tag] = list(adjectives)
+  
+  for tag in found_tags:
+    more_adj = add_adjectives(row, context_df, tag)
+    for adj in more_adj:
+      found_tags[tag].append(adj)
+
+  return found_tags
+
+
+def get_tags(df):
+  kw = ' - 50% nps'
+  tags = [col.replace(kw, '') for col in df.columns if kw in col]
+  exclude = {
+    'Twist angle - none',
+    'Twist angle solo diagonal',
+    'Twist angle - 90',
+    'Twist angle - close diagonal',
+    'Twist angle - far diagonal',
+    'Twist angle - 180',
+  }
+  return [tag for tag in tags if tag not in exclude]
+
+
+MIN_INTERESTING_NPS = 5   # todo - level dependent
+
+def get_stats(row, context_df, tag, verbose = True):
+  '''
+    Include tag if (OR)
+    - Frequency is in top 80% percentile of context charts
+    - Frequency is above 10%
+  '''
+  PCT_THRESHOLD = 0.80
+  OBJECTIVE_MIN_FQ = 0.10
+  suffix_to_adjective = {
+    ' - frequency': '',
+  }
+  adjs = set()
+  for suffix, adjective in suffix_to_adjective.items():
+    col = f'{tag}{suffix}'
+    if col in row.index:
+      val, context = row[col], context_df[col]
+      pct = sum(context < val) / len(context)
+
+      if pct >= PCT_THRESHOLD or val >= OBJECTIVE_MIN_FQ:
+        adjs.add(adjective)
+
+      if verbose:
+        print(col.ljust(30), f'{val:.2f} {pct:.0%}')
+
+  # Only keep if frequent. todo - clean code
+  if not adjs:
+    return adjs
+
+  # TODO? - Include some NPS even if not top percentile if objectively fast
+
+  '''
+    Label 'fast' only if (AND)
+    - speed (80% nps or nps of longest) is above average within chart
+    - speed is high percentile among context charts
+    - speed is above a minimum interesting nps
+    - frequency of movement pattern is in top 50th percentile
+  '''
+  speed_cols = {
+    # ' - 80% nps': 'fast',
+    ' - nps of longest': 'fast',
+  }
+  mean_nps = row['Notes per second since downpress - mean']
+
+  fq_col = f'{tag} - frequency'
+  fq = row[fq_col]
+  # fq_pct = sum(context_df[fq_col] < fq) / len(context_df)
+
+  for suffix, adjective in speed_cols.items():
+    col = f'{tag}{suffix}'
+    if col in row.index:
+      val, context = row[col], context_df[col]
+      pct = sum(context < val) / len(context)
+      adjs.add(f'{val:.1f} nps')
+      # if val >= mean_nps and pct >= PCT_THRESHOLD and val >= MIN_INTERESTING_NPS:
+        # adjs.add('fast')
+      if verbose:
+        print(col.ljust(30), f'{val:.2f} {pct:.0%}')
+        print(f'Mean NPS: {mean_nps:.2f}')
+
+  # Add 'long' using max len sec and nps of longest
+  col = f'{tag} - max len sec'
+  if col in row.index:
+    val, context = row[col], context_df[col]
+    pct = sum(context < val) / len(context)
+
+    nps = row[f'{tag} - nps of longest']
+    if pct >= PCT_THRESHOLD and nps >= MIN_INTERESTING_NPS and nps >= mean_nps:
+      adjs.add('long')
+
+  return adjs
+
+
+def add_adjectives(row, context_df, tag, verbose = True):
+  '''
+    Include these adjectives only for tags included for other reasons
+  '''
+  PCT_THRESHOLD = 0.65
+  suffix_to_adjective = {
+    ' - % no twist': 'front-facing',
+    ' - % 90+ twist': 'twisty',
+    ' - % diagonal+ twist': 'diagonal twisty',
+    ' - % far diagonal+ twist': 'has hard diagonal twists',
+    ' - mean travel (mm)': 'travel',
+    ' - 80% travel (mm)': 'travel',
+  }
+
+  adjs = set()
+  for suffix, adjective in suffix_to_adjective.items():
+    col = f'{tag}{suffix}'
+    if col in row.index:
+      val, context = row[col], context_df[col]
+      pct = sum(context < val) / len(context)
+      if pct >= PCT_THRESHOLD:
+        adjs.add(adjective)
+      if verbose:
+        print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
+  return adjs
+
+
+'''
+  Run
+'''
+def run_single(nm):
+  level = scinfo.name_to_level[nm]
+  df = pd.read_csv(_config.OUT_PLACE + f'features.csv', index_col=0)
+  df = df.fillna(0)
+  df['Name (unique)'] = df.index
+
+  all_df = pd.read_csv(inp_dir_a + 'all_stepcharts.csv', index_col=0)
+  all_df['Level'] = all_df['METER']
+  df = df.merge(all_df, on = 'Name (unique)', how = 'left')
+
+  context_crit = (df['Level'] >= level + CONTEXT_LOWER) & \
+                 (df['Level'] <= level + CONTEXT_UPPER)
+  context_df = df[context_crit]
+
+  tags = tag_chart(context_df, nm)
+
+  print('\n', nm)
+  for k, v in tags.items():
+    print(k.ljust(20), v)
+  return
+
+
+@util.time_dec
+def main():
+  print(NAME)
+  
+  # Test: Single stepchart
+  # nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Native - SHK S20 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  # nm = 'Sorceress Elise - YAHPP S23 arcade'
+  # nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
+  # nm = '8 6 - DASU S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
+
+  # Doubles
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+
+  run_single(nm)
+  return
+
+
+if __name__ == '__main__':
+  if len(sys.argv) == 1:
+    main()
+  else:
+    if sys.argv[1] == 'gen_qsubs':
+      _qsub.gen_qsubs(NAME, sys.argv[2])
+    elif sys.argv[1] == 'run_qsubs':
+      _qsub.run_qsubs(
+        chart_fnm = sys.argv[2],
+        start = sys.argv[3],
+        end = sys.argv[4],
+        run_single = run_single,
+      )
+    elif sys.argv[1] == 'gen_qsubs_remainder':
+      _qsub.gen_qsubs_remainder(NAME, sys.argv[2], '.csv')
+    elif sys.argv[1] == 'run_single':
+      run_single(sys.argv[2])

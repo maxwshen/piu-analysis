@@ -522,7 +522,7 @@ def main():
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
-  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
@@ -530,7 +530,8 @@ def main():
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
-  nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 
   # Test: Has warps
   # nm = 'Wedding Crashers - SHK S16 arcade'

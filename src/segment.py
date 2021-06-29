@@ -704,8 +704,6 @@ def main():
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Fresh - Aspektz S14 arcade infinity'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
-  # nm = 'Log In - SHK S20 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'Native - SHK S20 arcade'
@@ -726,8 +724,9 @@ def main():
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
-  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
-  nm = 'Super Fantasy - SHK S16 arcade'
+  nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  # nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'
