@@ -304,9 +304,10 @@ class Movement():
   def double_step_cost(self, d1, d2):
     '''
       Straightforward definition of double step: A limb is used on two neighboring lines.
-      Can be altered based on time in downstream code.
-      Do not penalize current step = 2 (can just hold there)
-      Do not penalize double steps in active holds
+      Forgive:
+      - current step = 2 (can just hold there)
+      - double steps in active holds
+      - double steps with repeated stance-action
     '''
     cost = 0
     limbs = list(limb for limb in d2['limb_to_pos']
@@ -345,6 +346,16 @@ class Movement():
           limb_cost = 0
 
         cost += limb_cost
+
+    # Nested equality
+    def identical_ds(d1, d2):
+      for k in d2.keys():
+        if d2[k].items() != d1[k].items():
+          return False
+      return True
+
+    if identical_ds(d1, d2):
+      cost = -1 * self.costs['No movement reward']
 
     if self.verbose: print(f'Double step cost: {cost}')
     return cost

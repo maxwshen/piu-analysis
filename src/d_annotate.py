@@ -366,7 +366,7 @@ def main():
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
-  # nm = 'Loki - Lotze S21 arcade'
+  nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
@@ -383,7 +383,8 @@ def main():
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
-  nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  # nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

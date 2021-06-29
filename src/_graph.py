@@ -237,7 +237,11 @@ class Graph():
         return sas
 
     if annot in ['jack', 'footswitch', 'jackorfootswitch']:
-      return self.filter_jackfootswitch(prev_sa, sas, jfs)
+      # annot takes priority
+      if annot in ['jack', 'footswitch']:
+        return self.filter_jackfootswitch(prev_sa, sas, annot)
+      else:
+        return self.filter_jackfootswitch(prev_sa, sas, jfs)
     elif annot in ['jump', 'bracket', 'jumporbracket']:
       return self.filter_twohits(sas, annot)
     elif annot == 'alternate':

@@ -33,7 +33,7 @@ movement_costs = {
     'costs': {
       'Double step': 2.5,
       'Inverted feet small': 0.3,
-      'Inverted feet big': 0.5,
+      'Inverted feet big': 5,
       'Inverted hands': 5,
       'Hold footslide': 5,
       'Hold footswitch': 5,
@@ -60,7 +60,7 @@ movement_costs = {
     'parameters': {
       # Distance of 1000 mm = 1 cost
       'Distance normalizer': 1000,
-      'Inversion distance threshold': 200,
+      'Inversion distance threshold': 250,
       'Time threshold': 5,
       # Time of 250 ms = 1 cost
       'Time normalizer': 0.25,
@@ -96,7 +96,7 @@ movement_costs = {
     'parameters': {
       # Distance in mm = 1 cost
       'Distance normalizer': 250,
-      'Inversion distance threshold': 200,
+      'Inversion distance threshold': 250,
       'Time threshold': 0.50,
       # Time of 200 ms = 1 cost
       'Time normalizer': 0.20,

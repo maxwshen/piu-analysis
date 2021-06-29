@@ -49,6 +49,17 @@ def native_s20(beats, features, annots, motifs):
   return annots, motifs
 
 
+def loki_s21(beats, features, annots, motifs):
+  def jackfootswitch(annots, beat, ft):
+    if ft[feature_mapper['repeated line']]:
+      annots[beat] = 'footswitch'
+
+  for beat, ft in zip(beats, features):
+    jackfootswitch(annots, beat, ft)
+  return annots, motifs
+
+
 overrides = {
   'Native - SHK S20 arcade': native_s20,
+  'Loki - Lotze S21 arcade': loki_s21,
 }
