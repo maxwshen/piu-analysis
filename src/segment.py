@@ -379,24 +379,15 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
       else:
         ds[beat] = 'jumporbracket'
     
-  # Alternate 3->2 when not same pad
+  # Alternate 3->1/2 when not same pad
   for b1, b2 in zip(beats[:-1], beats[1:]):
     lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
     [line1, line2] = lines_holds
     line_len = len(lines_holds[0])
-    if line2.replace('2', '3') != line1:
+    if line2.replace('2', '3').replace('1', '3') != line1:
       if line1.count('0') == line_len-1 and '3' in line1:
-        if line2.count('0') == line_len-1 and '2' in line2:
+        if line2.count('0') == line_len-1 and any(x in line2 for x in list('12')):
           ds[b2] = 'alternate'
-
-  # Alternate 3->1
-  for b1, b2 in zip(beats[:-1], beats[1:]):
-    lines_holds = get_key_in_section(line_nodes, beats, (b1, b2), 'Line with active holds')
-    [line1, line2] = lines_holds
-    line_len = len(lines_holds[0])
-    if line1.count('0') == line_len-1 and '3' in line1:
-      if line2.count('0') == line_len-1 and '1' in line2:
-        ds[b2] = 'alternate'
 
   # Force same foot on 1->2 with same pad
   for b1, b2 in zip(beats[:-1], beats[1:]):
@@ -712,7 +703,7 @@ def main():
   # nm = 'Hypnosis - BanYa S18 arcade'
   # nm = 'NoNoNo - Apink S14 arcade'
   # nm = 'Rage of Fire - MAX S16 arcade'
-  # nm = 'Conflict - Siromaru + Cranky S17 arcade'
+  nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Obelisque - ESTi x M2U S17 arcade'
   # nm = 'I Want U - MAX S19 arcade'
   # nm = 'Forgotten Vampire - WyvernP S18 arcade'
@@ -724,7 +715,7 @@ def main():
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
-  nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 

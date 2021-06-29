@@ -27,16 +27,17 @@ def tag_chart(context_df, nm):
   row = context_df[context_df['Name (unique)'] == nm].iloc[0]
   found_tags = {}
   for tag in get_tags(context_df):
-    adjectives = get_stats(row, context_df, tag)
-    if len(adjectives) > 0:
-      found_tags[tag] = list(adjectives)
-  
-  for tag in found_tags:
-    more_adj = add_adjectives(row, context_df, tag)
-    for adj in more_adj:
-      found_tags[tag].append(adj)
+    keep, ranker = get_stats(row, context_df, tag)
+    if keep:
+      found_tags[tag] = ranker
 
-  return found_tags
+  tags = sorted(found_tags, key=found_tags.get, reverse=True)
+
+  tag_to_adjs = dict()
+  for tag in tags:
+    tag_to_adjs[tag] = get_adjectives(row, context_df, tag)
+
+  return tag_to_adjs
 
 
 def get_tags(df):
@@ -66,25 +67,35 @@ def get_stats(row, context_df, tag, verbose = True):
   suffix_to_adjective = {
     ' - frequency': '',
   }
-  adjs = set()
-  for suffix, adjective in suffix_to_adjective.items():
-    col = f'{tag}{suffix}'
-    if col in row.index:
-      val, context = row[col], context_df[col]
-      pct = sum(context < val) / len(context)
+  col = f'{tag} - frequency'
+  val, context = row[col], context_df[col]
+  pct = sum(context < val) / len(context)
 
-      if pct >= PCT_THRESHOLD or val >= OBJECTIVE_MIN_FQ:
-        adjs.add(adjective)
+  keep = False
+  ranker = 0
+  if pct >= PCT_THRESHOLD or val >= OBJECTIVE_MIN_FQ:
+    keep = True
+    ranker = pct
 
-      if verbose:
-        print(col.ljust(30), f'{val:.2f} {pct:.0%}')
+  if verbose:
+    print(col.ljust(30), f'{val:.2f} {pct:.0%}')
+  return keep, ranker
 
-  # Only keep if frequent. todo - clean code
-  if not adjs:
-    return adjs
 
-  # TODO? - Include some NPS even if not top percentile if objectively fast
+def get_adjectives(row, context_df, tag, verbose = True):
+  '''
+    Include these adjectives only for tags included for other reasons
+  '''
+  adjs = dict()
+  adjs.update(twistiness(row, context_df, tag, verbose))
+  adjs.update(speed(row, context_df, tag, verbose))
+  adjs.update(length(row, context_df, tag, verbose))
 
+  adj_kws = sorted(adjs, key=adjs.get, reverse=True)
+  return adj_kws
+
+
+def speed(row, context_df, tag, verbose):
   '''
     Label 'fast' only if (AND)
     - speed (80% nps or nps of longest) is above average within chart
@@ -102,35 +113,38 @@ def get_stats(row, context_df, tag, verbose = True):
   fq = row[fq_col]
   # fq_pct = sum(context_df[fq_col] < fq) / len(context_df)
 
+  adjs = dict()
   for suffix, adjective in speed_cols.items():
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
       pct = sum(context < val) / len(context)
-      adjs.add(f'{val:.1f} nps')
+      nps_str = f'{val:.1f} nps'
+      adjs[nps_str] = pct
       # if val >= mean_nps and pct >= PCT_THRESHOLD and val >= MIN_INTERESTING_NPS:
         # adjs.add('fast')
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}')
         print(f'Mean NPS: {mean_nps:.2f}')
+  return adjs
 
+
+def length(row, context_df, tag, verbose):
   # Add 'long' using max len sec and nps of longest
+  PCT_THRESHOLD = 0.80
+  mean_nps = row['Notes per second since downpress - mean']
+  adjs = dict()
   col = f'{tag} - max len sec'
   if col in row.index:
     val, context = row[col], context_df[col]
     pct = sum(context < val) / len(context)
-
     nps = row[f'{tag} - nps of longest']
     if pct >= PCT_THRESHOLD and nps >= MIN_INTERESTING_NPS and nps >= mean_nps:
-      adjs.add('long')
-
+      adjs['long'] = pct
   return adjs
 
 
-def add_adjectives(row, context_df, tag, verbose = True):
-  '''
-    Include these adjectives only for tags included for other reasons
-  '''
+def twistiness(row, context_df, tag, verbose):
   PCT_THRESHOLD = 0.65
   suffix_to_adjective = {
     ' - % no twist': 'front-facing',
@@ -141,14 +155,14 @@ def add_adjectives(row, context_df, tag, verbose = True):
     ' - 80% travel (mm)': 'travel',
   }
 
-  adjs = set()
+  adjs = dict()
   for suffix, adjective in suffix_to_adjective.items():
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
       pct = sum(context < val) / len(context)
       if pct >= PCT_THRESHOLD:
-        adjs.add(adjective)
+        adjs[adjective] = pct
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
   return adjs
@@ -161,8 +175,18 @@ def run_single(nm):
   level = scinfo.name_to_level[nm]
   df = pd.read_csv(_config.OUT_PLACE + f'features.csv', index_col=0)
   df = df.fillna(0)
-  df['Name (unique)'] = df.index
 
+  # Add local
+  local_fn = inp_dir_d + f'{nm}_features.csv'
+  if os.path.isfile(local_fn):
+    print('Using local file ...')
+    local_df = pd.read_csv(local_fn, index_col=0)
+    df = df.append(local_df)
+
+  df['Name (unique)'] = df.index
+  df = df.drop_duplicates(subset = 'Name (unique)', keep='last')
+
+  # Annotate
   all_df = pd.read_csv(inp_dir_a + 'all_stepcharts.csv', index_col=0)
   all_df['Level'] = all_df['METER']
   df = df.merge(all_df, on = 'Name (unique)', how = 'left')
@@ -191,13 +215,13 @@ def main():
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
-  # nm = 'Sorceress Elise - YAHPP S23 arcade'
+  nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
-  nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
+  # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

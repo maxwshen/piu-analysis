@@ -350,7 +350,7 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
@@ -383,6 +383,7 @@ def main():
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
+  nm = 'Conflict - Siromaru + Cranky S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

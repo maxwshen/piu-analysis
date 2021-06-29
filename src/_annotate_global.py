@@ -69,7 +69,8 @@ def drill(df):
           same_as = rowk['Line'] == row1['Line']
         else:
           same_as = rowk['Line'] == row2['Line']
-        if same_as:
+        consistent_rhythm = rowk['Time since'] == row2['Time since']
+        if same_as and consistent_rhythm:
           k += 1
         else:
           break
@@ -253,7 +254,7 @@ def bools_to_ranges(bools):
   while i < len(bools):
     if bools[i]:
       j = i + 1
-      while bools[j] and j < len(bools):
+      while j < len(bools) and bools[j]:
         j += 1
       ranges.append((i, j))
       i = j + 1
