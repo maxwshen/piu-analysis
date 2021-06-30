@@ -1,4 +1,5 @@
 import numpy as np
+import _notelines
 
 mover = None
 get_ds = None
@@ -126,11 +127,20 @@ def twist_angle(row1, row2) -> str:
 
 def is_footswitch(row1, row2):
   # If exists a pad that was hit by 1 limb, then other limb
+  # Require that line1 == line2 and only one downpress
   # More general than movement annotations to capture Native S20
   d1, d2 = get_ds(row1, row2)
   if row1 is None:
     return False
   if row2['jump']:
+    return False
+
+  line1 = row1['Line with active holds'].replace('`', '')
+  line2 = row2['Line with active holds'].replace('`', '')
+  if line1 != line2:
+    return False
+
+  if _notelines.num_downpress(line2) != 1:
     return False
 
   old_limbs = ['Left foot', 'Right foot']
@@ -163,6 +173,14 @@ def is_jack(row1, row2):
   if row2['jump']:
     return False
 
+  line1 = row1['Line with active holds'].replace('`', '')
+  line2 = row2['Line with active holds'].replace('`', '')
+  if line1 != line2:
+    return False
+
+  if _notelines.num_downpress(line2) != 1:
+    return False
+
   res = False
   old_limbs = ['Left foot', 'Right foot']
   new_limbs = ['Left foot', 'Right foot']
@@ -192,6 +210,14 @@ def is_bracket_footswitch(row1, row2):
   if row1 is None:
     return False
 
+  line1 = row1['Line with active holds'].replace('`', '')
+  line2 = row2['Line with active holds'].replace('`', '')
+  if line1 != line2:
+    return False
+
+  if _notelines.num_downpress(line2) != 2:
+    return False
+
   old_limbs = ['Left foot', 'Right foot']
   new_limbs = ['Right foot', 'Left foot']
   for old_limb, new_limb in zip(old_limbs, new_limbs):
@@ -200,10 +226,10 @@ def is_bracket_footswitch(row1, row2):
     if old_pos == new_pos and new_pos in mover.bracket_pos:
       prev_ha = d1['limb_to_heel_action'][old_limb]
       prev_ta = d1['limb_to_toe_action'][old_limb]
-      curr_ha = d1['limb_to_heel_action'][new_limb]
-      curr_ta = d1['limb_to_toe_action'][new_limb]
+      curr_ha = d2['limb_to_heel_action'][new_limb]
+      curr_ta = d2['limb_to_toe_action'][new_limb]
 
-      if set([prev_ha, prev_ta, curr_ha, curr_ta]) == set([1]):
+      if set([prev_ha, prev_ta, curr_ha, curr_ta]) == set(['1']):
         return True
 
   return False

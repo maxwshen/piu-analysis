@@ -19,34 +19,37 @@ feature_mapper = {
   'beat since': 5,
 }
 
+footswitch_charts = [
+  'Oy Oy Oy - BanYa S13 arcade',
+  'An Interesting View - BanYa S13 arcade',
+  'Final Audition - BanYa S15 arcade',
+  'Loki - Lotze S21 arcade',
+  'Papasito (feat. KuTiNA) - Yakikaze & Cashew D21 arcade',
+]
+
 def manual_override_segment(sc_nm, beats, features, annots, motifs):
-
-  if scinfo.name_to_level[sc_nm] < _params.min_footswitch_level:
-    return force_jacks(beats, features, annots, motifs)
-
   if sc_nm in overrides:
     print(f'Found manual override for {sc_nm}!')
     return overrides[sc_nm](beats, features, annots, motifs)
+
+  # if scinfo.name_to_level[sc_nm] in footswitch_charts:
+  #   return force_repeated_line(beats, features, annots, motifs, 'jack')
+  # else:
+  #   return force_repeated_line(beats, features, annots, motifs, 'footswitch')
+
+  if scinfo.name_to_level[sc_nm] < _params.min_footswitch_level:
+    return force_repeated_line(beats, features, annots, motifs, 'jack')
+
   return annots, motifs
 
 
 '''
   Force specific movement
 '''
-def force_jacks(beats, features, annots, motifs):
+def force_repeated_line(beats, features, annots, motifs, force_annot):
   def jackfootswitch(annots, beat, ft):
     if ft[feature_mapper['repeated line']]:
-      annots[beat] = 'jack'
-  for beat, ft in zip(beats, features):
-    jackfootswitch(annots, beat, ft)
-  return annots, motifs
-
-
-def force_footswitch(beats, features, annots, motifs):
-  def jackfootswitch(annots, beat, ft):
-    if ft[feature_mapper['repeated line']]:
-      annots[beat] = 'footswitch'
-
+      annots[beat] = force_annot
   for beat, ft in zip(beats, features):
     jackfootswitch(annots, beat, ft)
   return annots, motifs
@@ -82,5 +85,4 @@ def native_s20(beats, features, annots, motifs):
 
 overrides = {
   'Native - SHK S20 arcade': native_s20,
-  'Loki - Lotze S21 arcade': force_footswitch,
 }

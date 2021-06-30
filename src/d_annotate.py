@@ -376,7 +376,7 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
@@ -385,7 +385,7 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
-  nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
+  # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
