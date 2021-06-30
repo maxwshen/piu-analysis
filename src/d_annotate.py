@@ -180,7 +180,12 @@ def featurize(df):
 
   # General features
   from scipy.stats import mode
-  all_stats['BPM mode'] = float(mode(dfs['BPM']).mode)
+  bpm_mode = float(mode(dfs['BPM']).mode)
+  while bpm_mode < 100:
+    bpm_mode *= 2
+  while bpm_mode > 250:
+    bpm_mode /= 2
+  all_stats['BPM mode'] = bpm_mode
 
   # Movement features
   for annot in annot_types:
