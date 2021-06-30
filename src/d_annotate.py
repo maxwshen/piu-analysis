@@ -215,14 +215,14 @@ def bool_featurize(df, col):
     time_longest = 0
 
   stats = {
-    f'{col} - frequency':         sum(df[col]) / len(df),
-    f'{col} - 50% nps':           nan_to_zero(np.nanmedian(nps)),
-    f'{col} - 80% nps':           nan_to_zero(np.nanpercentile(nps, 80)), 
-    f'{col} - 99% nps':           nan_to_zero(np.nanpercentile(nps, 99)), 
-    f'{col} - max len lines':     max_len,
-    f'{col} - mean nps of longest':    nps_of_longest_mean,
-    f'{col} - median nps of longest':    nps_of_longest_median,
-    f'{col} - max len sec':       time_longest,
+    f'{col} - frequency':             sum(df[col]) / len(df),
+    f'{col} - 50% nps':               nan_to_zero(np.nanmedian(nps)),
+    f'{col} - 80% nps':               nan_to_zero(np.nanpercentile(nps, 80)), 
+    f'{col} - 99% nps':               nan_to_zero(np.nanpercentile(nps, 99)), 
+    f'{col} - max len lines':         max_len,
+    f'{col} - mean nps of longest':   nps_of_longest_mean,
+    f'{col} - median nps of longest': nps_of_longest_median,
+    f'{col} - max len sec':           time_longest,
   }
 
   twist_stats = [
@@ -369,7 +369,7 @@ def main():
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  # nm = 'Mr. Larpus - BanYa S22 arcade'
+  nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
@@ -390,7 +390,7 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'

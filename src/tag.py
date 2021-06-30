@@ -113,7 +113,7 @@ def speed(row, context_df, tag, verbose):
   # fq_pct = sum(context_df[fq_col] < fq) / len(context_df)
 
   adjs = dict()
-  for suffix in speed_cols.items():
+  for suffix in speed_cols:
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
@@ -170,7 +170,7 @@ def length(row, context_df, tag, verbose):
   if col in row.index:
     val, context = row[col], context_df[col]
     pct = sum(context < val) / len(context)
-    nps = row[f'{tag} - nps of longest']
+    nps = row[f'{tag} - mean nps of longest']
     if pct >= PCT_THRESHOLD and nps >= MIN_INTERESTING_NPS and nps >= mean_nps:
       adjs['long'] = pct
   return adjs
@@ -209,8 +209,8 @@ def run_single(nm):
   df = df.fillna(0)
 
   # Add local
-  # use_local = False
-  use_local = True
+  use_local = False
+  # use_local = True
   if use_local:
     local_fn = inp_dir_d + f'{nm}_features.csv'
     if os.path.isfile(local_fn):
@@ -246,14 +246,14 @@ def main():
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Native - SHK S20 arcade'
-  # nm = 'Mr. Larpus - BanYa S22 arcade'
+  nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
-  nm = 'Death Moon - SHK S22 shortcut'
+  # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
