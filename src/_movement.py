@@ -305,7 +305,7 @@ class Movement():
     '''
       Straightforward definition of double step: A limb is used on two neighboring lines.
       Forgive:
-      - current step = 2 (can just hold there)
+      - double step on same panel, going from 1/3 -> 1/2
       - double steps in active holds
       - double steps with repeated stance-action
     '''
@@ -333,17 +333,19 @@ class Movement():
         if prev_step and curr_step:
           limb_cost = self.costs['Double step']
 
-        # Forgive 1/3->2 with same limb on same pad
+        # Forgive 1/3->2/1 with same limb on same pad
         prev_heel_a = d1['limb_to_heel_action'][limb]
         curr_heel_a = d2['limb_to_heel_action'][limb]
         prev_toe_a = d1['limb_to_toe_action'][limb]
         curr_toe_a = d2['limb_to_toe_action'][limb]
         heel_pad_match = d1['limb_to_pos'][limb] == d2['limb_to_pos'][limb]
         toe_pad_match = d1['limb_to_pos'][limb] == d2['limb_to_pos'][limb]
-        if prev_heel_a in list('13') and curr_heel_a == '2' and heel_pad_match:
-          limb_cost = 0
-        elif prev_toe_a in list('13') and curr_toe_a == '2' and toe_pad_match:
-          limb_cost = 0
+        if prev_heel_a in list('13') and heel_pad_match:
+          if any(x in curr_heel_a for x in list('12')):
+            limb_cost = 0
+        elif prev_toe_a in list('13') and toe_pad_match:
+          if any(x in curr_toe_a for x in list('12')):
+            limb_cost = 0
 
         cost += limb_cost
 
@@ -356,6 +358,7 @@ class Movement():
 
     if identical_ds(d1, d2):
       cost = -1 * self.costs['No movement reward']
+      cost += self.costs['Jacks']
 
     if self.verbose: print(f'Double step cost: {cost}')
     return cost

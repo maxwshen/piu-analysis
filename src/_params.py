@@ -10,7 +10,7 @@ perfect_windows = {
 }
 
 # min. level to propose brackets alongside jumps for two-hits (01100)
-bracket_level_threshold = 16
+bracket_level_threshold = 15
 # min. level to propose alternating feet in hold-taps with brackets
 hold_bracket_level_threshold = 19
 
@@ -46,6 +46,7 @@ movement_costs = {
       'Jump': 0.75,
       'Move power': 1.5,
       'No movement reward': -0.2,
+      'Jacks': 0.0, 
       'Toe-heel alternate': 5,
       'Multi reward': -1.5,
       # Unused, since only air-X allowed
@@ -83,6 +84,7 @@ movement_costs = {
       'Jump': 0.75,
       'Move power': 1.5,
       'No movement reward': -.2,
+      'Jacks': 0.0, 
       'Toe-heel alternate': 0.1,
       'Multi reward': -1.5,
       'Bracket': 0,

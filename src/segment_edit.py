@@ -2,7 +2,6 @@
   Manually edit uniform section or motif annotations
   - jack or footswitch
   - jump or bracket
-
   manual_override_segment() called in segment.py
 '''
 from collections import defaultdict
@@ -22,9 +21,15 @@ feature_mapper = {
 footswitch_charts = [
   'Oy Oy Oy - BanYa S13 arcade',
   'An Interesting View - BanYa S13 arcade',
-  'Final Audition - BanYa S15 arcade',
-  'Loki - Lotze S21 arcade',
+  # 'Final Audition - BanYa S15 arcade',  # rerated to S18
+  'Bee - BanYa S15 arcade',
+  'Native - SHK S17 arcade',
+  'Beat of The War 2 - BanYa S21 arcade',
   'Papasito (feat. KuTiNA) - Yakikaze & Cashew D21 arcade',
+]
+
+pure_footswitch_charts = [
+  'Loki - Lotze S21 arcade',
 ]
 
 def manual_override_segment(sc_nm, beats, features, annots, motifs):
@@ -32,12 +37,12 @@ def manual_override_segment(sc_nm, beats, features, annots, motifs):
     print(f'Found manual override for {sc_nm}!')
     return overrides[sc_nm](beats, features, annots, motifs)
 
-  # if scinfo.name_to_level[sc_nm] in footswitch_charts:
-  #   return force_repeated_line(beats, features, annots, motifs, 'jack')
-  # else:
-  #   return force_repeated_line(beats, features, annots, motifs, 'footswitch')
+  if scinfo.name_to_level[sc_nm] in pure_footswitch_charts:
+    print(f'Found manual override for {sc_nm}!')
+    return force_repeated_line(beats, features, annots, motifs, 'footswitch')
 
   if scinfo.name_to_level[sc_nm] < _params.min_footswitch_level:
+    print(f'Found manual override for {sc_nm}!')
     return force_repeated_line(beats, features, annots, motifs, 'jack')
 
   return annots, motifs
@@ -57,6 +62,7 @@ def force_repeated_line(beats, features, annots, motifs, force_annot):
 
 '''
   Chart-specific overrides
+  - Currently used for charts that mix footswitches and jacks
 '''
 def native_s20(beats, features, annots, motifs):
   '''
@@ -83,6 +89,21 @@ def native_s20(beats, features, annots, motifs):
   return annots, motifs
 
 
+def final_audition_s15(beats, features, annots, motifs):
+  def jackfootswitch(annots, beat, ft):
+    if ft[feature_mapper['repeated line']]:
+      if ft[feature_mapper['beat since']] in [0.25]:
+        annots[beat] = 'footswitch'
+      elif ft[feature_mapper['beat since']] in [0.50]:
+        annots[beat] = 'jack'
+      else:
+        annots[beat] = 'jackorfootswitch'
+
+  for beat, ft in zip(beats, features):
+    jackfootswitch(annots, beat, ft)
+  return annots, motifs
+
 overrides = {
   'Native - SHK S20 arcade': native_s20,
+  'Final Audition - BanYa S15 arcade': final_audition_s15,
 }
