@@ -183,7 +183,7 @@ def featurize(df):
   bpm_mode = float(mode(dfs['BPM']).mode)
   while bpm_mode < 100:
     bpm_mode *= 2
-  while bpm_mode > 250:
+  while bpm_mode > 225:
     bpm_mode /= 2
   all_stats['BPM mode'] = bpm_mode
 
@@ -204,11 +204,13 @@ def bool_featurize(df, col):
 
   if ts_lens:
     start, end = ts_ranges[np.argmax(ts_lens)]
-    nps_of_longest = np.mean(df[nps_col].iloc[start:end])
+    nps_of_longest_mean = np.mean(df[nps_col].iloc[start:end])
+    nps_of_longest_median = np.median(df[nps_col].iloc[start:end])
     max_len = max(ts_lens)
-    time_longest = max_len / nps_of_longest
+    time_longest = max_len / nps_of_longest_mean
   else:
-    nps_of_longest = 0
+    nps_of_longest_mean = 0
+    nps_of_longest_median = 0
     max_len = 0
     time_longest = 0
 
@@ -218,7 +220,8 @@ def bool_featurize(df, col):
     f'{col} - 80% nps':           nan_to_zero(np.nanpercentile(nps, 80)), 
     f'{col} - 99% nps':           nan_to_zero(np.nanpercentile(nps, 99)), 
     f'{col} - max len lines':     max_len,
-    f'{col} - nps of longest':    nps_of_longest,
+    f'{col} - mean nps of longest':    nps_of_longest_mean,
+    f'{col} - median nps of longest':    nps_of_longest_median,
     f'{col} - max len sec':       time_longest,
   }
 
@@ -368,7 +371,7 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
-  nm = 'Tepris - Doin S17 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'
@@ -387,7 +390,7 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
-  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'

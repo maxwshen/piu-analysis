@@ -56,7 +56,7 @@ def drill(df):
   i, j = 0, 1
   while j < len(df):
     row1, row2 = df.iloc[i], df.iloc[j]
-    is_1s = '1' in row1['Line'] and '1' in row2['Line']
+    is_1s = row1['Line'].count('1') == 1 and row2['Line'].count('1') == 1
     # alternate = row2['Annotation'] == 'alternate'
     if is_1s:
     # if is_1s and alternate:

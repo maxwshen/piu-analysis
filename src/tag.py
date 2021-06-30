@@ -103,18 +103,17 @@ def speed(row, context_df, tag, verbose):
     - speed is above a minimum interesting nps
     - frequency of movement pattern is in top 50th percentile
   '''
-  speed_cols = {
-    # ' - 80% nps': 'fast',
-    ' - nps of longest': 'fast',
-  }
-  mean_nps = row['Notes per second since downpress - mean']
+  speed_cols = [
+    # ' - 80% nps',
+    ' - median nps of longest'
+  ]
 
   fq_col = f'{tag} - frequency'
   fq = row[fq_col]
   # fq_pct = sum(context_df[fq_col] < fq) / len(context_df)
 
   adjs = dict()
-  for suffix, adjective in speed_cols.items():
+  for suffix in speed_cols.items():
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
@@ -127,11 +126,8 @@ def speed(row, context_df, tag, verbose):
       # print(ebpm_str)
       # import code; code.interact(local=dict(globals(), **locals()))
 
-      # if val >= mean_nps and pct >= PCT_THRESHOLD and val >= MIN_INTERESTING_NPS:
-        # adjs.add('fast')
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}')
-        print(f'Mean NPS: {mean_nps:.2f}')
   return adjs
 
 
@@ -213,11 +209,14 @@ def run_single(nm):
   df = df.fillna(0)
 
   # Add local
-  local_fn = inp_dir_d + f'{nm}_features.csv'
-  if os.path.isfile(local_fn):
-    print('Using local file ...')
-    local_df = pd.read_csv(local_fn, index_col=0)
-    df = df.append(local_df)
+  # use_local = False
+  use_local = True
+  if use_local:
+    local_fn = inp_dir_d + f'{nm}_features.csv'
+    if os.path.isfile(local_fn):
+      print('Using local file ...')
+      local_df = pd.read_csv(local_fn, index_col=0)
+      df = df.append(local_df)
 
   df['Name (unique)'] = df.index
   df = df.drop_duplicates(subset = 'Name (unique)', keep='last')
@@ -254,9 +253,9 @@ def main():
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
-  # nm = 'Death Moon - SHK S22 shortcut'
+  nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Tepris - Doin S17 arcade'
+  # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
