@@ -14,7 +14,7 @@ bracket_level_threshold = 16
 # min. level to propose alternating feet in hold-taps with brackets
 hold_bracket_level_threshold = 19
 
-min_footswitch_level = 15
+min_footswitch_level = 13
 
 # max lines in hold-taps to apply penalty on alternating
 hold_tap_line_threshold = 4
