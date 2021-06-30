@@ -6,7 +6,9 @@
   manual_override_segment() called in segment.py
 '''
 from collections import defaultdict
-import segment, _graph
+import segment, _graph, _stepcharts, _params
+
+scinfo = _stepcharts.SCInfo()
 
 feature_mapper = {
   'hit 1': 0,
@@ -18,12 +20,41 @@ feature_mapper = {
 }
 
 def manual_override_segment(sc_nm, beats, features, annots, motifs):
+
+  if scinfo.name_to_level[sc_nm] < _params.min_footswitch_level:
+    return force_jacks(beats, features, annots, motifs)
+
   if sc_nm in overrides:
     print(f'Found manual override for {sc_nm}!')
     return overrides[sc_nm](beats, features, annots, motifs)
   return annots, motifs
 
 
+'''
+  Force specific movement
+'''
+def force_jacks(beats, features, annots, motifs):
+  def jackfootswitch(annots, beat, ft):
+    if ft[feature_mapper['repeated line']]:
+      annots[beat] = 'jack'
+  for beat, ft in zip(beats, features):
+    jackfootswitch(annots, beat, ft)
+  return annots, motifs
+
+
+def force_footswitch(beats, features, annots, motifs):
+  def jackfootswitch(annots, beat, ft):
+    if ft[feature_mapper['repeated line']]:
+      annots[beat] = 'footswitch'
+
+  for beat, ft in zip(beats, features):
+    jackfootswitch(annots, beat, ft)
+  return annots, motifs
+
+
+'''
+  Chart-specific overrides
+'''
 def native_s20(beats, features, annots, motifs):
   '''
     Repeated lines with 0.75 beat since = footswitch;
@@ -49,17 +80,7 @@ def native_s20(beats, features, annots, motifs):
   return annots, motifs
 
 
-def loki_s21(beats, features, annots, motifs):
-  def jackfootswitch(annots, beat, ft):
-    if ft[feature_mapper['repeated line']]:
-      annots[beat] = 'footswitch'
-
-  for beat, ft in zip(beats, features):
-    jackfootswitch(annots, beat, ft)
-  return annots, motifs
-
-
 overrides = {
   'Native - SHK S20 arcade': native_s20,
-  'Loki - Lotze S21 arcade': loki_s21,
+  'Loki - Lotze S21 arcade': force_footswitch,
 }
