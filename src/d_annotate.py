@@ -177,6 +177,12 @@ def featurize(df):
     float: float_featurize,
   }
   all_stats = {}
+
+  # General features
+  from scipy.stats import mode
+  all_stats['BPM mode'] = float(mode(dfs['BPM']).mode)
+
+  # Movement features
   for annot in annot_types:
     f = type_to_featurizer[annot_types[annot]]
     stats = f(dfs, annot)
@@ -351,13 +357,13 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
-  nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
+  # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
-  # nm = 'Tepris - Doin S17 arcade'
+  nm = 'Tepris - Doin S17 arcade'
   # nm = 'Final Audition 2 - BanYa S7 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'Super Fantasy - SHK S10 arcade'

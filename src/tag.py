@@ -121,12 +121,48 @@ def speed(row, context_df, tag, verbose):
       pct = sum(context < val) / len(context)
       nps_str = f'{val:.1f} nps'
       adjs[nps_str] = pct
+
+      ebpm_str = effective_bpm(val, row['BPM mode'])
+      adjs[ebpm_str] = pct
+      # print(ebpm_str)
+      # import code; code.interact(local=dict(globals(), **locals()))
+
       # if val >= mean_nps and pct >= PCT_THRESHOLD and val >= MIN_INTERESTING_NPS:
         # adjs.add('fast')
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}')
         print(f'Mean NPS: {mean_nps:.2f}')
   return adjs
+
+
+def effective_bpm(nps, base_bpm):
+  npm = nps * 60
+
+  # Get lower and upper bpm, ensure that 2x does not fit in
+  lower = base_bpm * 2/3
+  upper = base_bpm * 4/3
+  while lower * 2 < upper:
+    lower += 1
+  
+  factors = {
+    4:    'whole note',
+    2:    'half note',
+    1:    'quarter note',
+    1/2:  '8th note',
+    # 1/3:  '12th note',
+    1/4:  '16th note',
+    # 1/6:  '24th note',
+    1/8:  '32nd note',
+    # 1/12: '48th note',
+    1/16: '64th note',
+  }
+  for factor in factors:
+    ebpm = npm * factor
+    if lower <= ebpm <= upper:
+      break
+  note_type = factors[factor]
+  ebpm_str = f'{note_type}s at {ebpm:.0f} bpm'
+  return ebpm_str
 
 
 def length(row, context_df, tag, verbose):
@@ -217,10 +253,10 @@ def main():
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
   # nm = 'U Got 2 Know - MAX S20 arcade'
-  nm = 'YOU AND I - Dreamcatcher S21 arcade'
+  # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
-  # nm = 'Tepris - Doin S17 arcade'
+  nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
