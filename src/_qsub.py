@@ -33,7 +33,10 @@ def gen_qsubs(NAME, chart_fnm):
 
     # Write qsub commands
     if NAME == 'c_dijkstra':
-      vmem = 'h_vmem=4G'
+      if 'doubles' in chart_fnm:
+        vmem = 'h_vmem=8G'
+      else:
+        vmem = 'h_vmem=4G'
     else:
       vmem = 'h_vmem=1G'
 

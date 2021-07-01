@@ -727,7 +727,7 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
-  nm = 'F(R)IEND - D_AAN S23 arcade'
+  # nm = 'F(R)IEND - D_AAN S23 arcade'
 
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'
@@ -756,6 +756,8 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
   # nm = 'Maslo - Vospi D16 arcade'
   # nm = 'Energetic - Wanna One D19 arcade'
+  # nm = 'You Got Me Crazy - MAX D18 arcade'
+  nm = 'Anguished Unmaking - void D18 arcade'
 
   run_single(nm)
   return

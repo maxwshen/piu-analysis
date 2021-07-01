@@ -385,7 +385,7 @@ def main():
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
-  nm = 'F(R)IEND - D_AAN S23 arcade'
+  # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
@@ -415,6 +415,8 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
   # nm = 'Maslo - Vospi D16 arcade'
   # nm = 'Energetic - Wanna One D19 arcade'
+  # nm = 'You Got Me Crazy - MAX D18 arcade'
+  nm = 'Anguished Unmaking - void D18 arcade'
 
   run_single(nm)
   return

@@ -49,12 +49,18 @@ def dijkstra(graph):
     visited.add(u)
     stats_d['Num. nodes considered'] += 1
 
-    for v in graph.edge_generator(u):
-      if v in visited:
-        continue
+    child_nodes = [v for v in graph.edge_generator(u) if v not in visited]
+    filt_nodes = [v for v in child_nodes if not graph.filter_edge(u, v)]
+    if filt_nodes:
+      child_nodes = filt_nodes
 
-      if graph.filter_edge(u, v):
-        continue
+    for v in child_nodes:
+    # for v in graph.edge_generator(u):
+      # if v in visited:
+        # continue
+        
+      # if graph.filter_edge(u, v):
+      #   continue
       
       graph.error_check(u, v)
 
@@ -252,7 +258,7 @@ def main():
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
-  nm = 'F(R)IEND - D_AAN S23 arcade'
+  # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
@@ -274,6 +280,8 @@ def main():
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
   # nm = 'Maslo - Vospi D16 arcade'
   # nm = 'Energetic - Wanna One D19 arcade'
+  # nm = 'You Got Me Crazy - MAX D18 arcade'
+  nm = 'Anguished Unmaking - void D18 arcade'
 
   run_single(nm)
   return
