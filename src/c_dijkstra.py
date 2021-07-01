@@ -54,8 +54,6 @@ def dijkstra(graph):
     if filt_nodes:
       child_nodes = filt_nodes
 
-    import code; code.interact(local=dict(globals(), **locals()))
-
     for v in child_nodes:
     # for v in graph.edge_generator(u):
       # if v in visited:

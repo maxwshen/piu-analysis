@@ -24,7 +24,7 @@ max_lines_in_multihit = 4
 
 init_stanceaction = {
   'singles': '14,36;--,--',
-  'doubles': 'p1`36c,p2`14c;--,--',
+  'doubles': 'p1`36,p2`14;--,--',
 }
 
 '''

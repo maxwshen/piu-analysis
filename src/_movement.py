@@ -272,7 +272,8 @@ class Movement():
       new_toe = self.pos_to_toe_coord[d2['limb_to_pos'][limb]]
       dist_heel = np.linalg.norm(prev_heel - new_heel, ord = 2)
       dist_toe = np.linalg.norm(prev_toe - new_toe, ord = 2)
-      dist = np.mean(dist_heel + dist_toe)
+      # dist = np.mean(dist_heel + dist_toe)
+      dist = np.min([dist_heel, dist_toe])
 
       cost += dist / self.params['Distance normalizer']
 

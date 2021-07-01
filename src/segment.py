@@ -187,9 +187,9 @@ def get_active_hold_motifs(lines, features, beats):
         import code; code.interact(local=dict(globals(), **locals()))
         raise Exception('Detected unresolved hold')
     else:
-      if bool('4' in lines[i] or '2' in lines[i]) and '1' in lines[i]:
+      if any(x in lines[i] for x in list('24')) and '1' in lines[i]:
         in_hold = True
-      elif '4' in lines[i] and '2' in lines[i]:
+      elif any(x in lines[i] for x in list('4')) and '2' in lines[i]:
         in_hold = True
       else:
         i += 1
