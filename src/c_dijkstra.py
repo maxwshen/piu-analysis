@@ -76,7 +76,7 @@ def dijkstra(graph):
 
   if u != graph.final_node:
     print('Error: Dijkstra terminated')
-    last_beat = max(float(x) for x in visited_line_nodes if x != 'init')
+    last_beat = max(float(x.split()[0]) for x in visited_line_nodes if x != 'init')
     print(f'Last beat: {last_beat}')
     import code; code.interact(local=dict(globals(), **locals()))
     raise Exception(f'Graph lacks path to final node. Traversed {len(visited)} nodes.')
@@ -221,7 +221,7 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S18 arcade'
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
   # nm = 'Uranium - Memme S19 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
@@ -252,7 +252,7 @@ def main():
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
-  # nm = 'F(R)IEND - D_AAN S23 arcade'
+  nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
@@ -272,6 +272,9 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
+  # nm = 'Maslo - Vospi D16 arcade'
+  # nm = 'Energetic - Wanna One D19 arcade'
+
   run_single(nm)
   return
 

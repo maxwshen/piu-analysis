@@ -59,7 +59,7 @@ class Stances():
     pass
 
 
-  def __init_panel_to_footpos(self) -> dict:
+  def __init_panel_to_footpos(self):
     '''
       md[limb][panel] = set of foot positions
     '''
@@ -76,7 +76,7 @@ class Stances():
     return md
 
 
-  def __init_bracket_pos(self) -> set:
+  def __init_bracket_pos(self):
     crit = (self.df[self.arrow_panels].apply(sum, axis='columns') == 2)
     return set(self.df[crit]['Name'])
 
@@ -84,21 +84,25 @@ class Stances():
   '''
     Get foot positions from active panels
   '''
-  def get_stances(self, active_panels, prev_panels, use_brackets = False, use_hands = False):
+  def get_stances(self, active_panels, prev_stance, use_brackets = False, use_hands = False):
     '''
       All stances covering active_panels, allowing limbs to rest on prev_panels
     '''
-    all_panels = list(set(active_panels) | set(prev_panels))
-
     limbs = ['Left foot', 'Right foot']
     if use_hands:
       limbs += ['Left hand', 'Right hand']
 
-    def get_positions(limb, panels):
-      footposs = [self.get_footpos(limb, panel, use_brackets) for panel in panels]
-      return list(set().union(*footposs))
+    limb_to_pos = self.stance_to_limb_to_pos(prev_stance)
 
-    ps = [get_positions(limb, all_panels) for limb in limbs]
+    def get_positions(limb, panels):
+      # Get limb positions that cover panels 
+      footposs = [self.get_footpos(limb, panel, use_brackets) for panel in panels]
+      footposs = set().union(*footposs)
+      # add limb's pos from previous stance
+      footposs.add(limb_to_pos[limb])
+      return list(footposs)
+
+    ps = [get_positions(limb, active_panels) for limb in limbs]
     stance_strs = [','.join(limbpos) for limbpos in itertools.product(*ps)]
     stance_strs = [stance for stance in stance_strs 
                    if self.covers_panels(stance, active_panels)]
@@ -108,7 +112,7 @@ class Stances():
   '''
     Annotating actions
   '''
-  def annotate_actions(self, aug_line: str, stances: List[str]) -> List[str]:
+  def annotate_actions(self, aug_line, stances):
     '''
       Annotate actions on top of stances that are consistent with panel constraints. 
       Returns list of stance-actions that hit all panels in panel constraints.
@@ -122,7 +126,7 @@ class Stances():
 
 
   @functools.lru_cache(maxsize=None)
-  def annotate_action(self, aug_line, stance) -> List[str]:
+  def annotate_action(self, aug_line, stance):
     panel_to_action = self.line_to_panel_to_action(aug_line)
     poss = self.stance_to_limbposs(stance)
     panel_to_part = defaultdict(list)
@@ -136,7 +140,7 @@ class Stances():
     return self.get_sas(stance, panel_to_action, panel_to_part)
 
 
-  def get_sas(self, stance, panel_to_action, panel_to_part) -> List[str]:
+  def get_sas(self, stance, panel_to_action, panel_to_part):
     '''
       Get stance-actions
     '''
@@ -168,8 +172,7 @@ class Stances():
   '''
     Primary
   '''
-  def get_stanceactions(self, aug_line: str,
-        prev_panels: Set[str] = set(), verbose = False) -> List[str]:
+  def get_stanceactions(self, aug_line, prev_stance, verbose = False):
     '''
       stance_action: example 15,53;1-,-1
       <limb positions>;<limb actions>
@@ -185,27 +188,25 @@ class Stances():
       4: continue hold
     '''
     active_panels = self.line_to_active_panels(aug_line)
-    if len(prev_panels) == 0:
-      prev_panels = set(self.arrow_panels)
 
     # Get foot stances consistent with active panels, and including previous panels
     # Propose brackets or hands only if necessary based on num. active panels
     if len(active_panels) > 4:
-      stances = self.get_stances(active_panels, prev_panels,
+      stances = self.get_stances(active_panels, prev_stance,
           use_brackets=True, use_hands=True)
     elif len(active_panels) >= 2:
       '''
         Note: Much slower (10x?) using 2-4, rather than 3-4 inclusive.
         However, sometimes we need to bracket 2 notes ...
       '''
-      stances = self.get_stances(active_panels, prev_panels,
+      stances = self.get_stances(active_panels, prev_stance,
           use_brackets=True)
     else:
-      stances = self.get_stances(active_panels, prev_panels)
+      stances = self.get_stances(active_panels, prev_stance)
 
     # If heuristic failed
     if len(stances) == 0:
-      stances = self.get_stances(active_panels, prev_panels,
+      stances = self.get_stances(active_panels, prev_stance,
           use_brackets=True, use_hands=True)
 
     # Annotate all possible actions (one to many relationship)
@@ -215,14 +216,14 @@ class Stances():
 
 
   @functools.lru_cache(maxsize=None)
-  def stanceaction_generator(self, stance: str, aug_line: str):
+  def stanceaction_generator(self, stance, aug_line):
     '''
       Input: Current stance, next line w/ holds
       Generates stance-actions that satisfy next line and move the min possible number of limbs from stance.
 
       Note: Checking for one move stances is empirically slower than just getting all stanceactions. Looks like unnecessary jump edge filtering is faster than one move stances. (3x slower for Loki s21)
     '''
-    prev_feet_panels = self.stance_to_covered_panels(stance, feet_only=True)
+    # prev_feet_panels = self.stance_to_covered_panels(stance, feet_only=True)
     # active_panels = self.line_to_active_panels(aug_line)
     # one_move_stances, min_pads_per_foot = self.stances_by_moving_one_foot(
     #     stance, aug_line)
@@ -231,14 +232,14 @@ class Stances():
     #   stance_actions = self.annotate_actions(aug_line, one_move_stances)
     # else:
     #   stance_actions = self.get_stanceactions(aug_line, prev_feet_panels)
-    stance_actions = self.get_stanceactions(aug_line, prev_feet_panels)
+    stance_actions = self.get_stanceactions(aug_line, stance)
     return stance_actions
 
 
   '''
     Helper
   '''
-  def combine_lines(self, lines: List[str]) -> str:
+  def combine_lines(self, lines):
     '''
       Combines a list of panel constraints, prioritizing 0 < 3 < 4 < 1 < 2.
       Used for finding a single set of panel constraints to hit to satisfy
@@ -253,7 +254,7 @@ class Stances():
 
 
   @functools.lru_cache(maxsize=None)
-  def stances_by_moving_one_foot(self, stance: str, aug_line: str):
+  def stances_by_moving_one_foot(self, stance, aug_line):
     '''
       Deprecated: Slower than proposing all stanceactions and filtering later by unnecessary jump
     '''
@@ -277,7 +278,7 @@ class Stances():
     return stances, min_pads_per_foot
 
 
-  def covers_panels(self, stance: str, active_panels: List[str]):
+  def covers_panels(self, stance, active_panels):
     # Does stance cover all active panels?
     covered_panels = self.stance_to_covered_panels(stance)
     return all([ap in covered_panels for ap in active_panels])
@@ -302,7 +303,7 @@ class Stances():
     Parsing
   '''
   @functools.lru_cache(maxsize=None)
-  def line_to_active_panels(self, line: str) -> List[str]:
+  def line_to_active_panels(self, line):
     '''
       Returns a list of panel names that are pressed in the input text string.
       e.g., '10002' -> ['p1,1', 'p1,3']
@@ -311,7 +312,7 @@ class Stances():
 
 
   @functools.lru_cache(maxsize=None)
-  def line_to_panel_to_action(self, line: str) -> dict:
+  def line_to_panel_to_action(self, line):
     panel_to_action = dict()
     for idx, action in enumerate(line):
       panel = self.idx_to_panel[idx]
@@ -321,28 +322,34 @@ class Stances():
 
 
   @functools.lru_cache(maxsize=None)
-  def limb_to_panel_from_stance(self, stance: str):
+  def limb_to_panel_from_stance(self, stance):
     return {limb: set([self.nm_to_toe_panel[pos], self.nm_to_heel_panel[pos]])
             for limb, pos in self.limb_to_pos_from_stance(stance).items()}
 
 
   @functools.lru_cache(maxsize=None)
-  def stance_to_covered_panels(self, stance: str, feet_only = False):
+  def stance_to_covered_panels(self, stance, feet_only = False):
     poss = self.stance_to_limbposs(stance, feet_only=feet_only)
     return set(self.nm_to_toe_panel[pos] for pos in poss) | \
            set(self.nm_to_heel_panel[pos] for pos in poss)
 
 
   @functools.lru_cache(maxsize=None)
-  def stance_to_limbposs(self, stance: str, feet_only = False):
+  def stance_to_limbposs(self, stance, feet_only = False):
     if feet_only:
       return stance.split(',')[:2]
     else:
       return stance.split(',')
 
+  @functools.lru_cache(maxsize=None)
+  def stance_to_limb_to_pos(self, stance):
+    limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
+    poss = stance.split(',')
+    return {limb: pos for limb, pos in zip(limbs[:len(poss)], poss)}
+
 
   @functools.lru_cache(maxsize=None)
-  def limb_to_pos_from_stance(self, stance: str):
+  def limb_to_pos_from_stance(self, stance):
     return {limb: pos for limb, pos in
             zip(self.all_limbs, self.stance_to_limbposs(stance))}
 

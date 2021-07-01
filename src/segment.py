@@ -723,10 +723,11 @@ def main():
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
+  nm = 'F(R)IEND - D_AAN S23 arcade'
 
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'
@@ -753,6 +754,8 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
+  # nm = 'Maslo - Vospi D16 arcade'
+  # nm = 'Energetic - Wanna One D19 arcade'
 
   run_single(nm)
   return

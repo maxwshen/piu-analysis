@@ -126,6 +126,7 @@ class Graph():
     else:
       # Typical case
       sas = self.stances.stanceaction_generator(prev_stance, aug_line)
+
       if motif_branch:
         sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
             motif_jfs, motif_twohits, motif_hold)

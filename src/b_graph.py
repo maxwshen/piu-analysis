@@ -530,7 +530,7 @@ def main():
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
@@ -581,7 +581,7 @@ def main():
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
   # nm = 'BEMERA - YAHPP S24 remix'
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
-  # nm = 'F(R)IEND - D_AAN S23 arcade'
+  nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
@@ -594,6 +594,8 @@ def main():
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
+  # nm = 'Maslo - Vospi D16 arcade'
+  # nm = 'Energetic - Wanna One D19 arcade'
 
   run_single(nm)
   return
