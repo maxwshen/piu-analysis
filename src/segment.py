@@ -148,6 +148,10 @@ def find_motifs(line_nodes, features, beats):
             if line_nodes[k]['Beat'] in beats]
   all_motifs = get_active_hold_motifs(lines, features, beats)
 
+  for k, v in all_motifs.items():
+    for section in v:
+      sections.append(section)
+
   motif_len = INIT_SEED_LEN
   while motif_len >= MIN_MOTIF_LEN:
     motifs = get_enriched_motifs(lines, features, beats, motif_len, sections)
@@ -436,7 +440,11 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
         if level < _params.hold_bracket_level_threshold:
           hold = 'jack'
         else:
-          hold = 'jackoralternateorfree'
+          total_dps = sum(any(x in line for x in list('12')) for line in lines_holds)
+          if total_dps == 1:
+            hold = 'jack'
+          else:
+            hold = 'jackoralternateorfree'
       
       ds[section] = f'{jfs}-{twohit}-{hold}'
   return ds
@@ -626,7 +634,7 @@ def filter_annots(beats, unif_d, motifs):
       if tag_twohits in ['jump', 'bracket', 'jumporbracket']:
         if 'jumporbracket' in annots:
           new_motifs[section] = tag
-      if tag_hold in ['jackoralternateorfree']:
+      if tag_hold in ['jack', 'alternate', 'free', 'jackoralternateorfree']:
         new_motifs[section] = tag
   return unif_d, new_motifs
 
@@ -749,7 +757,7 @@ def main():
   # nm = 'V3 - Beautiful Day S17 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
@@ -758,7 +766,7 @@ def main():
   # nm = 'Energetic - Wanna One D19 arcade'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
-  nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
+  # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
 
   run_single(nm)
   return

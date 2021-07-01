@@ -212,8 +212,12 @@ class Graph():
       for twohits in get_combo(motif_twohits):
         for hold in get_combo(motif_hold):
           # Don't filter hold at branch
-          path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
-              jfs, twohits, 'any')
+          if hold in ['alternate', 'free']:
+            path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+                jfs, twohits, 'any')
+          elif hold == 'jack':
+            path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+                jfs, twohits, hold)
           out_sas += path_sas
           ntags += [f'{jfs}-{twohits}-{hold}']*len(path_sas)
     return out_sas, ntags
@@ -302,7 +306,7 @@ class Graph():
       Right now, hold motifs are longer than assumed, which is why these bugs are happening.
     '''
     prev_limbs = [limb for limb in self.stances.limbs_doing(prev_sa, list('13'))]
-    holding_limb = [limb for limb in self.stances.limbs_doing(prev_sa, list('4'))]
+    holding_limb = [limb for limb in self.stances.limbs_doing(prev_sa, list('24'))]
     if hold == 'jack':
       accept = lambda sa: self.stances.limbs_doing(sa, list('12')) != holding_limb
     elif hold == 'alternate':

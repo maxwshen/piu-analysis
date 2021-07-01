@@ -589,7 +589,7 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
@@ -598,7 +598,7 @@ def main():
   # nm = 'Energetic - Wanna One D19 arcade'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
-  nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
+  # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
 
   run_single(nm)
   return
