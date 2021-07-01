@@ -15,3 +15,9 @@ class SCInfo():
                                                      self.df['METER'])}
 
     pass
+
+def singles_subset(df):
+  return df[df['Steptype simple'].str.contains('S')]
+
+def doubles_subset(df):
+  return df[df['Steptype simple'].str.contains('D')]

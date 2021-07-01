@@ -411,12 +411,12 @@ def doubles_broken_stair(df):
   rtls = [x[::-1] for x in ltrs]
   patterns = ltrs + rtls
   idxs = []
-  for i in range(len(dp_lines) - 10 + 1):
-    temp_lines = dp_lines[i:i+10]
+  for i in range(len(dp_lines) - 9 + 1):
+    temp_lines = dp_lines[i:i+9]
     translated_lines = [line.replace('2', '1') for line in temp_lines]
     translated_lines = [line.replace('4', '0') for line in translated_lines]
     if any(translated_lines == x for x in patterns):
-      idxs += list(dp_idxs[i:i+10])
+      idxs += list(dp_idxs[i:i+9])
   res = filter_short_runs(idxs, len(df), 1)
   return res
 

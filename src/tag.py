@@ -45,11 +45,11 @@ def get_tags(df):
   tags = [col.replace(kw, '') for col in df.columns if kw in col]
   exclude = {
     'Twist angle - none',
-    'Twist angle solo diagonal',
+    'Twist solo diagonal',
     'Twist angle - 90',
     'Twist angle - close diagonal',
     'Twist angle - far diagonal',
-    'Twist angle - 180',
+    # 'Twist angle - 180',
   }
   return [tag for tag in tags if tag not in exclude]
 
@@ -226,6 +226,12 @@ def run_single(nm):
   all_df['Level'] = all_df['METER']
   df = df.merge(all_df, on = 'Name (unique)', how = 'left')
 
+  steptype = df[df['Name (unique)'] == nm]['Steptype simple']
+  if 'S' in steptype:
+    df = _stepcharts.singles_subset(df)
+  elif 'D' in steptype:
+    df = _stepcharts.doubles_subset(df)
+
   context_crit = (df['Level'] >= level + CONTEXT_LOWER) & \
                  (df['Level'] <= level + CONTEXT_UPPER)
   context_df = df[context_crit]
@@ -246,7 +252,7 @@ def main():
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Native - SHK S20 arcade'
-  nm = 'Mr. Larpus - BanYa S22 arcade'
+  # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Conflict - Siromaru + Cranky S17 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
@@ -261,7 +267,7 @@ def main():
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
 
   run_single(nm)
   return
