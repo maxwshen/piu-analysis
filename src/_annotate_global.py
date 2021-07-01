@@ -339,6 +339,7 @@ def singles_stair(df):
 def singles_stair_in_doubles(df):
   # Uses downpress lines only, compare to panels
   dp_lines = df[df['Has downpress']]['Line with active holds']
+  doubles_stair = df[df['Has downpress']]['Stairs, doubles']
   dp_lines = [line.replace('`', '') for line in dp_lines]
   dp_idxs = df[df['Has downpress']].index
   ltr_p1 = ['1000000000', '0100000000', '0010000000', '0001000000', '0000100000']
@@ -352,7 +353,8 @@ def singles_stair_in_doubles(df):
     translated_lines = [line.replace('2', '1') for line in temp_lines]
     translated_lines = [line.replace('4', '0') for line in translated_lines]
     if any(translated_lines == x for x in patterns):
-      idxs += list(dp_idxs[i:i+5])
+      if not any(doubles_stair[i:i+5]):
+        idxs += list(dp_idxs[i:i+5])
   res = filter_short_runs(idxs, len(df), 1)
   return res
 
@@ -403,6 +405,7 @@ def doubles_stair(df):
 def doubles_broken_stair(df):
   # Uses downpress lines only, compare to panels
   dp_lines = df[df['Has downpress']]['Line with active holds']
+  doubles_stair = df[df['Has downpress']]['Stairs, doubles']
   dp_lines = [line.replace('`', '') for line in dp_lines]
   dp_idxs = df[df['Has downpress']].index
   ltr = ['1000000000', '0100000000', '0010000000', '0001000000', '0000100000',
@@ -416,7 +419,8 @@ def doubles_broken_stair(df):
     translated_lines = [line.replace('2', '1') for line in temp_lines]
     translated_lines = [line.replace('4', '0') for line in translated_lines]
     if any(translated_lines == x for x in patterns):
-      idxs += list(dp_idxs[i:i+9])
+      if not any(doubles_stair[i:i+9]):
+        idxs += list(dp_idxs[i:i+9])
   res = filter_short_runs(idxs, len(df), 1)
   return res
 
@@ -430,29 +434,31 @@ def spin(df):
     - Given base angle, query angle and orientation, determine if query angle is in allowed zone (+135 in orientation, -5 in opposite orientation)    
     i, j = base two lines defining orientation
     increment k while query angle is in allowed zone, if total angle surpasses 360 degrees then label as spin.
+    Only consider spins starting and ending at front-facing. (Otherwise mitotsudaira d19 has a spin)
   '''
   idxs = set()
   angles = list(df['Body angle'])
   i = 0
   while i < len(df) - 1:
-    j = i + 1
-    spin_orient = get_orientation(angles[i], angles[j])
-    total_spin = relative_angle(angles[i], angles[j], spin_orient)
+    if angles[i] >= 345 or angles[i] <= 15:
+      j = i + 1
+      spin_orient = get_orientation(angles[i], angles[j])
+      total_spin = relative_angle(angles[i], angles[j], spin_orient)
 
-    k = j + 1
-    while k < len(df):
-      if spin_allowed(angles[k-1], angles[k], spin_orient):
-        total_spin += relative_angle(angles[k-1], angles[k], spin_orient)
-        k += 1
-      else:
-        break
+      k = j + 1
+      while k < len(df):
+        if spin_allowed(angles[k-1], angles[k], spin_orient):
+          total_spin += relative_angle(angles[k-1], angles[k], spin_orient)
+          k += 1
+        else:
+          break
+
+        if total_spin >= 350:
+          break
 
       if total_spin >= 350:
-        break
-
-    if total_spin >= 350:
-      for idx in range(i, k + 1):
-        idxs.add(idx)
+        for idx in range(i, k + 1):
+          idxs.add(idx)
 
     i += 1
 
@@ -509,8 +515,8 @@ funcs = {
   # Movement required
   'Run with brackets':      bracket_run,
   'Jump run':               jump_run,
-  'Stairs, singles':        singles_stair,
   'Stairs, doubles':        doubles_stair,
+  'Stairs, singles':        singles_stair,
   'Broken stairs, doubles': doubles_broken_stair,
   'Spin':                   spin,
 }

@@ -209,8 +209,8 @@ def run_single(nm):
   df = df.fillna(0)
 
   # Add local
-  use_local = False
-  # use_local = True
+  # use_local = False
+  use_local = True
   if use_local:
     local_fn = inp_dir_d + f'{nm}_features.csv'
     if os.path.isfile(local_fn):

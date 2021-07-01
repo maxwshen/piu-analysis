@@ -28,9 +28,6 @@ def twist_solo_diagonal(df):
   return res
 
 
-
-
-
 #
 funcs = {
   'Twist solo diagonal': twist_solo_diagonal,
