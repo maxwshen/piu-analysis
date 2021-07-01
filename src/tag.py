@@ -49,7 +49,7 @@ def get_tags(df):
     'Twist angle - 90',
     'Twist angle - close diagonal',
     'Twist angle - far diagonal',
-    # 'Twist angle - 180',
+    'Twist angle - 180',
   }
   return [tag for tag in tags if tag not in exclude]
 
@@ -88,6 +88,7 @@ def get_adjectives(row, context_df, tag, verbose = True):
   '''
   adjs = dict()
   adjs.update(twistiness(row, context_df, tag, verbose))
+  adjs.update(travel(row, context_df, tag, verbose))
   adjs.update(speed(row, context_df, tag, verbose))
   adjs.update(length(row, context_df, tag, verbose))
 
@@ -179,12 +180,11 @@ def length(row, context_df, tag, verbose):
 def twistiness(row, context_df, tag, verbose):
   PCT_THRESHOLD = 0.65
   suffix_to_adjective = {
-    ' - % no twist': 'front-facing',
-    ' - % 90+ twist': 'twisty',
-    ' - % diagonal+ twist': 'diagonal twisty',
+    ' - % 180 twist': '180 twists',
     ' - % far diagonal+ twist': 'has hard diagonal twists',
-    ' - mean travel (mm)': 'travel',
-    ' - 80% travel (mm)': 'travel',
+    ' - % diagonal+ twist': 'diagonal twisty',
+    ' - % 90+ twist': 'twisty',
+    ' - % no twist': 'front-facing',
   }
 
   adjs = dict()
@@ -193,12 +193,32 @@ def twistiness(row, context_df, tag, verbose):
     if col in row.index:
       val, context = row[col], context_df[col]
       pct = sum(context < val) / len(context)
-      if pct >= PCT_THRESHOLD:
-        adjs[adjective] = pct
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
+      if pct >= PCT_THRESHOLD:
+        adjs[adjective] = pct
+        # Only add top twistiness adjective
+        break
   return adjs
 
+
+def travel(row, context_df, tag, verbose):
+  PCT_THRESHOLD = 0.75
+  suffix_to_adjective = {
+    ' - mean travel (mm)': 'travel',
+    ' - 80% travel (mm)': 'travel',
+  }
+  adjs = dict()
+  for suffix, adjective in suffix_to_adjective.items():
+    col = f'{tag}{suffix}'
+    if col in row.index:
+      val, context = row[col], context_df[col]
+      pct = sum(context < val) / len(context)
+      if verbose:
+        print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
+      if pct >= PCT_THRESHOLD:
+        adjs[adjective] = pct
+  return adjs
 
 '''
   Run

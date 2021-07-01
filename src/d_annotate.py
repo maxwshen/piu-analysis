@@ -204,8 +204,8 @@ def bool_featurize(df, col):
 
   if ts_lens:
     start, end = ts_ranges[np.argmax(ts_lens)]
-    nps_of_longest_mean = np.mean(df[nps_col].iloc[start:end])
-    nps_of_longest_median = np.median(df[nps_col].iloc[start:end])
+    nps_of_longest_mean = np.nanmean(df[nps_col].iloc[start:end])
+    nps_of_longest_median = np.nanmedian(df[nps_col].iloc[start:end])
     max_len = max(ts_lens)
     time_longest = max_len / nps_of_longest_mean
   else:
@@ -240,16 +240,19 @@ def bool_featurize(df, col):
           ['close diagonal', 'far diagonal', '180'])) / len(dfs)
       pct_twist_diagfarp = sum(dfs['Twist angle'].isin(
           ['far diagonal', '180'])) / len(dfs)
+      pct_twist_180p = sum(dfs['Twist angle'] == '180') / len(dfs)
     else:
       pct_twist_nop = 0
       pct_twist_90p = 0
       pct_twist_diagp = 0
       pct_twist_diagfarp = 0
+      pct_twist_180p = 0
     add_stats = {
       f'{col} - % no twist':            pct_twist_nop, 
       f'{col} - % 90+ twist':           pct_twist_90p, 
       f'{col} - % diagonal+ twist':     pct_twist_diagp, 
       f'{col} - % far diagonal+ twist': pct_twist_diagfarp, 
+      f'{col} - % 180 twist':           pct_twist_180p, 
     }
     stats.update(add_stats)
 
