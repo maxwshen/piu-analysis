@@ -440,8 +440,11 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
         if level < _params.hold_bracket_level_threshold:
           hold = 'jack'
         else:
-          total_dps = sum(any(x in line for x in list('12')) for line in lines_holds)
-          if total_dps == 1:
+          has_dp = lambda line: any(x in line for x in list('12'))
+          dp_lines = [line for line in lines_holds if has_dp(line)]
+          dp_count = lambda line: line.count('1') + line.count('2')
+          num_dps = sum(dp_count(line) for line in dp_lines)
+          if len(dp_lines) == 1 and num_dps == 1:
             hold = 'jack'
           else:
             hold = 'jackoralternateorfree'
@@ -758,7 +761,9 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  nm = 'Canon D - BanYa D17 arcade'
+  # nm = 'Canon D - BanYa D17 arcade'
+  # nm = 'Shock - BEAST D15 arcade'
+  nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
