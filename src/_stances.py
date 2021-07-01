@@ -99,7 +99,8 @@ class Stances():
       footposs = [self.get_footpos(limb, panel, use_brackets) for panel in panels]
       footposs = set().union(*footposs)
       # add limb's pos from previous stance
-      footposs.add(limb_to_pos[limb])
+      if limb in limb_to_pos:
+        footposs.add(limb_to_pos[limb])
       return list(footposs)
 
     ps = [get_positions(limb, active_panels) for limb in limbs]

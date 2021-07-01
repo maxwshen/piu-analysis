@@ -611,6 +611,11 @@ def save_annotations(sc_nm, line_nodes, unif_ds, motif_ds):
 
 
 def load_annotations(fold, sc_nm):
+  fn = fold + f'{sc_nm}-uniform.pkl'
+  if not os.path.isfile(fn):
+    print(f'ERROR: File not found in segment')
+    raise Exception(f'ERROR: File not found in segment')
+
   with open(fold + f'{sc_nm}-uniform.pkl', 'rb') as f:
     unif_d = pickle.load(f)
   with open(fold + f'{sc_nm}-motif.pkl', 'rb') as f:
@@ -763,7 +768,8 @@ def main():
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
-  nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  nm = 'Slam - Novasonic D19 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'

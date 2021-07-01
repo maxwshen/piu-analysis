@@ -277,7 +277,8 @@ def main():
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
-  nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  nm = 'Slam - Novasonic D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
@@ -286,6 +287,7 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
+  # nm = 'Good Night - Dreamcatcher D19 arcade'
 
   run_single(nm)
   return
