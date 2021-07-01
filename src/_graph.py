@@ -212,12 +212,12 @@ class Graph():
       for twohits in get_combo(motif_twohits):
         for hold in get_combo(motif_hold):
           # Don't filter hold at branch
-          if hold in ['alternate', 'free']:
-            path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
-                jfs, twohits, 'any')
-          elif hold == 'jack':
+          if hold == 'jack':
             path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
                 jfs, twohits, hold)
+          else:
+            path_sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+                jfs, twohits, 'any')
           out_sas += path_sas
           ntags += [f'{jfs}-{twohits}-{hold}']*len(path_sas)
     return out_sas, ntags

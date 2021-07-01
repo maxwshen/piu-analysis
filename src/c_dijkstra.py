@@ -274,7 +274,8 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'

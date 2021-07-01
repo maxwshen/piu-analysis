@@ -757,7 +757,8 @@ def main():
   # nm = 'V3 - Beautiful Day S17 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
