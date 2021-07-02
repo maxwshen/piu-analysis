@@ -92,6 +92,8 @@ def parse_line(line):
     'v': '0',
     's': '0',
     'S': '0',
+    'E': '0',
+    'I': '1',
     '4': '2',
     '6': '2',
   }
@@ -101,3 +103,7 @@ def parse_line(line):
 
 def excel_refmt(string):
   return f'`{string}'
+
+
+def hd_to_fulldouble(line):
+  return '00' + line + '00'

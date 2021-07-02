@@ -14,23 +14,32 @@ from functools import reduce
 
 df = pd.read_csv(inp_dir + 'all_stepcharts.csv', index_col=0)
 print('Total stepcharts:', len(df))
+
+# unlabeled co-op charts
+filter_charts = [
+  'Witch Doctor - BanYa DP21 arcade infinity',
+  'Cleaner - Doin DP17 arcade infinity',
+  'Dream To Nightmare - Nightmare DP16 arcade infinity',
+]
+
+general_filters = [
+  (df['METER'] != 99),
+  (~df['Name (unique)'].isin(filter_charts)),
+]
+
 subsets = {
   'charts_singles': [
-    (df['METER'] != 99),
     (df['Steptype simple'].str.contains('S')),
   ],
   'charts_doubles': [
-    (df['METER'] != 99),
     (df['Steptype simple'].str.contains('D')),
   ],
-  'charts_all': [
-    (df['METER'] != 99),
-  ]
+  'charts_all': [],
 }
 
 
 def subset(subset_name):
-  filters = subsets[subset_name]
+  filters = general_filters + subsets[subset_name]
   dfs = [df[filt] for filt in filters]
   intersect = lambda df1, df2: pd.merge(df1, df2, how='inner')
   mdf = reduce(intersect, dfs)

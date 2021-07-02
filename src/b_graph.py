@@ -85,6 +85,8 @@ def form_graph(nm, subset_measures = None):
   fakes = warp_data(warps, fakes)
   beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
+  beat_to_lines = handle_halfdouble(beat_to_lines)
+
   nodes['init'] = {
     'Time': time,
     'Beat': beat,
@@ -353,10 +355,13 @@ def add_empty_lines(beats_to_lines, beats_to_incs):
   example_line = list(beats_to_lines.values())[0]
   empty_line = '0'*len(example_line)
 
+  # start at beat 0 
+  beats_to_incs[-1] = 1
+
   add_beats_to_lines = {}
   add_beats_to_incs = {}
   beats = set(beats_to_incs.keys())
-  for beat in beats_to_incs:
+  for beat in sorted(beats_to_incs.keys()):
     next_beat = beat + beats_to_incs[beat]
     if next_beat not in beats:
       next_beats = [b for b in beats if b > beat]
@@ -376,7 +381,6 @@ def add_empty_lines(beats_to_lines, beats_to_incs):
   sorted_beats = sorted(list(beats_to_lines.keys()))
   beats_to_lines = {k: beats_to_lines[k] for k in sorted_beats}
   beats_to_incs = {k: beats_to_incs[k] for k in sorted_beats}
-
   return beats_to_lines, beats_to_incs
 
 
@@ -445,6 +449,10 @@ def update_time(time, beat, beat_increment, bpm, bpms):
     # 1 or more bpm updates before next note line.
     # For each bpm update, update beat, time (using bpm+beat), and bpm.
     bi = next_bpm_update_beat - beat
+    if bi < 0:
+      print('Error: Negative beat increment')
+      import code; code.interact(local=dict(globals(), **locals()))
+      raise Exception('Error: Time decreased')
     time += bi * (60 / bpm)
     beat += bi
     if beat >= bpms[0][0]:
@@ -452,17 +460,18 @@ def update_time(time, beat, beat_increment, bpm, bpms):
       bpm = bpms[0][1]
       bpms = bpms[1:]
       next_bpm_update_beat = bpms[0][0]
-    assert bpm is not None, 'ERROR: Failed to set bpm'
+    assert bpm is not None, 'Error: Failed to set bpm'
 
   # No more bpm updates before next note line.
   # Update time. No need to update beat, bpm.
   if beat < next_note_beat:
     bi = next_note_beat - beat
     time += bi * (60 / bpm)
-  assert bpm is not None, 'ERROR: Failed to set bpm'
+  assert bpm is not None, 'Error: Failed to set bpm'
   # print(beat, bpm)
   if time < orig_time:
-    print('ERROR: Time decreased')
+    print('Error: Time decreased')
+    import code; code.interact(local=dict(globals(), **locals()))
     raise Exception('ERROR: Time decreased')
   return time, bpm, bpms  
 
@@ -489,6 +498,16 @@ def get_init_bpm(beat, bpms):
     sys.exit(1)
   return bpm, bpms
 
+
+def handle_halfdouble(beat_to_lines):
+  '''
+    Add 00 to each side of lines
+  '''
+  example_line = list(beat_to_lines.values())[0]
+  if len(example_line) == 6:
+    return {k: _notelines.hd_to_fulldouble(v) for k, v in beat_to_lines.items()}
+  else:
+    return beat_to_lines
 
 '''
   Logging, IO
@@ -625,12 +644,14 @@ def main():
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
   # nm = 'Good Night - Dreamcatcher S20 arcade'
-  nm = 'Closer to Heaven - MePuma S7 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
+  # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
+  # nm = 'Cowgirl - Bambee HD11 arcade'
+  # nm = 'Chicken Wing - BanYa HD16 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -644,7 +665,7 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
-  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
