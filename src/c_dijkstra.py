@@ -152,15 +152,16 @@ def parse_sa_to_limb_action(sa: str) -> dict:
   '''
     Tuple = (Left foot, right foot, left hand, right hand)
   '''
-  actions = sa[sa.index(';'):].split(',') + ['--', '--']
+  actions = sa[sa.index(';')+1:].split(',') + ['--', '--']
   limbs = ('Left foot', 'Right foot', 'Left hand', 'Right hand')
   d = dict()
   res = []
   for limb, action in zip(limbs, actions):
-    if '1' in action or '2' in action or '4' in action:
-      d[limb] = 1
-    else:
-      d[limb] = np.nan
+    d[limb] = action.replace('-', '')
+    # if '1' in action or '2' in action or '4' in action:
+    #   d[limb] = 1
+    # else:
+    #   d[limb] = np.nan
   return d
 
 
@@ -265,7 +266,7 @@ def main():
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
-  # nm = 'Super Fantasy - SHK S16 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Hyperion - M2U S20 shortcut'
@@ -279,7 +280,7 @@ def main():
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Slam - Novasonic D19 arcade'
-  nm = 'Emperor - BanYa D17 arcade'
+  # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'

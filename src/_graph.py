@@ -203,6 +203,7 @@ class Graph():
 
   '''
     Chart hints
+    - Currently requires all lines to have an annotation, because switching back to default behavior in middle of tag is not implemented
   '''
   def get_chart_hints(self, nm):
     # hints[beat]['Left foot']
@@ -288,7 +289,7 @@ class Graph():
         hold: ['any', 'jack', 'alternate', 'free']
       Returns filtered sas and list of tags
     '''
-    if '4' in aug_line:
+    if '4' in aug_line or '3' in aug_line:
       if any(x in aug_line for x in list('12')):
         if hold in ['jack', 'alternate']:
           return self.filter_hold(prev_sa, sas, hold)

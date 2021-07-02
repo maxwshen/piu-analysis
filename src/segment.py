@@ -195,6 +195,11 @@ def get_active_hold_motifs(lines, features, beats):
         in_hold = True
       elif any(x in lines[i] for x in list('4')) and '2' in lines[i]:
         in_hold = True
+      elif '3' in lines[i] and any(x in lines[i] for x in '12'):
+        all_motifs[f'hold-{num_found}'] = [(beats[i], beats[i])]
+        num_found += 1
+        i += 1
+        j += 1
       else:
         i += 1
         j += 1
@@ -436,7 +441,7 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
       # Hold
       lines_holds = get_key_in_section(line_nodes, beats, section,
           'Line with active holds')
-      if any('4' in lineh for lineh in lines_holds):
+      if any(bool('4' in lineh or '3' in lineh) for lineh in lines_holds):
         if level < _params.hold_bracket_level_threshold:
           hold = 'jack'
         else:
@@ -697,6 +702,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
+  nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
@@ -770,7 +776,7 @@ def main():
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Slam - Novasonic D19 arcade'
-  nm = 'Emperor - BanYa D17 arcade'
+  # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
