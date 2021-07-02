@@ -286,8 +286,17 @@ def parse_lines_with_warps(measures, warps):
         raise ValueError(f'Bad symbol found in line, {line}')
       
       if not beat_in_any_warp(unwarped_beat, warps):
-        beats_to_lines[warped_beat] = line
-        beats_to_increments[warped_beat] = beat_increment
+        if warped_beat not in beats_to_lines:
+          beats_to_lines[warped_beat] = line
+          beats_to_increments[warped_beat] = beat_increment
+        else:
+          # at beginning and end of warp, we attempt to assign to the same beat
+          orig_line = beats_to_lines[warped_beat]
+          if _notelines.has_notes(orig_line):
+            pass
+          elif _notelines.has_notes(line):
+            beats_to_lines[warped_beat] = line
+            beats_to_increments[warped_beat] = beat_increment
         if not beat_begins_any_warp(unwarped_beat, warps):
           warped_beat += beat_increment
         if set(line) != set('0'):
@@ -323,13 +332,14 @@ def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
   beats = list(nonempty_btol.keys())
   assert beats == sorted(beats), 'ERROR: Beats are not sorted by default'
   ok_beats = []
-  lines = list(nonempty_btol.values())
+  lines = [nonempty_btol[beat] for beat in sorted(beats)]
   for i in range(len(lines) - 1):
     line1, line2 = lines[i], lines[i+1]
     if set(line1) == set(list('03')) and line1 == line2:
       pass
     else:
       ok_beats.append(beats[i])
+  ok_beats.append(len(lines)-1)
 
   filt_beats_to_lines = {k: v for k, v in beats_to_lines.items() if k in ok_beats}
   filt_beats_to_incs = {k: v for k, v in beats_to_incs.items() if k in ok_beats}
@@ -389,9 +399,8 @@ def total_warp_beat(beat, warps):
 
 
 '''
-  Fake notes
-  - Currently, handle only fake note sections
-  - TODO: Handle individual fake notes
+  Fake note sections
+  Individual fake notes are handled in _notelines.parse_line
 '''
 def parse_fakes(fakes):
   fake_list = []
@@ -489,6 +498,20 @@ def output_log(message):
   return
 
 
+def summarize_graph(nm, nodes):
+  dd = defaultdict(list)
+  cols = ['Time', 'Beat', 'BPM', 'Line', 'Line with active holds']
+  for node in nodes:
+    for col in cols:
+      item = nodes[node].get(col, '')
+      if col in ['Line', 'Line with active holds']:
+        item = _notelines.excel_refmt(item)
+      dd[col].append(item)
+  df = pd.DataFrame(dd)
+  df.to_csv(out_dir + f'{nm}.csv')
+  return
+
+
 def load_data(inp_dir, sc_nm):
   fn = inp_dir + f'{sc_nm}.pkl'
   if not os.path.isfile(fn):
@@ -520,6 +543,8 @@ def run_single(sc_nm):
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump((nodes, edges_out, edges_in), f)
   # output_log('Success')
+
+  summarize_graph(sc_nm, nodes)
   return
 
 
@@ -596,7 +621,9 @@ def main():
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Fake notes
-  nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'

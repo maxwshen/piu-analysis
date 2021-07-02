@@ -10,7 +10,7 @@ from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
-import _movement, _params, _memoizer, _stances, _qsub
+import _movement, _params, _memoizer, _stances, _qsub, _notelines
 import _graph, b_graph, segment, segment_edit, _stepcharts, _customcost
 
 # Default params
@@ -137,9 +137,8 @@ def backtrack_annotate(graph) -> pd.DataFrame:
 
   df = pd.DataFrame(dd)
   df = df.iloc[::-1].reset_index(drop=True)
-  excel_refmt = lambda s: f'`{s}'
-  df['Line'] = [excel_refmt(s) for s in df['Line']]
-  df['Line with active holds'] = [excel_refmt(s) for s in df['Line with active holds']]
+  df['Line'] = [_notelines.excel_refmt(s) for s in df['Line']]
+  df['Line with active holds'] = [_notelines.excel_refmt(s) for s in df['Line with active holds']]
 
   return df
 
@@ -243,7 +242,9 @@ def main():
   # nm = 'Bee - BanYa S15 arcade'
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
-  nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'God Mode feat. skizzo - Nato S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'Tepris - Doin S17 arcade'

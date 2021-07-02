@@ -61,6 +61,8 @@ def add_active_holds(line, active_holds, panel_to_idx):
 @functools.lru_cache(maxsize=None)
 def parse_line(line):
   '''
+    https://github.com/rhythmlunatic/stepmania/wiki/Note-Types#stepf2-notes
+    https://github.com/stepmania/stepmania/wiki/Note-Types
     Handle lines like:
       0000F00000
       00{2|n|1|0}0000000    
@@ -72,14 +74,30 @@ def parse_line(line):
     if '|' not in w:
       nl += w
     else:
-      nl += w[0]
+      [note_type, attribute, fake_flag, x_offset] = w.split('|')
+      if fake_flag == '1':
+        nl += '0'
+      else:
+        if attribute in ['v', 'h']:
+          nl += '0'
+        else:
+          nl += note_type
   line = nl
 
+  # F is fake note
   replace = {
-    'F': '1',
+    'F': '0',
     'M': '0',
+    'V': '0',
+    'v': '0',
+    's': '0',
+    'S': '0',
     '4': '2',
     '6': '2',
   }
   line = line.translate(str.maketrans(replace))
   return line
+
+
+def excel_refmt(string):
+  return f'`{string}'

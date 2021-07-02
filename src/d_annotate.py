@@ -404,9 +404,11 @@ def main():
   # nm = 'Bee - BanYa S15 arcade'
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
-  nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
+  nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

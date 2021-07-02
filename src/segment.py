@@ -602,9 +602,8 @@ def save_annotations(sc_nm, line_nodes, unif_ds, motif_ds):
       print(f'ERROR: {col} not monotonic')
       # raise Exception()
 
-  excel_refmt = lambda s: f'`{s}'
-  df['Line'] = [excel_refmt(s) for s in df['Line']]
-  df['Line with active holds'] = [excel_refmt(s) for s in df['Line with active holds']]
+  df['Line'] = [_notelines.excel_refmt(s) for s in df['Line']]
+  df['Line with active holds'] = [_notelines.excel_refmt(s) for s in df['Line with active holds']]
   df.to_csv(out_dir + f'{sc_nm}.csv')
 
   with open(out_dir + f'{sc_nm}-uniform.pkl', 'wb') as f:
@@ -702,7 +701,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
@@ -759,7 +758,9 @@ def main():
   # nm = 'Elvis - AOA S15 arcade'
 
   # Test: Fake notes
-  nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Club Night - Matduke S18 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Fixed
   # nm = 'Acquaintance - Outsider S17 arcade'
