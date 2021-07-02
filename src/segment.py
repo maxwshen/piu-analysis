@@ -732,7 +732,6 @@ def main():
   # nm = 'Bee - BanYa S15 arcade'
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
-  # nm = 'Club Night - Matduke S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'Obelisque - ESTi x M2U S17 arcade'
@@ -758,6 +757,9 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Elvis - AOA S15 arcade'
+
+  # Test: Fake notes
+  nm = 'Club Night - Matduke S18 arcade'
 
   # Fixed
   # nm = 'Acquaintance - Outsider S17 arcade'

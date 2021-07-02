@@ -404,14 +404,14 @@ def main():
   # nm = 'Bee - BanYa S15 arcade'
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
-  # nm = 'Club Night - Matduke S18 arcade'
+  nm = 'Club Night - Matduke S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
-  nm = 'Emperor - BanYa D17 arcade'
+  # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'

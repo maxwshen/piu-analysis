@@ -194,7 +194,7 @@ class Graph():
       if not bad:
         return
 
-    if self.line_nodes[line_node2]['BPM'] >= 1000 or timedelta < 0.001:
+    if timedelta < 0.001:
       print(f'ERROR: Notes are too close together, likely from high bpm. {line1} {line2}')
       import code; code.interact(local=dict(globals(), **locals()))
       sys.exit(1)

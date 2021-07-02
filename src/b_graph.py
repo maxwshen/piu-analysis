@@ -25,6 +25,7 @@ util.ensure_dir_exists(out_dir)
 all_notes = pickle.load(open(inp_dir_a + f'notes.pkl', 'rb'))
 all_bpms = pickle.load(open(inp_dir_a + f'bpms.pkl', 'rb'))
 all_warps = pickle.load(open(inp_dir_a + f'warps.pkl', 'rb'))
+all_fakes = pickle.load(open(inp_dir_a + f'fakes.pkl', 'rb'))
 
 sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col=0)
 
@@ -78,7 +79,11 @@ def form_graph(nm, subset_measures = None):
 
   warps = parse_warps(all_warps[nm])
   beat_to_lines, beats_to_increments = parse_lines_with_warps(measures, warps)
-  bpms = warp_bpms(warps, bpms)
+  bpms = warp_data(warps, bpms)
+
+  fakes = parse_fakes(all_fakes[nm])
+  fakes = warp_data(warps, fakes)
+  beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
   nodes['init'] = {
     'Time': time,
@@ -365,12 +370,12 @@ def add_empty_lines(beats_to_lines, beats_to_incs):
   return beats_to_lines, beats_to_incs
 
 
-def warp_bpms(warps, bpms):
-  adj_bpms = []
-  for beat, bpm in bpms:
+def warp_data(warps, data):
+  adj_data = []
+  for beat, val in data:
     new_start = beat - total_warp_beat(beat, warps)
-    adj_bpms.append((new_start, bpm))
-  return adj_bpms
+    adj_data.append((new_start, val))
+  return adj_data
 
 
 def total_warp_beat(beat, warps):
@@ -381,6 +386,35 @@ def total_warp_beat(beat, warps):
     elif start <= end <= beat:
       tot += beat - start
   return tot
+
+
+'''
+  Fake notes
+  - Currently, handle only fake note sections
+  - TODO: Handle individual fake notes
+'''
+def parse_fakes(fakes):
+  fake_list = []
+  for line in fakes.split(','):
+    [beat, length] = line.split('=')
+    fake_list.append([float(beat), float(length)])
+  return fake_list
+
+
+def filter_fakes(beat_to_lines, fakes):
+  example_line = list(beat_to_lines.values())[0]
+  empty_line = '0' * len(example_line)
+
+  fake_ranges = [(beat, beat+val) for beat, val in fakes]
+  inrange = lambda x, range: range[0] <= x <= range[1]
+
+  new_beat_to_lines = dict()
+  for beat, line in beat_to_lines.items():
+    if any(inrange(beat, r) for r in fake_ranges):
+      new_beat_to_lines[beat] = empty_line
+    else:
+      new_beat_to_lines[beat] = line
+  return new_beat_to_lines
 
 
 '''
@@ -423,14 +457,13 @@ def update_time(time, beat, beat_increment, bpm, bpms):
 
 
 def parse_bpm(bpms):
-  '''
-  '''
   bpm_list = []
   for line in bpms.split(','):
     [beat, bpm] = line.split('=')
-    if float(bpm) < 999:
+    bpm_list.append([float(beat), float(bpm)])
+    # if float(bpm) < 999:
       # Ignore bpm speedups for visual gimmicks
-      bpm_list.append([float(beat), float(bpm)])
+      # Helps parse some charts, but causes time desyncs
   bpm_list.append([np.inf, 0])
   return bpm_list
 
@@ -520,7 +553,6 @@ def main():
   # nm = 'Bee - BanYa S15 arcade'
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
-  # nm = 'Club Night - Matduke S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'Obelisque - ESTi x M2U S17 arcade'
@@ -563,6 +595,9 @@ def main():
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
+  # Test: Fake notes
+  nm = 'Club Night - Matduke S18 arcade'
+
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
@@ -598,7 +633,7 @@ def main():
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Slam - Novasonic D19 arcade'
-  nm = 'Emperor - BanYa D17 arcade'
+  # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Loki - Lotze D19 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
