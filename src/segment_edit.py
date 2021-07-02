@@ -90,6 +90,7 @@ def native_s20(beats, features, annots, motifs):
 
 
 def final_audition_s15(beats, features, annots, motifs):
+  # Has jacks and footswitches; distinguish by beat since
   def jackfootswitch(annots, beat, ft):
     if ft[feature_mapper['repeated line']]:
       if ft[feature_mapper['beat since']] in [0.25]:
@@ -103,7 +104,27 @@ def final_audition_s15(beats, features, annots, motifs):
     jackfootswitch(annots, beat, ft)
   return annots, motifs
 
+
+def emperor_d17(beats, features, annots, motifs):
+  # Hold taps should be free
+  new_motifs = {}
+  for k, v in motifs.items():
+    [jfs, twohit, hold] = v.split('-')
+    forced_hold = 'free'
+    new_motifs[k] = '-'.join([jfs, twohit, forced_hold])
+  
+  new_annots = {}
+  for beat, feature in zip(beats, features):
+    if beat in annots:
+      annot = annots[beat]
+      if annot != 'alternate':
+        new_annots[beat] = annot
+  return new_annots, new_motifs
+
+
+
 overrides = {
   'Native - SHK S20 arcade': native_s20,
   'Final Audition - BanYa S15 arcade': final_audition_s15,
+  # 'Emperor - BanYa D17 arcade': emperor_d17,
 }

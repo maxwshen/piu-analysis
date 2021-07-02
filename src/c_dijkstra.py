@@ -11,9 +11,7 @@ from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
 import _movement, _params, _memoizer, _stances, _qsub
-import _graph, b_graph, segment, segment_edit, _stepcharts
-
-scinfo = _stepcharts.SCInfo()
+import _graph, b_graph, segment, segment_edit, _stepcharts, _customcost
 
 # Default params
 inp_dir_b = _config.OUT_PLACE + 'b_graph/'
@@ -24,6 +22,7 @@ util.ensure_dir_exists(out_dir)
 
 log_fn = ''
 stats_d = defaultdict(lambda: 0)
+
 
 '''
   Primary
@@ -190,15 +189,16 @@ def run_single(nm):
   util.exists_empty_fn(log_fn)
   print(nm)
 
-  level = scinfo.name_to_level[nm]
-  move_skillset = _movement.level_to_moveskillset(level)
-
+  move_skillset = _movement.nm_to_moveskillset(nm)
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
   annots, motifs = segment.load_annotations(inp_dir_segment, nm)
 
+  custom_costs = _customcost.get_custom_cost(nm)
+
   steptype = line_nodes['init']['Steptype']
-  mover = _movement.Movement(style=steptype, move_skillset=move_skillset)
-  graph = _graph.Graph(mover, line_nodes, line_edges_out, annots, motifs)
+  mover = _movement.Movement(style=steptype, 
+      move_skillset=move_skillset, custom_cost=custom_costs)
+  graph = _graph.Graph(nm, mover, line_nodes, line_edges_out, annots, motifs)
 
   graph = dijkstra(graph)
   df = backtrack_annotate(graph)
@@ -278,7 +278,8 @@ def main():
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
-  nm = 'Slam - Novasonic D19 arcade'
+  # nm = 'Slam - Novasonic D19 arcade'
+  nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'

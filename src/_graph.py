@@ -2,7 +2,8 @@
   Graph for Dijkstra's.
   Nodes are stance-actions at specific lines.
 '''
-import sys, functools, itertools
+import sys, os, functools, itertools
+import _config
 import numpy as np, pandas as pd
 from collections import defaultdict
 from typing import List, Dict, Set, Tuple
@@ -10,7 +11,8 @@ from typing import List, Dict, Set, Tuple
 import _memoizer, _params, _stances, segment
 
 class Graph():
-  def __init__(self, mover, line_nodes, line_edges, annots, motifs):
+  def __init__(self, nm, mover, line_nodes, line_edges, annots, motifs):
+    self.nm = nm
     self.stats_d = defaultdict(lambda: 0)
     self.mover = mover    
     self.stances = _stances.Stances(style=mover.style)
@@ -40,6 +42,9 @@ class Graph():
     self.annots, self.motifs = segment.filter_annots(self.beats, annots, motifs)
     self.beat_to_motif = self.get_beat_to_motif()
     self.beat_to_motiflen = self.get_beat_to_motif_len()
+
+    self.hints = self.get_chart_hints(nm)
+    self.has_hints = bool(self.hints is not None)
     pass
 
 
@@ -127,13 +132,17 @@ class Graph():
       # Typical case
       sas = self.stances.stanceaction_generator(prev_stance, aug_line)
 
-      if motif_branch:
-        sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
-            motif_jfs, motif_twohits, motif_hold)
-      else:
-        sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
-            jfs, twohits, hold)
+      if self.has_hints:
+        sas = self.filter_sas_by_hints(sas, beat)
         ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
+      else:
+        if motif_branch:
+          sas, ntags = self.motif_branch(prev_sa, sas, aug_line, annot,
+              motif_jfs, motif_twohits, motif_hold)
+        else:
+          sas = self.filter_stanceactions(prev_sa, sas, aug_line, annot,
+              jfs, twohits, hold)
+          ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
 
       for sa, ntag in zip(sas, ntags):
         yield get_node_name(line_node, sa, ntag)
@@ -190,6 +199,53 @@ class Graph():
       import code; code.interact(local=dict(globals(), **locals()))
       sys.exit(1)
     return
+
+
+  '''
+    Chart hints
+  '''
+  def get_chart_hints(self, nm):
+    # hints[beat]['Left foot']
+    hint_fn = _config.DATA_DIR + f'hints/{nm}.csv'
+    if not os.path.isfile(hint_fn):
+      return None
+
+    print(f'Found chart hints - ignoring segment annotations and motifs')
+    hint_df = pd.read_csv(hint_fn, index_col=0)
+
+    def parse_hint(hint):
+      # Read in as floats and np.nan. Convert to strings
+      return '' if np.isnan(hint) else str(int(hint))
+
+    left_hints = [parse_hint(hint) for hint in hint_df['Left foot hint']]
+    right_hints = [parse_hint(hint) for hint in hint_df['Right foot hint']]
+    beats = hint_df['Beat']
+
+    hints = {}
+    for beat, left_hint, right_hint in zip(beats, left_hints, right_hints):
+      hints[beat] = (left_hint, right_hint)
+    return hints
+
+
+  def filter_sas_by_hints(self, sas, beat):
+    def foot_hint_match(d, foot, hint):
+      acts = d['limb_to_heel_action'][foot] + d['limb_to_toe_action'][foot]
+      if hint == 'nan':
+        return acts == '--'
+      else:
+        return all(x in acts for x in hint)
+
+    feet = ['Left foot', 'Right foot']
+    hints = self.hints[beat]
+    new_sas = []
+    for sa in sas:
+      d = self.parse_sa(sa)
+      ok = all(foot_hint_match(d, foot, hint) for foot, hint in zip(feet, hints))
+      if ok:
+        new_sas.append(sa)
+    # print(f'{len(sas)}'.ljust(6), f'{len(new_sas)}')
+    # import code; code.interact(local=dict(globals(), **locals()))
+    return new_sas
 
 
   '''

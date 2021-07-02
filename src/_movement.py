@@ -6,10 +6,14 @@ import numpy as np, pandas as pd
 import os, copy
 from typing import List, Dict, Set, Tuple
 
-import _positions, _notelines, _graph
+import _positions, _notelines, _graph, _stepcharts
 
 
-def level_to_moveskillset(level):
+scinfo = _stepcharts.SCInfo()
+
+
+def nm_to_moveskillset(nm):
+  level = scinfo.name_to_level[nm]
   if level <= 11:
     return 'beginner'
   else:
@@ -26,7 +30,7 @@ class Movement():
       _params.py
       positions_<singles/doubles>.csv
   '''
-  def __init__(self, style = 'singles', move_skillset = 'basic'):
+  def __init__(self, style = 'singles', move_skillset = 'basic', custom_cost = None):
     self.style = style
     self.move_skillset = move_skillset
 
@@ -42,8 +46,11 @@ class Movement():
         'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
       ]
 
-    self.costs = _params.movement_costs[move_skillset]['costs']
     self.params = _params.movement_costs[move_skillset]['parameters']
+    if custom_cost:
+      self.costs = custom_cost
+    else:
+      self.costs = _params.movement_costs[move_skillset]['costs']
 
     self.min_cost = sum(cost for cost in self.costs.values() if cost < 0)
 

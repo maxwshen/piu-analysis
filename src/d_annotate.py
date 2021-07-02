@@ -21,7 +21,6 @@ NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
-scinfo = _stepcharts.SCInfo()
 mover = None
 
 import _annotate_local, _annotate_global, _annotate_post
@@ -331,9 +330,7 @@ def run_single(nm):
   move_skillset = 'basic'
   print(nm, move_skillset)
 
-  level = scinfo.name_to_level[nm]
-  move_skillset = _movement.level_to_moveskillset(level)
-
+  move_skillset = _movement.nm_to_moveskillset(nm)
   line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
 
   steptype = line_nodes['init']['Steptype']
@@ -413,7 +410,8 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
+  nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
   # nm = '8 6 - DASU D21 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama D18 arcade'
