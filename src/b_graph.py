@@ -404,6 +404,8 @@ def total_warp_beat(beat, warps):
 '''
 def parse_fakes(fakes):
   fake_list = []
+  if fakes == '':
+    return fake_list
   for line in fakes.split(','):
     [beat, length] = line.split('=')
     fake_list.append([float(beat), float(length)])
@@ -623,7 +625,8 @@ def main():
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
   # nm = 'Good Night - Dreamcatcher S20 arcade'
-  nm = 'God Mode feat. skizzo - Nato S18 arcade'
+  nm = 'Closer to Heaven - MePuma S7 arcade'
+  # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
   # nm = 'V3 - Beautiful Day S17 arcade'

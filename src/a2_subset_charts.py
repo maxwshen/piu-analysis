@@ -23,6 +23,9 @@ subsets = {
     (df['METER'] != 99),
     (df['Steptype simple'].str.contains('D')),
   ],
+  'charts_all': [
+    (df['METER'] != 99),
+  ]
 }
 
 

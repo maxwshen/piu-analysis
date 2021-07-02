@@ -759,8 +759,8 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
-  nm = 'God Mode feat. skizzo - Nato S18 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
+  # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Fixed
   # nm = 'Acquaintance - Outsider S17 arcade'
