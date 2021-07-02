@@ -253,8 +253,6 @@ class Movement():
       - foot center
       - average of heel and toe
 
-      Only grant no movement reward for basic heel toe and air positions, not for bracket positions (deprecated - grant reward)
-
       Do not grant no-movement reward when alternating heel and toe on same foot
     '''
     cost = 0
@@ -389,7 +387,10 @@ class Movement():
     pressing = lambda x: any([d2[pkey][x] == '1' or d2[pkey][x] == '2'
                               for pkey in pressing_keys])
     feet_pressing = [limb for limb in feet if pressing(limb)]
+
     both_feet_pressing = bool(len(feet_pressing) == 2)
+    moved = self.move_cost(d1, d2) > 0
+    both_feet_pressing_and_moved = both_feet_pressing and moved
 
     if both_feet_moved or both_feet_pressing:
       cost += self.costs['Jump']
@@ -430,7 +431,8 @@ class Movement():
 
       heel_action = d2['limb_to_heel_action'][limb]
       toe_action = d2['limb_to_toe_action'][limb]
-      no_action = bool(heel_action + toe_action == '--')
+      acts = heel_action + toe_action
+      no_action = not any(x in acts for x in list('12'))
 
       if prev_pos != curr_pos and no_action:
         cost += self.costs['Move without action']
