@@ -120,6 +120,7 @@ def form_graph(nm, subset_measures = None):
       prev_node_nm = node_nm
 
       active_panel_to_action = stance.line_to_panel_to_action(line)
+      bad_hold_releases = []
       for p in active_panel_to_action:
         a = active_panel_to_action[p]
         if a == '2':
@@ -129,10 +130,19 @@ def form_graph(nm, subset_measures = None):
             active_holds.remove(p)
           else:
             prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
-            print('Bad hold', beat, line)
-            print('\n'.join(prev_lines[-10:]))
-            import code; code.interact(local=dict(globals(), **locals()))
-            raise Exception('Bad hold')
+            print('Warning: Bad hold', beat, line)
+            # print('\n'.join(prev_lines[-10:]))
+            pidx = stance.panel_to_idx[p]
+            bad_hold_releases.append(pidx)
+            # import code; code.interact(local=dict(globals(), **locals()))
+            # raise Exception('Bad hold')
+
+      if bad_hold_releases:
+        for k in ['Line', 'Line with active holds']:
+          fixed_line = list(nodes[node_nm][k])
+          for pidx in bad_hold_releases:
+            fixed_line[pidx] = '0'
+          nodes[node_nm][k] = ''.join(fixed_line)
 
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
@@ -716,7 +726,8 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
-  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Accident - MAX S18 arcade'
+  nm = 'Requiem - MAX D23 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
