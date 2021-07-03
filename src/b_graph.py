@@ -81,9 +81,10 @@ def form_graph(nm, subset_measures = None):
   beat_to_lines, beats_to_increments = parse_lines_with_warps(measures, warps)
   bpms = warp_data(warps, bpms)
 
+  beats = list(beat_to_lines.keys())
   fakes = parse_fakes(all_fakes[nm])
-  fakes = warp_data(warps, fakes)
-  # TODO - Fakes should be processed before warps - leather d22?
+  fakes = warp_fakes(warps, fakes, beats)
+  import code; code.interact(local=dict(globals(), **locals()))
   beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
   beat_to_lines = handle_halfdouble(beat_to_lines)
@@ -404,6 +405,52 @@ def warp_data(warps, data):
   return adj_data
 
 
+def warp_fakes(warps, fakes, beats):
+  '''
+    Adjust fake ranges by warps
+    Remove fakes that are in warps
+  '''
+  adj_fakes = []
+  for beat, val in fakes:
+    fake_range = (beat, beat + val)
+    overlaps = [w for w in warps if ranges_overlap(w, fake_range)]
+    if overlaps:
+      for new_range in get_warped_fake_ranges(overlaps, fake_range, beats):
+        first_beat, range_len = new_range
+        new_start = first_beat - total_warp_beat(first_beat, warps)
+        adj_fakes.append((new_start, range_len))                
+      pass
+    else:
+      # current fake section doesn't overlap any warp, so shift by earlier warps
+      new_start = beat - total_warp_beat(beat, warps)
+      adj_fakes.append((new_start, val))
+  return adj_fakes
+
+
+def get_warped_fake_ranges(warps, fake, beats):
+  '''
+    Find consecutive ranges of beats in fake that are not in warps
+  '''
+  ranges = []
+  fake_start, fake_end = fake
+  bs = [b for b in beats if fake_start <= b <= fake_end]
+  i = 0
+  while i < len(bs):
+    if not beat_in_any_warp(bs[i], warps):
+      j = i + 1
+      while j < len(bs) and not beat_in_any_warp(bs[j], warps):
+        j += 1
+      ranges.append((bs[i], bs[j-1] - bs[i]))
+      i = j + 1
+    else:
+      i += 1
+  return ranges
+
+
+def ranges_overlap(r1, r2):
+  return r1[0] <= r2[0] <= r1[1] or r1[0] <= r2[1] <= r1[1]
+
+
 def total_warp_beat(beat, warps):
   tot = 0
   for start, end in warps:
@@ -668,7 +715,8 @@ def main():
   # nm = "Rave 'til the Earth's End - 5argon S17 arcade"
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
-  nm = 'You Got Me Crazy - MAX D18 arcade'
+  # nm = 'You Got Me Crazy - MAX D18 arcade'
+  nm = 'Accident - MAX S18 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
