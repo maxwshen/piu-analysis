@@ -136,7 +136,10 @@ def form_graph(nm, subset_measures = None):
       # import code; code.interact(local=dict(globals(), **locals()))
 
     bi = beats_to_increments[beat]
-    time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
+    try:
+      time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
+    except:
+      import code; code.interact(local=dict(globals(), **locals()))
     timer.update()
 
   # Add terminal node and edges
@@ -268,6 +271,9 @@ def beat_begins_any_warp(beat, warps):
 
 
 def parse_lines_with_warps(measures, warps):
+  '''
+    Skip over lines in warps
+  '''
   beats_per_measure = 4
   beats_to_lines = {}
   beats_to_increments = {}
@@ -294,11 +300,11 @@ def parse_lines_with_warps(measures, warps):
         else:
           # at beginning and end of warp, we attempt to assign to the same beat
           orig_line = beats_to_lines[warped_beat]
-          if _notelines.has_notes(orig_line):
-            pass
-          elif _notelines.has_notes(line):
+          if _notelines.has_notes(line):
             beats_to_lines[warped_beat] = line
             beats_to_increments[warped_beat] = beat_increment
+          elif _notelines.has_notes(orig_line):
+            pass
         if not beat_begins_any_warp(unwarped_beat, warps):
           warped_beat += beat_increment
         if set(line) != set('0'):
@@ -379,6 +385,7 @@ def add_empty_lines(beats_to_lines, beats_to_incs):
   beats_to_incs.update(add_beats_to_incs)
 
   sorted_beats = sorted(list(beats_to_lines.keys()))
+  sorted_beats = [b for b in sorted_beats if b >= 0]
   beats_to_lines = {k: beats_to_lines[k] for k in sorted_beats}
   beats_to_incs = {k: beats_to_incs[k] for k in sorted_beats}
   return beats_to_lines, beats_to_incs
@@ -389,6 +396,11 @@ def warp_data(warps, data):
   for beat, val in data:
     new_start = beat - total_warp_beat(beat, warps)
     adj_data.append((new_start, val))
+  start_beats = [s[0] for s in adj_data]
+  if start_beats != sorted(start_beats):
+    print(f'Error: Warping data failed - no longer in order')
+    import code; code.interact(local=dict(globals(), **locals()))
+    raise Exception(f'Error: Warping data failed - no longer in order')
   return adj_data
 
 
@@ -397,7 +409,7 @@ def total_warp_beat(beat, warps):
   for start, end in warps:
     if end <= beat:
       tot += end - start
-    elif start <= end <= beat:
+    elif start <= beat <= end:
       tot += beat - start
   return tot
 
@@ -451,7 +463,6 @@ def update_time(time, beat, beat_increment, bpm, bpms):
     bi = next_bpm_update_beat - beat
     if bi < 0:
       print('Error: Negative beat increment')
-      import code; code.interact(local=dict(globals(), **locals()))
       raise Exception('Error: Time decreased')
     time += bi * (60 / bpm)
     beat += bi
@@ -471,7 +482,6 @@ def update_time(time, beat, beat_increment, bpm, bpms):
   # print(beat, bpm)
   if time < orig_time:
     print('Error: Time decreased')
-    import code; code.interact(local=dict(globals(), **locals()))
     raise Exception('ERROR: Time decreased')
   return time, bpm, bpms  
 
@@ -652,6 +662,8 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Cowgirl - Bambee HD11 arcade'
   # nm = 'Chicken Wing - BanYa HD16 arcade'
+  # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
+  nm = 'Desaparecer - Applessoda vs MAX S20 remix'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
@@ -665,7 +677,7 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
-  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
