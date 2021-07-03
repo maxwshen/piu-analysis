@@ -83,6 +83,7 @@ def form_graph(nm, subset_measures = None):
 
   fakes = parse_fakes(all_fakes[nm])
   fakes = warp_data(warps, fakes)
+  # TODO - Fakes should be processed before warps - leather d22?
   beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
   beat_to_lines = handle_halfdouble(beat_to_lines)
@@ -136,10 +137,7 @@ def form_graph(nm, subset_measures = None):
       # import code; code.interact(local=dict(globals(), **locals()))
 
     bi = beats_to_increments[beat]
-    try:
-      time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
-    except:
-      import code; code.interact(local=dict(globals(), **locals()))
+    time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
     timer.update()
 
   # Add terminal node and edges
@@ -301,8 +299,10 @@ def parse_lines_with_warps(measures, warps):
           # at beginning and end of warp, we attempt to assign to the same beat
           orig_line = beats_to_lines[warped_beat]
           if _notelines.has_notes(line):
-            beats_to_lines[warped_beat] = line
-            beats_to_increments[warped_beat] = beat_increment
+            if orig_line.replace('2', '3') != line:
+              if orig_line.replace('2', '1') != line:
+                beats_to_lines[warped_beat] = line
+                beats_to_increments[warped_beat] = beat_increment
           elif _notelines.has_notes(orig_line):
             pass
         if not beat_begins_any_warp(unwarped_beat, warps):
@@ -664,7 +664,11 @@ def main():
   # nm = 'Chicken Wing - BanYa HD16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
   # nm = 'Desaparecer - Applessoda vs MAX S20 remix'
-  nm = '1950 - SLAM DP3 arcade'
+  # nm = '1950 - SLAM DP3 arcade'
+  # nm = "Rave 'til the Earth's End - 5argon S17 arcade"
+  # nm = 'Sarabande - MAX S20 arcade'
+  # nm = 'Leather - Doin D22 remix'
+  nm = 'You Got Me Crazy - MAX D18 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
