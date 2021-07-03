@@ -663,7 +663,8 @@ def main():
   # nm = 'Cowgirl - Bambee HD11 arcade'
   # nm = 'Chicken Wing - BanYa HD16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
-  nm = 'Desaparecer - Applessoda vs MAX S20 remix'
+  # nm = 'Desaparecer - Applessoda vs MAX S20 remix'
+  nm = '1950 - SLAM DP3 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
