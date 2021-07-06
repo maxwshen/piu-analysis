@@ -497,7 +497,10 @@ def filter_fakes(beat_to_lines, fakes):
   new_beat_to_lines = dict()
   for beat, line in beat_to_lines.items():
     if any(inrange(beat, r) for r in fake_ranges):
-      new_beat_to_lines[beat] = empty_line
+      if set(line) != set(list('03')):
+        new_beat_to_lines[beat] = empty_line
+      else:
+        new_beat_to_lines[beat] = line
     else:
       new_beat_to_lines[beat] = line
   return new_beat_to_lines
@@ -730,7 +733,8 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Requiem - MAX D23 arcade'
-  nm = 'Good Night - Dreamcatcher S17 arcade'
+  # nm = 'Good Night - Dreamcatcher S17 arcade'
+  nm = 'Fly high - Dreamcatcher S15 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

@@ -758,7 +758,8 @@ def main():
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
-  nm = 'Good Night - Dreamcatcher S17 arcade'
+  # nm = 'Good Night - Dreamcatcher S17 arcade'
+  nm = 'Fly high - Dreamcatcher S15 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
