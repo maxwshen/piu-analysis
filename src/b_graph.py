@@ -84,7 +84,7 @@ def form_graph(nm, subset_measures = None):
   beats = list(beat_to_lines.keys())
   fakes = parse_fakes(all_fakes[nm])
   fakes = warp_fakes(warps, fakes, beats)
-  import code; code.interact(local=dict(globals(), **locals()))
+  # import code; code.interact(local=dict(globals(), **locals()))
   beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
   beat_to_lines = handle_halfdouble(beat_to_lines)
@@ -134,6 +134,7 @@ def form_graph(nm, subset_measures = None):
             # print('\n'.join(prev_lines[-10:]))
             pidx = stance.panel_to_idx[p]
             bad_hold_releases.append(pidx)
+            # This forgives bad hold releases, which could be problematic downstream, and is basically a hack that doesn't solve the underlying issues
             # import code; code.interact(local=dict(globals(), **locals()))
             # raise Exception('Bad hold')
 
@@ -312,8 +313,9 @@ def parse_lines_with_warps(measures, warps):
           if _notelines.has_notes(line):
             if orig_line.replace('2', '3') != line:
               if orig_line.replace('2', '1') != line:
-                beats_to_lines[warped_beat] = line
-                beats_to_increments[warped_beat] = beat_increment
+                if orig_line.replace('3', '0') != line:
+                  beats_to_lines[warped_beat] = line
+                  beats_to_increments[warped_beat] = beat_increment
           elif _notelines.has_notes(orig_line):
             pass
         if not beat_begins_any_warp(unwarped_beat, warps):
@@ -727,7 +729,8 @@ def main():
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Accident - MAX S18 arcade'
-  nm = 'Requiem - MAX D23 arcade'
+  # nm = 'Requiem - MAX D23 arcade'
+  nm = 'Good Night - Dreamcatcher S17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
