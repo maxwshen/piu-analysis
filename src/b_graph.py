@@ -507,7 +507,7 @@ def filter_fakes(beat_to_lines, fakes):
   new_beat_to_lines = dict()
   for beat, line in beat_to_lines.items():
     if any(inrange(beat, r) for r in fake_ranges):
-      if set(line) != set(list('03')):
+      if '3' not in line:
         new_beat_to_lines[beat] = empty_line
       else:
         new_beat_to_lines[beat] = line
@@ -728,7 +728,9 @@ def main():
 
   # Test: Failures
   # nm = 'Log In - SHK S20 arcade'
-  nm = 'Shub Niggurath - Nato S24 arcade'
+  # nm = 'Shub Niggurath - Nato S24 arcade'
+  # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
+  nm = 'Club Night - Matduke D21 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
