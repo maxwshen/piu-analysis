@@ -57,8 +57,8 @@ def add_active_holds(line, active_holds, panel_to_idx):
     if aug_line[idx] == '0':
       aug_line[idx] = '4'
     elif aug_line[idx] == '1':
-      print('ERROR: Tried to place active hold 4 onto 1')
-      import code; code.interact(local=dict(globals(), **locals()))
+      # print('Error: Tried to place active hold 4 onto 1')
+      # import code; code.interact(local=dict(globals(), **locals()))
       raise Exception('Error: Tried to place active hold 4 onto 1')
   return ''.join(aug_line)
 

@@ -37,6 +37,8 @@ stance_store = {
 
 log_fn = ''
 
+WARP_RELEASE_TIME = 0.001
+
 ##
 # Functions
 ##
@@ -84,7 +86,6 @@ def form_graph(nm, subset_measures = None):
   beats = list(beat_to_lines.keys())
   fakes = parse_fakes(all_fakes[nm])
   fakes = warp_fakes(warps, fakes, beats)
-  # import code; code.interact(local=dict(globals(), **locals()))
   beat_to_lines = filter_fakes(beat_to_lines, fakes)
 
   beat_to_lines = handle_halfdouble(beat_to_lines)
@@ -103,7 +104,35 @@ def form_graph(nm, subset_measures = None):
   for beat, line in beat_to_lines.items():
     if _notelines.has_notes(line):
       # Add active holds into line as 4
-      aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
+      try:
+        aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
+      except:
+        # Error when trying to place 4 on 1
+        continue
+
+      active_panel_to_action = stance.line_to_panel_to_action(line)
+      bad_hold_releases = []
+      for p in active_panel_to_action:
+        a = active_panel_to_action[p]
+        if a == '3' and p not in active_holds:
+          # Tried to release a hold that didn't exist - remove the 3
+          prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
+          print('Notice: Caught a bad hold', beat, line)
+          # print('\n'.join(prev_lines[-10:]))
+          pidx = stance.panel_to_idx[p]
+          bad_hold_releases.append(pidx)
+          # This forgives bad hold releases, which could be problematic downstream, and is basically a hack that doesn't solve the underlying issues
+          # import code; code.interact(local=dict(globals(), **locals()))
+          # raise Exception('Bad hold')
+
+      # Tried to release a hold that didn't exist - remove the 3
+      if bad_hold_releases:
+        continue
+        # for k in ['Line', 'Line with active holds']:
+        #   fixed_line = list(nodes[node_nm][k])
+        #   for pidx in bad_hold_releases:
+        #     fixed_line[pidx] = '0'
+        #   nodes[node_nm][k] = ''.join(fixed_line)
 
       node_nm = f'{beat}'
       nodes[node_nm] = {
@@ -119,8 +148,7 @@ def form_graph(nm, subset_measures = None):
       edges_in[node_nm].append(prev_node_nm)
       prev_node_nm = node_nm
 
-      active_panel_to_action = stance.line_to_panel_to_action(line)
-      bad_hold_releases = []
+      # Update active holds
       for p in active_panel_to_action:
         a = active_panel_to_action[p]
         if a == '2':
@@ -128,24 +156,6 @@ def form_graph(nm, subset_measures = None):
         if a == '3':
           if p in active_holds:
             active_holds.remove(p)
-          else:
-            # Tried to release a hold that didn't exist - remove the 3
-            prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
-            print('Warning: Bad hold', beat, line)
-            # print('\n'.join(prev_lines[-10:]))
-            pidx = stance.panel_to_idx[p]
-            bad_hold_releases.append(pidx)
-            # This forgives bad hold releases, which could be problematic downstream, and is basically a hack that doesn't solve the underlying issues
-            # import code; code.interact(local=dict(globals(), **locals()))
-            # raise Exception('Bad hold')
-
-      # Tried to release a hold that didn't exist - remove the 3
-      if bad_hold_releases:
-        for k in ['Line', 'Line with active holds']:
-          fixed_line = list(nodes[node_nm][k])
-          for pidx in bad_hold_releases:
-            fixed_line[pidx] = '0'
-          nodes[node_nm][k] = ''.join(fixed_line)
 
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
@@ -336,15 +346,12 @@ def parse_lines_with_warps(measures, warps):
           # if prev_twos_idxs.issubset(curr_three_idxs):
           # if prev_dp_line.replace('2', '3') == line:
           if True:
-            warp_release_time = 0.001
-            release_beat = prev_beat + warp_release_time
+            release_beat = prev_beat + WARP_RELEASE_TIME
             beats_to_lines[release_beat] = line
-            beats_to_increments[prev_beat] = warp_release_time
-            beats_to_increments[release_beat] = beat_increment - warp_release_time
+            beats_to_increments[prev_beat] = WARP_RELEASE_TIME
+            beats_to_increments[release_beat] = beat_increment - WARP_RELEASE_TIME
 
       unwarped_beat += beat_increment
-
-  # import code; code.interact(local=dict(globals(), **locals()))
 
   # Filter repeated hold releases from warping
   # This occurs from visual gimmicks where holds advance instantly, but do not completely disappear
@@ -502,8 +509,16 @@ def filter_fakes(beat_to_lines, fakes):
   example_line = list(beat_to_lines.values())[0]
   empty_line = '0' * len(example_line)
 
-  fake_ranges = [(beat, beat+val) for beat, val in fakes]
-  inrange = lambda x, range: range[0] <= x <= range[1]
+  fake_ranges = []
+  for beat, val in fakes:
+    if val > 0:
+      fake_ranges.append((beat, beat + val))
+    else:
+      # fake range reduced to 0 because of overlapping warp
+      # filter 10 warp lines
+      fake_ranges.append((beat, beat + WARP_RELEASE_TIME * 10))
+
+  inrange = lambda x, range: range[0] < x < range[1]
 
   new_beat_to_lines = dict()
   for beat, line in beat_to_lines.items():
@@ -731,7 +746,8 @@ def main():
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
-  nm = 'Club Night - Matduke D21 arcade'
+  # nm = 'Club Night - Matduke D21 arcade'
+  nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'

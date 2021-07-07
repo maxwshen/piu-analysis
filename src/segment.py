@@ -764,7 +764,8 @@ def main():
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
-  nm = 'Club Night - Matduke D21 arcade'
+  # nm = 'Club Night - Matduke D21 arcade'
+  nm = 'Macaron Day - HyuN D18 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
