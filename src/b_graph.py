@@ -326,6 +326,7 @@ def parse_lines_with_warps(measures, warps):
           prev_dp_line = line
       else:
         # If hold release occurs within warp, add as new line
+        # Purposefully be too lenient here, since it's easy to filter non-sensical hold releases later
         if '3' in line:
         # if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
