@@ -129,6 +129,7 @@ def form_graph(nm, subset_measures = None):
           if p in active_holds:
             active_holds.remove(p)
           else:
+            # Tried to release a hold that didn't exist - remove the 3
             prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
             print('Warning: Bad hold', beat, line)
             # print('\n'.join(prev_lines[-10:]))
@@ -138,6 +139,7 @@ def form_graph(nm, subset_measures = None):
             # import code; code.interact(local=dict(globals(), **locals()))
             # raise Exception('Bad hold')
 
+      # Tried to release a hold that didn't exist - remove the 3
       if bad_hold_releases:
         for k in ['Line', 'Line with active holds']:
           fixed_line = list(nodes[node_nm][k])
@@ -324,13 +326,15 @@ def parse_lines_with_warps(measures, warps):
           prev_dp_line = line
       else:
         # If hold release occurs within warp, add as new line
-        if set(line) == set(list('03')):
+        if '3' in line:
+        # if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
           # prev_twos_idxs = set([i for i, c in enumerate(prev_dp_line) if c == '2'])
           # curr_three_idxs = set([i for i, c in enumerate(line) if c == '3'])
           # import code; code.interact(local=dict(globals(), **locals()))
           # if prev_twos_idxs.issubset(curr_three_idxs):
-          if prev_dp_line.replace('2', '3') == line:
+          # if prev_dp_line.replace('2', '3') == line:
+          if True:
             warp_release_time = 0.001
             release_beat = prev_beat + warp_release_time
             beats_to_lines[release_beat] = line
@@ -723,7 +727,8 @@ def main():
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
-  nm = 'Log In - SHK S20 arcade'
+  # nm = 'Log In - SHK S20 arcade'
+  nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'

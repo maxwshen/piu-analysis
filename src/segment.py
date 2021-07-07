@@ -751,7 +751,7 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
 
   # Test: failures
-  nm = 'Log In - SHK S20 arcade'
+  # nm = 'Log In - SHK S20 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -763,6 +763,7 @@ def main():
   # nm = 'Fly high - Dreamcatcher S15 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
+  nm = 'Shub Niggurath - Nato S24 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
