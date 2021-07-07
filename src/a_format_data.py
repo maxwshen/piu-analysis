@@ -141,13 +141,7 @@ def main():
   print(NAME)
   
   get_all_stepcharts_df()
-
-  # test_ssc_fn = '/mnt/c/Users/maxws/Downloads/StepF2/Songs/19-XX/(00) 1608 - MAX - I Want U/1608 - MAX - I Want U.ssc'
-  # sc = _data.SSCFile(test_ssc_fn)
-
   # # import_all_sscs()
-
-  # format_data(ssc_fn=_config.SRC_DIR + 'timeforthemoonnight-s18.ssc')
   return
 
 

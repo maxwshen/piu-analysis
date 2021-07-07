@@ -25,6 +25,7 @@ filter_charts = [
 general_filters = [
   (df['METER'] != 99),
   (~df['Name (unique)'].isin(filter_charts)),
+  (~df['Name (unique)'].str.contains('infinity')),
 ]
 
 subsets = {

@@ -37,6 +37,7 @@ stance_store = {
 
 log_fn = ''
 
+# Add lines with hold releases in warps at this time increment (seconds)
 WARP_RELEASE_TIME = 0.001
 
 ##
@@ -96,6 +97,8 @@ def form_graph(nm, subset_measures = None):
     'Time': time,
     'Beat': beat,
     'BPM': bpm,
+    'Line': '',
+    'Line with active holds': '',
     'Steptype': steptype,
     'Timing judge': 'None',
   }
@@ -264,6 +267,24 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
   print(f'Proposed {num_multihits_proposed} multihit nodes')
   return nodes, edges_out, edges_in
 
+
+def filter_empty_nodes(nodes, edges_out, edges_in):
+  empty_set = set(['0'])
+  remove = []
+  for node in nodes:
+    if set(nodes[node]['Line']) == empty_set:
+      parents = edges_in[node]
+      children = edges_out[node]
+      for parent in parents:
+        edges_out[parent] = children
+      for child in children:
+        edges_in[child] = parents
+      remove.append(node)
+  
+  print(f'Deleted {len(remove)} empty line nodes')
+  for node in remove:
+    del nodes[node]
+  return nodes, edges_out, edges_in
 
 
 '''
@@ -657,6 +678,8 @@ def run_single(sc_nm):
 
   nodes, edges_out, edges_in, stance = form_graph(sc_nm)
 
+  nodes, edges_out, edges_in = filter_empty_nodes(nodes, edges_out, edges_in)
+
   # Faster than forming graph.
   # More efficient to just run this for each timing judge
   nodes, edges_out, edges_in = propose_multihits(nodes,
@@ -751,7 +774,7 @@ def main():
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
   # nm = 'Club Night - Matduke D21 arcade'
-  # nm = 'Macaron Day - HyuN D18 arcade'
+  nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -764,7 +787,8 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
-  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Accident - MAX S18 arcade'
+  # nm = 'Scorpion King - r300k S15 arcade'
   # nm = 'Requiem - MAX D23 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Fly high - Dreamcatcher S15 arcade'
