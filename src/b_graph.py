@@ -90,6 +90,8 @@ def form_graph(nm, subset_measures = None):
 
   beat_to_lines = handle_halfdouble(beat_to_lines)
 
+  empty_line = list(beat_to_lines.values())[0]
+
   nodes['init'] = {
     'Time': time,
     'Beat': beat,
@@ -104,30 +106,31 @@ def form_graph(nm, subset_measures = None):
   for beat, line in beat_to_lines.items():
     if _notelines.has_notes(line):
       # Add active holds into line as 4
+      bad_line = False
       try:
         aug_line = _notelines.add_active_holds(line, active_holds, stance.panel_to_idx)
       except:
         # Error when trying to place 4 on 1
-        continue
+        bad_line = True
 
       active_panel_to_action = stance.line_to_panel_to_action(line)
       bad_hold_releases = []
       for p in active_panel_to_action:
         a = active_panel_to_action[p]
         if a == '3' and p not in active_holds:
-          # Tried to release a hold that didn't exist - remove the 3
+          # Tried to release a hold that didn't exist - remove it
           prev_lines = [f'{b:.3f}'.ljust(8) + line for b, line in beat_to_lines.items() if b <= beat]
-          print('Notice: Caught a bad hold', beat, line)
+          # print('Notice: Caught a bad hold', beat, line)
           # print('\n'.join(prev_lines[-10:]))
           pidx = stance.panel_to_idx[p]
           bad_hold_releases.append(pidx)
-          # This forgives bad hold releases, which could be problematic downstream, and is basically a hack that doesn't solve the underlying issues
+          bad_line = True
           # import code; code.interact(local=dict(globals(), **locals()))
           # raise Exception('Bad hold')
 
-      # Tried to release a hold that didn't exist - remove the 3
+      # Tried to release a hold that didn't exist - empty the line
       if bad_hold_releases:
-        continue
+        bad_line = True
         # for k in ['Line', 'Line with active holds']:
         #   fixed_line = list(nodes[node_nm][k])
         #   for pidx in bad_hold_releases:
@@ -138,8 +141,8 @@ def form_graph(nm, subset_measures = None):
       nodes[node_nm] = {
         'Time': time,
         'Beat': beat,
-        'Line': line,
-        'Line with active holds': aug_line,
+        'Line': line if not bad_line else empty_line,
+        'Line with active holds': aug_line if not bad_line else empty_line,
         'BPM': bpm,
       }
 
@@ -149,13 +152,14 @@ def form_graph(nm, subset_measures = None):
       prev_node_nm = node_nm
 
       # Update active holds
-      for p in active_panel_to_action:
-        a = active_panel_to_action[p]
-        if a == '2':
-          active_holds.add(p)
-        if a == '3':
-          if p in active_holds:
-            active_holds.remove(p)
+      if not bad_line:
+        for p in active_panel_to_action:
+          a = active_panel_to_action[p]
+          if a == '2':
+            active_holds.add(p)
+          if a == '3':
+            if p in active_holds:
+              active_holds.remove(p)
 
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
@@ -747,7 +751,7 @@ def main():
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
   # nm = 'Club Night - Matduke D21 arcade'
-  nm = 'Macaron Day - HyuN D18 arcade'
+  # nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -760,7 +764,7 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
-  # nm = 'Accident - MAX S18 arcade'
+  nm = 'Accident - MAX S18 arcade'
   # nm = 'Requiem - MAX D23 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Fly high - Dreamcatcher S15 arcade'
