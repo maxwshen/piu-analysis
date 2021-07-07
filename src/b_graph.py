@@ -326,6 +326,10 @@ def parse_lines_with_warps(measures, warps):
         # If hold release occurs within warp, add as new line
         if set(line) == set(list('03')):
           prev_beat = list(beats_to_lines.keys())[-1]
+          # prev_twos_idxs = set([i for i, c in enumerate(prev_dp_line) if c == '2'])
+          # curr_three_idxs = set([i for i, c in enumerate(line) if c == '3'])
+          # import code; code.interact(local=dict(globals(), **locals()))
+          # if prev_twos_idxs.issubset(curr_three_idxs):
           if prev_dp_line.replace('2', '3') == line:
             warp_release_time = 0.001
             release_beat = prev_beat + warp_release_time
@@ -334,6 +338,8 @@ def parse_lines_with_warps(measures, warps):
             beats_to_increments[release_beat] = beat_increment - warp_release_time
 
       unwarped_beat += beat_increment
+
+  # import code; code.interact(local=dict(globals(), **locals()))
 
   # Filter repeated hold releases from warping
   # This occurs from visual gimmicks where holds advance instantly, but do not completely disappear
@@ -360,7 +366,7 @@ def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
       pass
     else:
       ok_beats.append(beats[i])
-  ok_beats.append(len(lines)-1)
+  ok_beats.append(beats[len(lines)-1])
 
   filt_beats_to_lines = {k: v for k, v in beats_to_lines.items() if k in ok_beats}
   filt_beats_to_incs = {k: v for k, v in beats_to_incs.items() if k in ok_beats}
@@ -690,7 +696,6 @@ def main():
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Fresh - Aspektz S14 arcade infinity'
-  # nm = 'Log In - SHK S20 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Chicken Wing - BanYa S7 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
@@ -709,7 +714,6 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
-  # nm = 'Log In - SHK S20 arcade'
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
@@ -719,6 +723,7 @@ def main():
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
+  nm = 'Log In - SHK S20 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -734,7 +739,9 @@ def main():
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Requiem - MAX D23 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
-  nm = 'Fly high - Dreamcatcher S15 arcade'
+  # nm = 'Fly high - Dreamcatcher S15 arcade'
+  # nm = 'Poseidon - Quree S20 arcade'
+  # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

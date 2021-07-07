@@ -185,11 +185,12 @@ def get_active_hold_motifs(lines, features, beats):
         i, j = j+1, j+2
         num_found += 1
       else:
-        print('\nERROR: Detected unresolved hold')
+        print('\n Warning: Detected unresolved hold')
         print(lines[i:j+1])
         print(beats[i:j+1])
-        import code; code.interact(local=dict(globals(), **locals()))
-        raise Exception('Detected unresolved hold')
+        # import code; code.interact(local=dict(globals(), **locals()))
+        # raise Exception('Detected unresolved hold')
+        j += 1
     else:
       if any(x in lines[i] for x in list('24')) and '1' in lines[i]:
         in_hold = True
@@ -750,7 +751,7 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
 
   # Test: failures
-  # nm = 'Log In - SHK S20 arcade'
+  nm = 'Log In - SHK S20 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -759,7 +760,9 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
-  nm = 'Fly high - Dreamcatcher S15 arcade'
+  # nm = 'Fly high - Dreamcatcher S15 arcade'
+  # nm = 'Poseidon - Quree S20 arcade'
+  # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
