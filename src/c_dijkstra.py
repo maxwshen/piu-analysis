@@ -77,7 +77,7 @@ def dijkstra(graph):
     if line_node not in visited_line_nodes:
       visited_line_nodes.add(line_node)
       timer.update()
-      if len(qu) > 10000:
+      if len(qu) > 40000:
         print(f'Error: Queue too large - failing out to avoid OOM')
         raise Exception(f'Error: Queue too large - failing out to avoid OOM')
   timer.end()
