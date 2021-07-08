@@ -287,6 +287,7 @@ def filter_empty_nodes(nodes, edges_out, edges_in):
 
 
 def get_beat_to_lines(measures):
+  # Includes empty lines
   beats_per_measure = 4
   beat_to_lines = {}
   beat_to_increments = {}
@@ -354,6 +355,7 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
     Decide to keep start line or end line of warp
     Shift beats after warps
   '''
+  # Remove lines in warps, except hold releases
   beats = list(beat_to_lines.keys())
   new_beat_to_lines = {}
   new_beat_to_incs = {}
@@ -494,13 +496,18 @@ def parse_fakes(fakes):
 
 
 def apply_fakes(beat_to_lines, fakes):
+  '''
+    For some reason, fake hold releases are real, e.g., Scorpion King S15
+    Fake ranges are inclusive: Scorpion King S15
+  '''
   example_line = list(beat_to_lines.values())[0]
   empty_line = '0' * len(example_line)
 
-  infake = lambda x, fake: fake[0] < x < fake[0] + fake[1]
+  infake = lambda x, fake: fake[0] <= x <= fake[0] + fake[1]
   num_fakes = 0
-  for beat in beat_to_lines:
+  for beat, line in beat_to_lines.items():
     if any(infake(beat, r) for r in fakes):
+      # if set(line) != set(list('03')):
       num_fakes += 1
       beat_to_lines[beat] = empty_line
   print(f'Filtered {num_fakes} fake lines')
@@ -724,7 +731,7 @@ def main():
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
   # nm = 'Club Night - Matduke D21 arcade'
-  nm = 'Macaron Day - HyuN D18 arcade'
+  # nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
   # nm = 'Death Moon - SHK S17 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
@@ -738,7 +745,7 @@ def main():
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Accident - MAX S18 arcade'
-  # nm = 'Scorpion King - r300k S15 arcade'
+  nm = 'Scorpion King - r300k S15 arcade'
   # nm = 'Requiem - MAX D23 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Fly high - Dreamcatcher S15 arcade'

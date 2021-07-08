@@ -246,7 +246,7 @@ def main():
   # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
-  nm = 'Macaron Day - HyuN D18 arcade'
+  # nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
@@ -277,6 +277,7 @@ def main():
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
+  nm = 'Scorpion King - r300k S15 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
