@@ -230,7 +230,7 @@ def main():
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
-  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
@@ -279,7 +279,8 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
   # nm = 'Scorpion King - r300k S15 arcade'
   # nm = 'Red Swan - Yahpp S18 arcade'
-  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Accident - MAX S18 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

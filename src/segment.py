@@ -742,7 +742,7 @@ def main():
   # nm = 'HYPERCUBE - MAX S15 arcade'
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
   # nm = 'Uranium - Memme S19 arcade'
-  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
@@ -768,7 +768,7 @@ def main():
   # nm = 'Macaron Day - HyuN D18 arcade'
   # nm = 'Scorpion King - r300k S15 arcade'
   # nm = 'Red Swan - Yahpp S18 arcade'
-  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Accident - MAX S18 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
@@ -780,7 +780,6 @@ def main():
 
   # Test: Visual gimmicks
   # nm = 'Obliteration - ATAS S17 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'

@@ -26,6 +26,8 @@ all_notes = pickle.load(open(inp_dir_a + f'notes.pkl', 'rb'))
 all_bpms = pickle.load(open(inp_dir_a + f'bpms.pkl', 'rb'))
 all_warps = pickle.load(open(inp_dir_a + f'warps.pkl', 'rb'))
 all_fakes = pickle.load(open(inp_dir_a + f'fakes.pkl', 'rb'))
+all_stops = pickle.load(open(inp_dir_a + f'stops.pkl', 'rb'))
+all_delays = pickle.load(open(inp_dir_a + f'delays.pkl', 'rb'))
 
 sc_df = pd.read_csv(inp_dir_a + f'all_stepcharts.csv', index_col=0)
 
@@ -83,12 +85,20 @@ def form_graph(nm, subset_measures = None):
   beat_to_lines, beat_to_increments = get_beat_to_lines(measures)
   beat_to_lines = handle_halfdouble(beat_to_lines)
 
-  fakes = parse_fakes(all_fakes[nm])
+  fakes = parse_data(all_fakes[nm])
   beat_to_lines = apply_fakes(beat_to_lines, fakes)
 
-  warps = parse_warps(all_warps[nm])
+  warps = parse_data(all_warps[nm], rounding=3)
   bpms = warp_data(warps, bpms)
   beat_to_lines, beat_to_increments = apply_warps(beat_to_lines, beat_to_increments, warps)
+
+  stops = parse_data(all_stops[nm])
+  stops = warp_data(warps, stops)
+  stops_d = tuples_to_dict(stops)
+
+  delays = parse_data(all_delays[nm])
+  delays = warp_data(warps, delays)
+  delays_d = tuples_to_dict(delays)
 
   empty_line = list(beat_to_lines.values())[0]
 
@@ -106,6 +116,9 @@ def form_graph(nm, subset_measures = None):
 
   timer = util.Timer(total=len(beat_to_lines))
   for beat, line in beat_to_lines.items():
+
+    time += delays_d.get(beat, 0)
+
     if _notelines.has_notes(line):
       # Add active holds into line as 4
       bad_line = False
@@ -165,6 +178,7 @@ def form_graph(nm, subset_measures = None):
 
     bi = beat_to_increments[beat]
     time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
+    time += stops_d.get(beat, 0)
     timer.update()
 
   # Add terminal node and edges
@@ -313,31 +327,20 @@ def get_beat_to_lines(measures):
 '''
   Warping
 '''
-def parse_warps(warps):
-  warps_list = []
-  if warps == '':
-    return warps_list
-  for line in warps.split(','):
-    [beat, num_beats] = line.split('=')
-    beat = float(beat)
-    num_beats = float(num_beats)
-    warps_list.append([round(beat, 3), round(beat + num_beats, 3)])
-  return warps_list
-
-
 def beat_in_any_warp(beat, warps):
   # Round to handle beats like 1/3, 2/3
   # Ending needs to be in warp: Obliteration S17
   # Beginning needs to be in warp: V3 S17
   # But sometimes lines are duplicated: Elvis S15
   # in_warp = lambda beat, warp: warp[0] <= round(beat, 3) < warp[1]
-  in_warp = lambda beat, warp: warp[0] < round(beat, 3) < warp[1]
+  in_warp = lambda beat, warp: warp[0] < round(beat, 3) < warp[0] + warp[1]
   return any(in_warp(beat, warp) for warp in warps)
 
 
 def total_warp_beat(beat, warps):
   tot = 0
-  for start, end in warps:
+  for start, length in warps:
+    end = start + length
     if end <= beat:
       tot += end - start
     elif start <= beat <= end:
@@ -372,18 +375,20 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
   warp_to_line = {}
   for warp in warps:
     start, end = warp[0], warp[0] + warp[1]
-    if start in beat_to_lines and end not in beat_to_lines:
-      warp_to_line[start] = start
-    elif start not in beat_to_lines and end in beat_to_lines:
-      warp_to_line[start] = end
-    elif start in beat_to_lines and end in beat_to_lines:
-      start_line, end_line = beat_to_lines[start], beat_to_lines[end]
+    start_line = beat_to_lines.get(start, None)
+    end_line = beat_to_lines.get(end, None)
+    
+    if start_line and not end_line:
+      warp_to_line[start] = start_line
+    elif not start_line and end_line:
+      warp_to_line[start] = end_line
+    elif start_line and end_line:
       if start_line.replace('2', '3') != end_line and \
          start_line.replace('2', '1') != end_line and \
          start_line.replace('3', '0') != end_line:
-        warp_to_line[start] = end
+        warp_to_line[start] = end_line
       else:
-        warp_to_line[start] = start
+        warp_to_line[start] = start_line
 
   # Shift beats after warps
   new_beat_to_lines = {}
@@ -484,16 +489,6 @@ def warp_data(warps, data):
   Fake note sections
   Individual fake notes are handled in _notelines.parse_line
 '''
-def parse_fakes(fakes):
-  fake_list = []
-  if fakes == '':
-    return fake_list
-  for line in fakes.split(','):
-    [beat, length] = line.split('=')
-    fake_list.append([float(beat), float(length)])
-  return fake_list
-
-
 def apply_fakes(beat_to_lines, fakes):
   '''
     Fake ranges are inclusive: Scorpion King S15
@@ -510,6 +505,27 @@ def apply_fakes(beat_to_lines, fakes):
       beat_to_lines[beat] = empty_line
   print(f'Filtered {num_fakes} fake lines')
   return beat_to_lines
+
+
+'''
+  General data parsing
+'''
+def parse_data(data, rounding = None):
+  res = []
+  if data == '':
+    return res
+  for line in data.split(','):
+    [beat, val] = line.split('=')
+    beat, val = float(beat), float(val)
+    if rounding:
+      beat = round(beat, 3)
+      val = round(val, 3)
+    res.append([beat, val])
+  return res
+
+
+def tuples_to_dict(tuples):
+  return {s[0]: s[1] for s in tuples}
 
 
 '''
@@ -688,7 +704,6 @@ def main():
   # nm = 'Prime Time - Cashew S23 remix'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Setsuna Trip - Last Note. S16 arcade'
-  # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
@@ -716,6 +731,7 @@ def main():
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Fake notes
@@ -741,7 +757,7 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
-  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Accident - MAX S18 arcade'
   # nm = 'Scorpion King - r300k S15 arcade'
   # nm = 'Red Swan - Yahpp S18 arcade'
   # nm = 'Requiem - MAX D23 arcade'

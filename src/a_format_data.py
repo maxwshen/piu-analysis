@@ -39,6 +39,8 @@ def get_all_stepcharts_df():
     all_attributes['tickcounts'] += sc.get_attribute('TICKCOUNTS')
     all_attributes['warps'] += sc.get_attribute('WARPS', default_global=False)
     all_attributes['fakes'] += sc.get_attribute('FAKES', default_global=False)
+    all_attributes['stops'] += sc.get_attribute('STOPS', default_global=False)
+    all_attributes['delays'] += sc.get_attribute('DELAYS', default_global=False)
 
     timer.update()
 
