@@ -92,6 +92,9 @@ def form_graph(nm, subset_measures = None):
   bpms = warp_data(warps, bpms)
   beat_to_lines, beat_to_increments = apply_warps(beat_to_lines, beat_to_increments, warps)
 
+  beat_to_lines, beat_to_increments = filter_repeated_hold_releases(beat_to_lines, beat_to_increments)
+  beat_to_lines, beat_to_increments = add_empty_lines(beat_to_lines, beat_to_increments)
+
   stops = parse_data(all_stops[nm])
   stops = warp_data(warps, stops)
   stops_d = tuples_to_dict(stops)
@@ -116,9 +119,7 @@ def form_graph(nm, subset_measures = None):
 
   timer = util.Timer(total=len(beat_to_lines))
   for beat, line in beat_to_lines.items():
-
     time += delays_d.get(beat, 0)
-
     if _notelines.has_notes(line):
       # Add active holds into line as 4
       bad_line = False
@@ -177,7 +178,10 @@ def form_graph(nm, subset_measures = None):
               active_holds.remove(p)
 
     bi = beat_to_increments[beat]
-    time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
+    try:
+      time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
+    except:
+      import code; code.interact(local=dict(globals(), **locals()))
     time += stops_d.get(beat, 0)
     timer.update()
 
@@ -394,7 +398,7 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
         warp_to_line[start] = end_line
       else:
         warp_to_line[start] = start_line
-    print(start, end, start_line, end_line, warp_to_line.get(start, None))
+    # print(start, end, start_line, end_line, warp_to_line.get(start, None))
 
   # Shift beats after warps
   new_beat_to_lines = {}
@@ -778,9 +782,10 @@ def main():
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
   # nm = 'BANG BANG BANG - BIGBANG S15 arcade'
   # nm = 'PRIME - Tatsh S11 arcade'
+  nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
 
   # Test: Many hands
-  nm = 'London Bridge - SCI Guyz S11 arcade'
+  # nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
