@@ -12,6 +12,7 @@ from collections import defaultdict, Counter
 import pandas as pd
 from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
+from fractions import Fraction
 
 import _notelines, _qsub
 
@@ -40,7 +41,7 @@ stance_store = {
 log_fn = ''
 
 # Add lines with hold releases in warps at this time increment (seconds)
-WARP_RELEASE_TIME = 0.001
+WARP_RELEASE_TIME = Fraction(1, 1000)
 
 ##
 # Functions
@@ -302,7 +303,6 @@ def filter_empty_nodes(nodes, edges_out, edges_in):
 
 def get_beat_to_lines(measures):
   # Includes empty lines
-  from fractions import Fraction
   beats_per_measure = 4
   beat_to_lines = {}
   beat_to_increments = {}
@@ -430,17 +430,21 @@ def filter_repeated_hold_releases(beat_to_lines, beat_to_incs):
   '''
   nonempty_btol = {k: v for k, v in beat_to_lines.items() if set(v) != set('0')}
   beats = list(nonempty_btol.keys())
+  empty_beats = [b for b, v in beat_to_lines.items() if set(v) == set('0')]
   assert beats == sorted(beats), 'ERROR: Beats are not sorted by default'
   ok_beats = []
   lines = [nonempty_btol[beat] for beat in sorted(beats)]
   for i in range(len(lines) - 1):
+    # filter first in repeated hold release: filter one in warp, not one after warp
     line1, line2 = lines[i], lines[i+1]
     if set(line1) == set(list('03')) and line1 == line2:
       pass
     else:
       ok_beats.append(beats[i])
   ok_beats.append(beats[len(lines)-1])
+  ok_beats += empty_beats
 
+  print(f'Filtered {len(beat_to_lines)-len(ok_beats)} repeated hold releases')
   filt_beat_to_lines = {k: v for k, v in beat_to_lines.items() if k in ok_beats}
   filt_beat_to_incs = {k: v for k, v in beat_to_incs.items() if k in ok_beats}
   return filt_beat_to_lines, filt_beat_to_incs
@@ -743,7 +747,7 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
-  # nm = 'Elvis - AOA S15 arcade'
+  nm = 'Elvis - AOA S15 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Club Night - Matduke S18 arcade'
@@ -782,7 +786,7 @@ def main():
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
   # nm = 'BANG BANG BANG - BIGBANG S15 arcade'
   # nm = 'PRIME - Tatsh S11 arcade'
-  nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
+  # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
