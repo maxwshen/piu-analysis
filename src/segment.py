@@ -744,7 +744,8 @@ def main():
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Club Night - Matduke S18 arcade'
-  nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'PRIME - Tatsh S11 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
@@ -752,6 +753,9 @@ def main():
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
+  
+  # Test: Many hands
+  nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Test: failures
   # nm = 'Log In - SHK S20 arcade'

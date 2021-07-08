@@ -75,6 +75,7 @@ class Movement():
         self.bracket_pos.add(nm)
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
+    self.feet = ['Left foot', 'Right foot']
     self.downpress = set(list('12'))
     self.doublestep_prev = set(list('123'))
     self.doublestep_curr = set(list('12'))
@@ -168,7 +169,8 @@ class Movement():
     cost = 0
     if len(d['limb_to_pos']) <= 2:
       return 0
-
+    if d['limb_to_pos']['Left hand'] == '**':
+      return 0
     left_coord = self.pos_to_center[d['limb_to_pos']['Left hand']]
     right_coord = self.pos_to_center[d['limb_to_pos']['Right hand']]
     diff = left_coord[0] - right_coord[0]
@@ -240,7 +242,7 @@ class Movement():
       Sum over limbs
     '''
     cost = 0
-    for limb in d['limb_to_pos']:
+    for limb in self.feet:
       pos = d['limb_to_pos'][limb]
       cost += self.pos_to_cost[pos]
     if self.verbose: print(f'Pos cost: {cost}')
@@ -257,7 +259,7 @@ class Movement():
     '''
     cost = 0
     has_bracket = False
-    for limb in d2['limb_to_pos']:
+    for limb in self.feet:
       if limb not in d1['limb_to_pos']:
         continue
 
@@ -376,7 +378,7 @@ class Movement():
       E.g., not a jump is if 1 foot has the same position and action as before.
     '''
     cost = 0
-    feet = ['Left foot', 'Right foot']
+    feet = self.feet
 
     matched_keys = ['limb_to_pos']
     matches = lambda x: all([d1[mkey][x] == d2[mkey][x] for mkey in matched_keys])
@@ -425,7 +427,7 @@ class Movement():
 
   def move_without_action_cost(self, d1, d2):
     cost = 0
-    for limb in ['Left foot', 'Right foot']:
+    for limb in self.feet:
       prev_pos = d1['limb_to_pos'][limb]
       curr_pos = d2['limb_to_pos'][limb]
 
@@ -443,7 +445,7 @@ class Movement():
 
   def downpress_cost(self, d):
     cost = 0
-    for limb in ['Left foot', 'Right foot']:
+    for limb in self.feet:
       heel_action = d['limb_to_heel_action'][limb]
       toe_action = d['limb_to_toe_action'][limb]
 

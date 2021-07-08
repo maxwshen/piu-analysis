@@ -680,7 +680,6 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Xeroize - FE S24 arcade'
   # nm = 'Super Fantasy - SHK S7 arcade'
@@ -777,7 +776,11 @@ def main():
   # nm = 'Fly high - Dreamcatcher S15 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
-  nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'PRIME - Tatsh S11 arcade'
+
+  # Test: Many hands
+  nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'

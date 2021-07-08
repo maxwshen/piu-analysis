@@ -77,6 +77,9 @@ def dijkstra(graph):
     if line_node not in visited_line_nodes:
       visited_line_nodes.add(line_node)
       timer.update()
+      if len(qu) > 5000:
+        print(f'Error: Queue too large - failing out to avoid OOM')
+        raise Exception(f'Error: Queue too large - failing out to avoid OOM')
   timer.end()
 
   if u != graph.final_node:
@@ -233,7 +236,8 @@ def main():
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Club Night - Matduke S18 arcade'
-  nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'BANG BANG BANG - BIGBANG S15 arcade'
+  # nm = 'PRIME - Tatsh S11 arcade'
   # nm = 'CROSS SOUL - HyuN feat. Syepias S8 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Prime Time - Cashew S23 remix'
@@ -284,6 +288,9 @@ def main():
   # nm = 'Red Swan - Yahpp S18 arcade'
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Elvis - AOA S15 arcade'
+
+  # Test: Many hands
+  nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

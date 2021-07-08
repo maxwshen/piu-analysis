@@ -6,7 +6,7 @@ import numpy as np, pandas as pd
 import os, copy, itertools, functools
 from typing import List, Dict, Set, Tuple
 
-import _positions
+import _positions, _params
 
 '''
   Foot positions
@@ -100,13 +100,15 @@ class Stances():
       footposs = set().union(*footposs)
       # add limb's pos from previous stance
       if limb in limb_to_pos:
-        footposs.add(limb_to_pos[limb])
+        if limb_to_pos[limb] != '**':
+          footposs.add(limb_to_pos[limb])
       return list(footposs)
 
     ps = [get_positions(limb, active_panels) for limb in limbs]
     stance_strs = [','.join(limbpos) for limbpos in itertools.product(*ps)]
     stance_strs = [stance for stance in stance_strs 
                    if self.covers_panels(stance, active_panels)]
+
     return list(set(stance_strs))
 
 
@@ -151,7 +153,6 @@ class Stances():
 
     ps = list(panel_to_part.keys())
     vs = list(panel_to_part.values())
-    # print('vs', vs)
     part_combos = itertools.product(*vs)
 
     actions = []
@@ -189,12 +190,14 @@ class Stances():
       4: continue hold
     '''
     active_panels = self.line_to_active_panels(aug_line)
+    hands = False
 
     # Get foot stances consistent with active panels, and including previous panels
     # Propose brackets or hands only if necessary based on num. active panels
     if len(active_panels) > 4:
       stances = self.get_stances(active_panels, prev_stance,
           use_brackets=True, use_hands=True)
+      hands = True
     elif len(active_panels) >= 2:
       '''
         Note: Much slower (10x?) using 2-4, rather than 3-4 inclusive.
@@ -209,10 +212,19 @@ class Stances():
     if len(stances) == 0:
       stances = self.get_stances(active_panels, prev_stance,
           use_brackets=True, use_hands=True)
+      hands = True
 
     # Annotate all possible actions (one to many relationship)
     stance_actions = self.annotate_actions(aug_line, stances)
-    if verbose: print(stance_actions)
+
+    # Filter out exact hand positions and actions
+    if hands:
+      feet_sas = [self.transform_hand_sa(sa) for sa in stance_actions]
+      feet_sas = [sa for sa in feet_sas if self.using_both_feet(sa)]
+      stance_actions = list(set(feet_sas))
+
+    if verbose: 
+      print(stance_actions)
     return stance_actions
 
 
@@ -372,6 +384,21 @@ class Stances():
     has_action = lambda limb_action: any(x in limb_action for x in doing)
     return [i for i, la in enumerate(limbs) if has_action(la)]
 
+
+  def transform_hand_sa(self, sa):
+    # Transforms hand+feet sa into feet sa only
+    [stance, action] = sa.split(';')
+    new_stance = stance.split(',')[:2] + ['**', '**']
+    new_action = action.split(',')[:2] + ['**', '**']
+    return ','.join(new_stance) + ';' + ','.join(new_action)
+
+
+  def using_both_feet(self, sa):
+    [stance, action] = sa.split(';')
+    actions = action.split(',')
+    return all(x != '--' for x in actions)
+
+
 '''
   Testing
 '''
@@ -385,7 +412,10 @@ def test():
   pattern = '11001'
 
   print(f'Running {pattern} ...')
-  stance_actions = stance.get_stanceactions(pattern, verbose=True)
+  prev_stance = '14,36'
+  stance_actions = stance.get_stanceactions(pattern, prev_stance, verbose=True)
+
+  import code; code.interact(local=dict(globals(), **locals()))
 
   test_limb_order_preservation(stance)
   test_continue_hold(stance)
