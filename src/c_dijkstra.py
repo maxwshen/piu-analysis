@@ -277,7 +277,9 @@ def main():
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
-  nm = 'Scorpion King - r300k S15 arcade'
+  # nm = 'Scorpion King - r300k S15 arcade'
+  # nm = 'Red Swan - Yahpp S18 arcade'
+  nm = 'Accident - MAX S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

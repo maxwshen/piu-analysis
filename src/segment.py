@@ -766,7 +766,9 @@ def main():
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Club Night - Matduke D21 arcade'
   # nm = 'Macaron Day - HyuN D18 arcade'
-  nm = 'Scorpion King - r300k S15 arcade'
+  # nm = 'Scorpion King - r300k S15 arcade'
+  # nm = 'Red Swan - Yahpp S18 arcade'
+  nm = 'Accident - MAX S18 arcade'
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'

@@ -163,9 +163,6 @@ def form_graph(nm, subset_measures = None):
             if p in active_holds:
               active_holds.remove(p)
 
-      # print(time, bpm, beat, line, active_holds)
-      # import code; code.interact(local=dict(globals(), **locals()))
-
     bi = beat_to_increments[beat]
     time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
     timer.update()
@@ -259,7 +256,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
       # Inspect proposed multihits
       # for key in ['Time', 'Beat', 'Line', 'Line with active holds', 'Measure', 'BPM']:
         # print(key, nodes[new_node_nm][key])
-      # import code; code.interact(local=dict(globals(), **locals()))
 
       num_multihits_proposed += 1
 
@@ -288,6 +284,7 @@ def filter_empty_nodes(nodes, edges_out, edges_in):
 
 def get_beat_to_lines(measures):
   # Includes empty lines
+  from fractions import Fraction
   beats_per_measure = 4
   beat_to_lines = {}
   beat_to_increments = {}
@@ -299,15 +296,15 @@ def get_beat_to_lines(measures):
     num_subbeats = len(lines)
 
     for lidx, line in enumerate(lines):
-      beat_increment = beats_per_measure / num_subbeats
+      beat_increment = Fraction(beats_per_measure, num_subbeats)
       line = _notelines.parse_line(line)
 
       if any(x not in set(list('01234')) for x in line):
         print(f'Error: Bad symbol found in line, {line}')
         raise ValueError(f'Bad symbol found in line, {line}')
       
-      beat_to_lines[beat] = line
-      beat_to_increments[beat] = beat_increment
+      beat_to_lines[float(beat)] = line
+      beat_to_increments[float(beat)] = beat_increment
       beat += beat_increment
 
   return beat_to_lines, beat_to_increments
@@ -402,9 +399,11 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
         shifted_beat += WARP_RELEASE_TIME
     # if beat starts a warp, use warp_to_line, otherwise default to line
     new_beat_to_lines[shifted_beat] = warp_to_line.get(beat, line)
-    new_beat_to_incs[shifted_beat] = beat_to_incs[beat]      
-  beat_to_lines = new_beat_to_lines
-  beat_to_incs = new_beat_to_incs
+    new_beat_to_incs[shifted_beat] = beat_to_incs[beat]
+  
+  sorted_beats = sorted(list(new_beat_to_lines.keys()))
+  beat_to_lines = {b: new_beat_to_lines[b] for b in sorted_beats}
+  beat_to_incs = {b: new_beat_to_incs[b] for b in sorted_beats}
   return beat_to_lines, beat_to_incs
 
 
@@ -497,7 +496,6 @@ def parse_fakes(fakes):
 
 def apply_fakes(beat_to_lines, fakes):
   '''
-    For some reason, fake hold releases are real, e.g., Scorpion King S15
     Fake ranges are inclusive: Scorpion King S15
   '''
   example_line = list(beat_to_lines.values())[0]
@@ -634,7 +632,6 @@ def run_single(sc_nm):
   log_fn = out_dir + f'{sc_nm} {timing_judge}.log'
 
   nodes, edges_out, edges_in, stance = form_graph(sc_nm)
-
   nodes, edges_out, edges_in = filter_empty_nodes(nodes, edges_out, edges_in)
 
   # Faster than forming graph.
@@ -744,8 +741,9 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Leather - Doin D22 remix'
   # nm = 'You Got Me Crazy - MAX D18 arcade'
-  # nm = 'Accident - MAX S18 arcade'
-  nm = 'Scorpion King - r300k S15 arcade'
+  nm = 'Accident - MAX S18 arcade'
+  # nm = 'Scorpion King - r300k S15 arcade'
+  # nm = 'Red Swan - Yahpp S18 arcade'
   # nm = 'Requiem - MAX D23 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Fly high - Dreamcatcher S15 arcade'
