@@ -372,6 +372,7 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
   beat_to_incs = new_beat_to_incs
 
   # Decide to keep start or end line of warp
+  is_empty = lambda line: set(line) == set(['0'])
   warp_to_line = {}
   for warp in warps:
     start, end = warp[0], warp[0] + warp[1]
@@ -383,12 +384,17 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
     elif not start_line and end_line:
       warp_to_line[start] = end_line
     elif start_line and end_line:
-      if start_line.replace('2', '3') != end_line and \
+      if is_empty(start_line):
+        warp_to_line[start] = end_line
+      elif is_empty(end_line):
+        warp_to_line[start] = start_line
+      elif start_line.replace('2', '3') != end_line and \
          start_line.replace('2', '1') != end_line and \
          start_line.replace('3', '0') != end_line:
         warp_to_line[start] = end_line
       else:
         warp_to_line[start] = start_line
+    print(start, end, start_line, end_line, warp_to_line.get(start, None))
 
   # Shift beats after warps
   new_beat_to_lines = {}
@@ -399,9 +405,10 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
       shifted_beat = beat - shift
     else:
       # hold release line in warp - add very small beat offset
-      shifted_beat = beat - shift
+      shifted_beat = beat - shift + WARP_RELEASE_TIME
       while shifted_beat in new_beat_to_lines:
         shifted_beat += WARP_RELEASE_TIME
+      print(f'Found hold release in warp; {shifted_beat}, {line}')
     # if beat starts a warp, use warp_to_line, otherwise default to line
     new_beat_to_lines[shifted_beat] = warp_to_line.get(beat, line)
     new_beat_to_incs[shifted_beat] = beat_to_incs[beat]
@@ -492,6 +499,7 @@ def warp_data(warps, data):
 def apply_fakes(beat_to_lines, fakes):
   '''
     Fake ranges are inclusive: Scorpion King S15
+    Fakes do not apply to hold releases - BANG BANG BANG S15
   '''
   example_line = list(beat_to_lines.values())[0]
   empty_line = '0' * len(example_line)
@@ -500,9 +508,11 @@ def apply_fakes(beat_to_lines, fakes):
   num_fakes = 0
   for beat, line in beat_to_lines.items():
     if any(infake(beat, r) for r in fakes):
-      # if set(line) != set(list('03')):
-      num_fakes += 1
-      beat_to_lines[beat] = empty_line
+      if set(line) != set(list('03')):
+        num_fakes += 1
+        beat_to_lines[beat] = empty_line
+      # else:
+        # print(f'Kept hold release in fake {beat}, {line}')
   print(f'Filtered {num_fakes} fake lines')
   return beat_to_lines
 
@@ -731,7 +741,9 @@ def main():
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Elvis - AOA S15 arcade'
-  nm = 'Gothique Resonance - P4Koo S20 arcade'
+  # nm = 'Gothique Resonance - P4Koo S20 arcade'
+  # nm = 'Shub Niggurath - Nato S24 arcade'
+  # nm = 'Club Night - Matduke S18 arcade'
   # nm = 'Obliteration - ATAS S17 arcade'
 
   # Test: Fake notes
@@ -765,6 +777,7 @@ def main():
   # nm = 'Fly high - Dreamcatcher S15 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
+  nm = 'BANG BANG BANG - BIGBANG S15 arcade'
 
   # Test: Has multi hits
   # nm = 'Sorceress Elise - YAHPP S23 arcade'
