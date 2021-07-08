@@ -80,16 +80,15 @@ def form_graph(nm, subset_measures = None):
 
   bpm, bpms = get_init_bpm(beat, bpms)
 
-  warps = parse_warps(all_warps[nm])
-  beat_to_lines, beats_to_increments = parse_lines_with_warps(measures, warps)
-  bpms = warp_data(warps, bpms)
-
-  beats = list(beat_to_lines.keys())
-  fakes = parse_fakes(all_fakes[nm])
-  fakes = warp_fakes(warps, fakes, beats)
-  beat_to_lines = filter_fakes(beat_to_lines, fakes)
-
+  beat_to_lines, beat_to_increments = get_beat_to_lines(measures)
   beat_to_lines = handle_halfdouble(beat_to_lines)
+
+  fakes = parse_fakes(all_fakes[nm])
+  beat_to_lines = apply_fakes(beat_to_lines, fakes)
+
+  warps = parse_warps(all_warps[nm])
+  bpms = warp_data(warps, bpms)
+  beat_to_lines, beat_to_increments = apply_warps(beat_to_lines, beat_to_increments, warps)
 
   empty_line = list(beat_to_lines.values())[0]
 
@@ -167,7 +166,7 @@ def form_graph(nm, subset_measures = None):
       # print(time, bpm, beat, line, active_holds)
       # import code; code.interact(local=dict(globals(), **locals()))
 
-    bi = beats_to_increments[beat]
+    bi = beat_to_increments[beat]
     time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
     timer.update()
 
@@ -287,6 +286,32 @@ def filter_empty_nodes(nodes, edges_out, edges_in):
   return nodes, edges_out, edges_in
 
 
+def get_beat_to_lines(measures):
+  beats_per_measure = 4
+  beat_to_lines = {}
+  beat_to_increments = {}
+  beat = 0
+
+  for measure_num, measure in enumerate(measures):
+    lines = measure.split('\n')
+    lines = [line for line in lines if '//' not in line]
+    num_subbeats = len(lines)
+
+    for lidx, line in enumerate(lines):
+      beat_increment = beats_per_measure / num_subbeats
+      line = _notelines.parse_line(line)
+
+      if any(x not in set(list('01234')) for x in line):
+        print(f'Error: Bad symbol found in line, {line}')
+        raise ValueError(f'Bad symbol found in line, {line}')
+      
+      beat_to_lines[beat] = line
+      beat_to_increments[beat] = beat_increment
+      beat += beat_increment
+
+  return beat_to_lines, beat_to_increments
+
+
 '''
   Warping
 '''
@@ -312,87 +337,81 @@ def beat_in_any_warp(beat, warps):
   return any(in_warp(beat, warp) for warp in warps)
 
 
-def beat_begins_any_warp(beat, warps):
-  begins_warp = lambda beat, warp: warp[0] == round(beat, 3)
-  return any(begins_warp(beat, warp) for warp in warps)
+def total_warp_beat(beat, warps):
+  tot = 0
+  for start, end in warps:
+    if end <= beat:
+      tot += end - start
+    elif start <= beat <= end:
+      tot += beat - start
+  return tot
 
 
-def parse_lines_with_warps(measures, warps):
+def apply_warps(beat_to_lines, beat_to_incs, warps):
   '''
-    Skip over lines in warps
+    Remove beats in warps, except:
+    - Keep hold release lines compatible with active holds
+    Decide to keep start line or end line of warp
+    Shift beats after warps
   '''
-  beats_per_measure = 4
-  beats_to_lines = {}
-  beats_to_increments = {}
+  beats = list(beat_to_lines.keys())
+  new_beat_to_lines = {}
+  new_beat_to_incs = {}
+  nonwarp_beats = set([b for b in beats if not beat_in_any_warp(b, warps)])
+  for beat, line in beat_to_lines.items():
+    if beat in nonwarp_beats:
+      new_beat_to_lines[beat] = line
+      new_beat_to_incs[beat] = beat_to_incs[beat]
+    elif '3' in line:
+      # Line in warp with hold release
+      new_beat_to_lines[beat] = line
+      new_beat_to_incs[beat] = beat_to_incs[beat]
+  beat_to_lines = new_beat_to_lines
+  beat_to_incs = new_beat_to_incs
 
-  prev_dp_line = ''
-  warped_beat, unwarped_beat = 0, 0
-  for measure_num, measure in enumerate(measures):
-    lines = measure.split('\n')
-    lines = [line for line in lines if '//' not in line]
-    num_subbeats = len(lines)
-
-    for lidx, line in enumerate(lines):
-      beat_increment = beats_per_measure / num_subbeats
-
-      line = _notelines.parse_line(line)
-      if any(x not in set(list('01234')) for x in line):
-        print(f'Error: Bad symbol found in line, {line}')
-        raise ValueError(f'Bad symbol found in line, {line}')
-      
-      if not beat_in_any_warp(unwarped_beat, warps):
-        if warped_beat not in beats_to_lines:
-          beats_to_lines[warped_beat] = line
-          beats_to_increments[warped_beat] = beat_increment
-        else:
-          # at beginning and end of warp, we attempt to assign to the same beat
-          orig_line = beats_to_lines[warped_beat]
-          if _notelines.has_notes(line):
-            if orig_line.replace('2', '3') != line:
-              if orig_line.replace('2', '1') != line:
-                if orig_line.replace('3', '0') != line:
-                  beats_to_lines[warped_beat] = line
-                  beats_to_increments[warped_beat] = beat_increment
-          elif _notelines.has_notes(orig_line):
-            pass
-        if not beat_begins_any_warp(unwarped_beat, warps):
-          warped_beat += beat_increment
-        if set(line) != set('0'):
-          prev_dp_line = line
+  # Decide to keep start or end line of warp
+  warp_to_line = {}
+  for warp in warps:
+    start, end = warp[0], warp[0] + warp[1]
+    if start in beat_to_lines and end not in beat_to_lines:
+      warp_to_line[start] = start
+    elif start not in beat_to_lines and end in beat_to_lines:
+      warp_to_line[start] = end
+    elif start in beat_to_lines and end in beat_to_lines:
+      start_line, end_line = beat_to_lines[start], beat_to_lines[end]
+      if start_line.replace('2', '3') != end_line and \
+         start_line.replace('2', '1') != end_line and \
+         start_line.replace('3', '0') != end_line:
+        warp_to_line[start] = end
       else:
-        # If hold release occurs within warp, add as new line
-        # Purposefully be too lenient here, since it's easy to filter non-sensical hold releases later
-        if '3' in line:
-        # if set(line) == set(list('03')):
-          prev_beat = list(beats_to_lines.keys())[-1]
-          # prev_twos_idxs = set([i for i, c in enumerate(prev_dp_line) if c == '2'])
-          # curr_three_idxs = set([i for i, c in enumerate(line) if c == '3'])
-          # import code; code.interact(local=dict(globals(), **locals()))
-          # if prev_twos_idxs.issubset(curr_three_idxs):
-          # if prev_dp_line.replace('2', '3') == line:
-          if True:
-            release_beat = prev_beat + WARP_RELEASE_TIME
-            beats_to_lines[release_beat] = line
-            beats_to_increments[prev_beat] = WARP_RELEASE_TIME
-            beats_to_increments[release_beat] = beat_increment - WARP_RELEASE_TIME
+        warp_to_line[start] = start
 
-      unwarped_beat += beat_increment
-
-  # Filter repeated hold releases from warping
-  # This occurs from visual gimmicks where holds advance instantly, but do not completely disappear
-  beats_to_lines, beats_to_increments = filter_repeated_hold_releases(beats_to_lines, beats_to_increments)
-
-  # Add in empty lines for warps for proper bpm parsing
-  beats_to_lines, beats_to_increments = add_empty_lines(beats_to_lines, beats_to_increments)
-  return beats_to_lines, beats_to_increments
+  # Shift beats after warps
+  new_beat_to_lines = {}
+  new_beat_to_incs = {}
+  for beat, line in beat_to_lines.items():
+    shift = total_warp_beat(beat, warps)
+    if beat in nonwarp_beats:
+      shifted_beat = beat - shift
+    else:
+      # hold release line in warp - add very small beat offset
+      shifted_beat = beat - shift
+      while shifted_beat in new_beat_to_lines:
+        shifted_beat += WARP_RELEASE_TIME
+    # if beat starts a warp, use warp_to_line, otherwise default to line
+    new_beat_to_lines[shifted_beat] = warp_to_line.get(beat, line)
+    new_beat_to_incs[shifted_beat] = beat_to_incs[beat]      
+  beat_to_lines = new_beat_to_lines
+  beat_to_incs = new_beat_to_incs
+  return beat_to_lines, beat_to_incs
 
 
-def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
+def filter_repeated_hold_releases(beat_to_lines, beat_to_incs):
   '''
     Ignoring empty lines, filter out duplicated hold release lines
     These can only arise from inserting hold releases during warps
   '''
-  nonempty_btol = {k: v for k, v in beats_to_lines.items() if set(v) != set('0')}
+  nonempty_btol = {k: v for k, v in beat_to_lines.items() if set(v) != set('0')}
   beats = list(nonempty_btol.keys())
   assert beats == sorted(beats), 'ERROR: Beats are not sorted by default'
   ok_beats = []
@@ -405,46 +424,46 @@ def filter_repeated_hold_releases(beats_to_lines, beats_to_incs):
       ok_beats.append(beats[i])
   ok_beats.append(beats[len(lines)-1])
 
-  filt_beats_to_lines = {k: v for k, v in beats_to_lines.items() if k in ok_beats}
-  filt_beats_to_incs = {k: v for k, v in beats_to_incs.items() if k in ok_beats}
-  return filt_beats_to_lines, filt_beats_to_incs
+  filt_beat_to_lines = {k: v for k, v in beat_to_lines.items() if k in ok_beats}
+  filt_beat_to_incs = {k: v for k, v in beat_to_incs.items() if k in ok_beats}
+  return filt_beat_to_lines, filt_beat_to_incs
 
 
-def add_empty_lines(beats_to_lines, beats_to_incs):
+def add_empty_lines(beat_to_lines, beat_to_incs):
   '''
     Every beat + its increment should be a key in both dicts
   '''
-  example_line = list(beats_to_lines.values())[0]
+  example_line = list(beat_to_lines.values())[0]
   empty_line = '0'*len(example_line)
 
   # start at beat 0 
-  beats_to_incs[-1] = 1
+  beat_to_incs[-1] = 1
 
-  add_beats_to_lines = {}
-  add_beats_to_incs = {}
-  beats = set(beats_to_incs.keys())
-  for beat in sorted(beats_to_incs.keys()):
-    next_beat = beat + beats_to_incs[beat]
+  add_beat_to_lines = {}
+  add_beat_to_incs = {}
+  beats = set(beat_to_incs.keys())
+  for beat in sorted(beat_to_incs.keys()):
+    next_beat = beat + beat_to_incs[beat]
     if next_beat not in beats:
       next_beats = [b for b in beats if b > beat]
       if next_beats:
         min_next_beat = min(next_beats)
-        min_inc = min([beats_to_incs[beat], beats_to_incs[min_next_beat]])
+        min_inc = min([beat_to_incs[beat], beat_to_incs[min_next_beat]])
 
         nb = beat + min_inc
         while nb < min_next_beat:
-          add_beats_to_lines[nb] = empty_line
-          add_beats_to_incs[nb] = min_inc
+          add_beat_to_lines[nb] = empty_line
+          add_beat_to_incs[nb] = min_inc
           nb += min_inc
 
-  beats_to_lines.update(add_beats_to_lines)
-  beats_to_incs.update(add_beats_to_incs)
+  beat_to_lines.update(add_beat_to_lines)
+  beat_to_incs.update(add_beat_to_incs)
 
-  sorted_beats = sorted(list(beats_to_lines.keys()))
+  sorted_beats = sorted(list(beat_to_lines.keys()))
   sorted_beats = [b for b in sorted_beats if b >= 0]
-  beats_to_lines = {k: beats_to_lines[k] for k in sorted_beats}
-  beats_to_incs = {k: beats_to_incs[k] for k in sorted_beats}
-  return beats_to_lines, beats_to_incs
+  beat_to_lines = {k: beat_to_lines[k] for k in sorted_beats}
+  beat_to_incs = {k: beat_to_incs[k] for k in sorted_beats}
+  return beat_to_lines, beat_to_incs
 
 
 def warp_data(warps, data):
@@ -458,62 +477,6 @@ def warp_data(warps, data):
     import code; code.interact(local=dict(globals(), **locals()))
     raise Exception(f'Error: Warping data failed - no longer in order')
   return adj_data
-
-
-def warp_fakes(warps, fakes, beats):
-  '''
-    Adjust fake ranges by warps
-    Remove fakes that are in warps
-  '''
-  adj_fakes = []
-  for beat, val in fakes:
-    fake_range = (beat, beat + val)
-    overlaps = [w for w in warps if ranges_overlap(w, fake_range)]
-    if overlaps:
-      for new_range in get_warped_fake_ranges(overlaps, fake_range, beats):
-        first_beat, range_len = new_range
-        new_start = first_beat - total_warp_beat(first_beat, warps)
-        adj_fakes.append((new_start, range_len))                
-      pass
-    else:
-      # current fake section doesn't overlap any warp, so shift by earlier warps
-      new_start = beat - total_warp_beat(beat, warps)
-      adj_fakes.append((new_start, val))
-  return adj_fakes
-
-
-def get_warped_fake_ranges(warps, fake, beats):
-  '''
-    Find consecutive ranges of beats in fake that are not in warps
-  '''
-  ranges = []
-  fake_start, fake_end = fake
-  bs = [b for b in beats if fake_start <= b <= fake_end]
-  i = 0
-  while i < len(bs):
-    if not beat_in_any_warp(bs[i], warps):
-      j = i + 1
-      while j < len(bs) and not beat_in_any_warp(bs[j], warps):
-        j += 1
-      ranges.append((bs[i], bs[j-1] - bs[i]))
-      i = j + 1
-    else:
-      i += 1
-  return ranges
-
-
-def ranges_overlap(r1, r2):
-  return r1[0] <= r2[0] <= r1[1] or r1[0] <= r2[1] <= r1[1]
-
-
-def total_warp_beat(beat, warps):
-  tot = 0
-  for start, end in warps:
-    if end <= beat:
-      tot += end - start
-    elif start <= beat <= end:
-      tot += beat - start
-  return tot
 
 
 '''
@@ -530,31 +493,18 @@ def parse_fakes(fakes):
   return fake_list
 
 
-def filter_fakes(beat_to_lines, fakes):
+def apply_fakes(beat_to_lines, fakes):
   example_line = list(beat_to_lines.values())[0]
   empty_line = '0' * len(example_line)
 
-  fake_ranges = []
-  for beat, val in fakes:
-    if val > 0:
-      fake_ranges.append((beat, beat + val))
-    else:
-      # fake range reduced to 0 because of overlapping warp
-      # filter 10 warp lines
-      fake_ranges.append((beat, beat + WARP_RELEASE_TIME * 10))
-
-  inrange = lambda x, range: range[0] < x < range[1]
-
-  new_beat_to_lines = dict()
-  for beat, line in beat_to_lines.items():
-    if any(inrange(beat, r) for r in fake_ranges):
-      if '3' not in line:
-        new_beat_to_lines[beat] = empty_line
-      else:
-        new_beat_to_lines[beat] = line
-    else:
-      new_beat_to_lines[beat] = line
-  return new_beat_to_lines
+  infake = lambda x, fake: fake[0] < x < fake[0] + fake[1]
+  num_fakes = 0
+  for beat in beat_to_lines:
+    if any(infake(beat, r) for r in fakes):
+      num_fakes += 1
+      beat_to_lines[beat] = empty_line
+  print(f'Filtered {num_fakes} fake lines')
+  return beat_to_lines
 
 
 '''
