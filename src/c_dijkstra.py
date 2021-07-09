@@ -289,7 +289,7 @@ def main():
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'PRIME - Tatsh S7 arcade'
-  nm = '%X (Percent X) - Pory S17 arcade'
+  # nm = '%X (Percent X) - Pory S17 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
@@ -310,6 +310,7 @@ def main():
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Good Night - Dreamcatcher D19 arcade'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

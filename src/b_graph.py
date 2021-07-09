@@ -760,7 +760,7 @@ def main():
 
   # Test: Failures
   # nm = 'PRIME - Tatsh S7 arcade'
-  nm = '%X (Percent X) - Pory S17 arcade'
+  # nm = '%X (Percent X) - Pory S17 arcade'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'
@@ -834,6 +834,7 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

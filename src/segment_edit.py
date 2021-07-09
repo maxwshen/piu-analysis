@@ -122,9 +122,15 @@ def emperor_d17(beats, features, annots, motifs):
   return new_annots, new_motifs
 
 
+def uglydee_d15(beats, features, annots, motifs):
+  # Remove all motifs
+  return annots, {}
+
 
 overrides = {
   'Native - SHK S20 arcade': native_s20,
   'Final Audition - BanYa S15 arcade': final_audition_s15,
   # 'Emperor - BanYa D17 arcade': emperor_d17,
+  'Ugly Dee - Banya Production D15 arcade': uglydee_d15,
+  'Ugly Dee - Banya Production D11 arcade': uglydee_d15,
 }
