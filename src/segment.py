@@ -755,9 +755,11 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   
   # Test: Many hands
-  nm = 'London Bridge - SCI Guyz S11 arcade'
+  # nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Test: failures
+  # nm = 'PRIME - Tatsh S7 arcade'
+  nm = '%X (Percent X) - Pory S17 arcade'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Poseidon - Quree S20 arcade'

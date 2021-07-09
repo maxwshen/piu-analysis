@@ -747,7 +747,7 @@ def main():
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Acquaintance - Outsider S17 arcade'
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
-  nm = 'Elvis - AOA S15 arcade'
+  # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Club Night - Matduke S18 arcade'
@@ -759,6 +759,8 @@ def main():
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
+  # nm = 'PRIME - Tatsh S7 arcade'
+  nm = '%X (Percent X) - Pory S17 arcade'
   # nm = 'Log In - SHK S20 arcade'
   # nm = 'Shub Niggurath - Nato S24 arcade'
   # nm = 'Allegro Con Fuoco - FULL SONG - - DM Ashura S23 fullsong'

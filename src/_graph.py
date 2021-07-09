@@ -195,9 +195,10 @@ class Graph():
         return
 
     if timedelta < 0.001:
-      print(f'Error: Notes are too close together, likely from high bpm. {line1} {line2}')
-      import code; code.interact(local=dict(globals(), **locals()))
-      sys.exit(1)
+      pass
+      # print(f'Error: Notes are too close together, likely from high bpm. {line1} {line2}')
+      # import code; code.interact(local=dict(globals(), **locals()))
+      # sys.exit(1)
     return
 
 

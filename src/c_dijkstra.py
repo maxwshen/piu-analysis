@@ -288,9 +288,11 @@ def main():
   # nm = 'Red Swan - Yahpp S18 arcade'
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Elvis - AOA S15 arcade'
+  # nm = 'PRIME - Tatsh S7 arcade'
+  nm = '%X (Percent X) - Pory S17 arcade'
 
   # Test: Many hands
-  nm = 'London Bridge - SCI Guyz S11 arcade'
+  # nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
