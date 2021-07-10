@@ -177,10 +177,7 @@ def form_graph(nm, subset_measures = None):
               active_holds.remove(p)
 
     bi = beat_to_increments[beat]
-    try:
-      time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
-    except:
-      import code; code.interact(local=dict(globals(), **locals()))
+    time, bpm, bpms = update_time(time, beat, bi, bpm, bpms)
     time += stops_d.get(beat, 0)
     timer.update()
 
@@ -380,6 +377,7 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
     start, end = warp[0], warp[0] + warp[1]
     start_line = beat_to_lines.get(start, None)
     end_line = beat_to_lines.get(end, None)
+    # print(start, end, start_line, end_line)
     
     if start_line and not end_line:
       warp_to_line[start] = start_line
@@ -388,14 +386,19 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
     elif start_line and end_line:
       if is_empty(start_line):
         warp_to_line[start] = end_line
+        # print(f'Replaced {start_line} with {end_line} at warped beat {start}')
       elif is_empty(end_line):
         warp_to_line[start] = start_line
+        # print(f'Retained {start_line} over {end_line} at warped beat {start}')
+      # both start_line and end_line exist and are not empty
       elif start_line.replace('2', '3') != end_line and \
          start_line.replace('2', '1') != end_line and \
          start_line.replace('3', '0') != end_line:
         warp_to_line[start] = end_line
+        # print(f'Replaced {start_line} with {end_line} at warped beat {start}')
       else:
         warp_to_line[start] = start_line
+        # print(f'Retained {start_line} over {end_line} at warped beat {start}')
     # print(start, end, start_line, end_line, warp_to_line.get(start, None))
 
   # Shift beats after warps
@@ -412,8 +415,9 @@ def apply_warps(beat_to_lines, beat_to_incs, warps):
         shifted_beat += WARP_RELEASE_TIME
       print(f'Found hold release in warp; {shifted_beat}, {line}')
     # if beat starts a warp, use warp_to_line, otherwise default to line
-    new_beat_to_lines[shifted_beat] = warp_to_line.get(beat, line)
-    new_beat_to_incs[shifted_beat] = beat_to_incs[beat]
+    if shifted_beat not in new_beat_to_lines:
+      new_beat_to_lines[shifted_beat] = warp_to_line.get(beat, line)
+      new_beat_to_incs[shifted_beat] = beat_to_incs[beat]
   
   sorted_beats = sorted(list(new_beat_to_lines.keys()))
   beat_to_lines = {b: new_beat_to_lines[b] for b in sorted_beats}
@@ -740,7 +744,7 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
@@ -819,7 +823,7 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

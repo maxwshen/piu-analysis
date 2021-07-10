@@ -234,7 +234,7 @@ def main():
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
   # nm = 'Macaron Day - HyuN D18 arcade'
@@ -273,7 +273,7 @@ def main():
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'PRIME - Tatsh S7 arcade'
-  nm = '%X (Percent X) - Pory S17 arcade'
+  # nm = '%X (Percent X) - Pory S17 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'

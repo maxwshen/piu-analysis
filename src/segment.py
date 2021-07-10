@@ -781,7 +781,7 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Fixed
@@ -810,7 +810,7 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return
