@@ -20,7 +20,6 @@ NAME = util.get_fn(__file__)
 out_dir = _config.OUT_PLACE + NAME + '/'
 util.ensure_dir_exists(out_dir)
 
-log_fn = ''
 stats_d = defaultdict(lambda: 0)
 
 
@@ -173,23 +172,9 @@ def is_final_node(node):
 
 
 '''
-  IO
-'''
-def output_log(message):
-  print(message)
-  with open(log_fn, 'w') as f:
-    f.write(message)
-  return
-
-
-'''
   Run
 '''
 def run_single(nm):
-
-  global log_fn
-  log_fn = out_dir + f'{nm}.log'
-  util.exists_empty_fn(log_fn)
   print(nm)
 
   move_skillset = _movement.nm_to_moveskillset(nm)
@@ -208,7 +193,6 @@ def run_single(nm):
   df.to_csv(out_dir + f'{nm}.csv')
 
   # graph.interactive_debug()
-  # output_log('Success')
   return
 
 
@@ -289,7 +273,7 @@ def main():
   # nm = 'Accident - MAX S18 arcade'
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'PRIME - Tatsh S7 arcade'
-  # nm = '%X (Percent X) - Pory S17 arcade'
+  nm = '%X (Percent X) - Pory S17 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
@@ -310,7 +294,7 @@ def main():
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Good Night - Dreamcatcher D19 arcade'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

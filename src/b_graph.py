@@ -38,8 +38,6 @@ stance_store = {
   'doubles': _stances.Stances(style='doubles'),
 }
 
-log_fn = ''
-
 # Add lines with hold releases in warps at this time increment (seconds)
 WARP_RELEASE_TIME = Fraction(1, 1000)
 
@@ -621,15 +619,6 @@ def handle_halfdouble(beat_to_lines):
   else:
     return beat_to_lines
 
-'''
-  Logging, IO
-'''
-def output_log(message):
-  print(message)
-  with open(log_fn, 'a') as f:
-    f.write(message)
-  return
-
 
 def summarize_graph(nm, nodes):
   dd = defaultdict(list)
@@ -660,10 +649,7 @@ def load_data(inp_dir, sc_nm):
 '''
 def run_single(sc_nm):
   timing_judge = 'piu nj'
-
   print(sc_nm, timing_judge)
-  global log_fn
-  log_fn = out_dir + f'{sc_nm} {timing_judge}.log'
 
   nodes, edges_out, edges_in, stance = form_graph(sc_nm)
   nodes, edges_out, edges_in = filter_empty_nodes(nodes, edges_out, edges_in)
@@ -676,7 +662,6 @@ def run_single(sc_nm):
   print(f'Found {len(nodes)} nodes')
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
     pickle.dump((nodes, edges_out, edges_in), f)
-  # output_log('Success')
 
   summarize_graph(sc_nm, nodes)
   return

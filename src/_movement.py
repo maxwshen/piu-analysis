@@ -378,23 +378,25 @@ class Movement():
       E.g., not a jump is if 1 foot has the same position and action as before.
     '''
     cost = 0
-    feet = self.feet
 
     matched_keys = ['limb_to_pos']
     matches = lambda x: all([d1[mkey][x] == d2[mkey][x] for mkey in matched_keys])
-    feet_stay = [limb for limb in feet if matches(limb)]
+    feet_stay = [limb for limb in self.feet if matches(limb)]
     both_feet_moved = bool(len(feet_stay) == 0)
 
     pressing_keys = ['limb_to_heel_action', 'limb_to_toe_action']
     pressing = lambda x: any([d2[pkey][x] == '1' or d2[pkey][x] == '2'
                               for pkey in pressing_keys])
-    feet_pressing = [limb for limb in feet if pressing(limb)]
-
+    feet_pressing = [limb for limb in self.feet if pressing(limb)]
     both_feet_pressing = bool(len(feet_pressing) == 2)
+
+    # count as jump if foot stays in same place, but alternate heel/toe
     moved = self.move_cost(d1, d2) > 0
     both_feet_pressing_and_moved = both_feet_pressing and moved
 
-    if both_feet_moved or both_feet_pressing:
+    # if both_feet_moved or both_feet_pressing:
+    # if both_feet_moved and both_feet_pressing:
+    if both_feet_pressing_and_moved:
       cost += self.costs['Jump']
 
     if self.verbose: print(f'Jump cost: {cost}')
