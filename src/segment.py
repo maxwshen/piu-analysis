@@ -332,19 +332,14 @@ def increment_beat(beat, beats):
 def form_data_struct(sc_nm, line_nodes, features, beats, uniform_sections, all_motifs):
   '''
     d[beat] = decision in {
-      'alternate',
-      'jacks',
-      'footswitch',
-      'bracket',
-      'jump',
-      'jumporbracket',
-      missing: (let dijkstra decide) 
+      'any', 'alternate', 'jacks', 'footswitch', 'bracket', 'jump',
+      'jumporbracket', etc ...
     }
   '''
   level = scinfo.name_to_level[sc_nm]
   unif_ds = struct_uniform(line_nodes, features, beats, uniform_sections, level)
   motif_ds = struct_motifs(line_nodes, features, beats, all_motifs, level)
-  joint_ds = unif_ds.update(motif_ds)
+  motif_ds = unify_disconnected_twohits(beats, unif_ds, motif_ds)
   return unif_ds, motif_ds
 
 
@@ -360,8 +355,8 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
 
     if single_hit_alternating(lines_holds, fts):
       annot = 'alternate'
-    # Decide 2hits as jumps or brackets
     elif is_twohit(lines_holds, fts):
+      # Decide 2hits as jumps or brackets
       if level < _params.bracket_level_threshold:
         annot = 'jump'
       elif _notelines.frac_bracketable(lines) < 1:
@@ -451,6 +446,7 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
           dp_count = lambda line: line.count('1') + line.count('2')
           num_dps = sum(dp_count(line) for line in dp_lines)
           if len(dp_lines) == 1 and num_dps == 1:
+            # print(lines_holds)
             hold = 'jackorfree'
           else:
             hold = 'jackoralternateorfree'
@@ -458,6 +454,75 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
       ds[section] = f'{jfs}-{twohit}-{hold}'
   return ds
 
+
+def unify_disconnected_twohits(beats, unif_ds, motif_ds):
+  '''
+    Use uniform annotations on single twohits, connecting them, only if:
+    - they are within CONNECT_DIST lines, and
+    - they are separated only by blank or 'alternate' annotations
+    Finds expanded context to call twohits as jumps or brackets
+    If connected groups are found, overwrite existing (shorter) motifs
+      Motivating example: Good Night S20
+        00120
+        10030, 
+        20100
+        30001, 
+        00102
+        01003, 
+        02100
+        03010, 
+        10020
+        00030, 
+  '''
+  CONNECT_DIST = 4
+  twohits = ['jump', 'jumporbracket']
+  ok = ['', 'alternate'] + twohits  
+  motif_ranges = list(motif_ds.keys())
+  num_new_contexts = 0
+  num_deleted = 0
+
+  i = 0
+  while i < len(beats):
+    anti = unif_ds.get(beats[i], '')
+    if anti in twohits:
+      annots = [anti]
+      last_twohit_idx = 0
+      j = i + 1
+      while j < len(beats):
+        antj = unif_ds.get(beats[j], '')
+        if antj not in ok:
+          break
+        annots.append(antj)
+        if antj in twohits:
+          last_twohit_idx = len(annots) - 1
+        if len(annots) - last_twohit_idx > CONNECT_DIST:
+          break
+        j += 1
+      
+      # ensure that all twohits are within CONNECT_DIST
+      annots = annots[:last_twohit_idx + 1]
+      if len(annots) > 1:        
+        start_beat, end_beat = beats[i], beats[i + last_twohit_idx]
+        # form new motif based on % bracketable
+        twohit_ants = [ant for ant in annots if ant in twohits]
+        if 'jump' in twohit_ants:
+          new_motif = 'any-jump-any'
+        else:
+          new_motif = 'any-jumporbracket-any'
+
+        for motif_range in motif_ranges:
+          if range_in_range(motif_range, (start_beat, end_beat)):
+            del motif_ds[motif_range]
+            num_deleted += 1
+        
+        motif_ds[(start_beat, end_beat)] = new_motif
+        num_new_contexts += 1
+      i = j
+    else:
+      i += 1
+        
+  print(f'Overwrote {num_deleted} motifs with {num_new_contexts} expanded twohit contexts')
+  return motif_ds
 
 
 '''
@@ -647,7 +712,7 @@ def filter_annots(beats, unif_d, motifs):
       if tag_twohits in ['jump', 'bracket', 'jumporbracket']:
         if 'jumporbracket' in annots:
           new_motifs[section] = tag
-      if tag_hold in ['jack', 'alternate', 'free', 'jackoralternateorfree']:
+      if tag_hold in ['jack', 'alternate', 'free', 'jackorfree', 'jackoralternateorfree']:
         new_motifs[section] = tag
   return unif_d, new_motifs
 
