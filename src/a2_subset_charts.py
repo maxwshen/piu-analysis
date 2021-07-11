@@ -36,6 +36,8 @@ subsets = {
     (df['Steptype simple'].str.contains('D')),
   ],
   'charts_all': [],
+  'charts_lowlevel': [(df['METER'] <= 15)],
+  'charts_highlevel': [(df['METER'] > 15)],
 }
 
 
