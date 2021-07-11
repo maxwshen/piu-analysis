@@ -410,6 +410,7 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
@@ -423,7 +424,7 @@ def main():
   # nm = 'You Got Me Crazy - MAX D18 arcade'
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

@@ -9,6 +9,10 @@ perfect_windows = {
   'itg': [0.0215, 0.0215],
 }
 
+# Seconds
+# faep x2 d24's rolling brackets are 58.3 milliseconds apart, so do just above that
+multi_window = 0.060
+
 # min. level to propose brackets alongside jumps for two-hits (01100)
 bracket_level_threshold = 15
 # min. level to propose alternating feet in hold-taps with brackets
@@ -48,7 +52,8 @@ movement_costs = {
       'No movement reward': -0.2,
       'Jacks': 0.0, 
       'Toe-heel alternate': 5,
-      'Multi reward': -1.5,
+      'Multi reward': 0,
+      'Double step in multi': 5,
       # Unused, since only air-X allowed
       'Bracket': 5,
       'Bracket on 1panel line': 5,
@@ -86,7 +91,8 @@ movement_costs = {
       'No movement reward': -.2,
       'Jacks': 0.0, 
       'Toe-heel alternate': 0.1,
-      'Multi reward': -1.5,
+      'Multi reward': -0.05,
+      'Double step in multi': 5,
       'Bracket': 0.05,
       'Bracket on 1panel line': 0.1,
       'Hands': 5,

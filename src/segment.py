@@ -444,14 +444,14 @@ def struct_motifs(line_nodes, features, beats, motifs, level):
           'Line with active holds')
       if any(bool('4' in lineh or '3' in lineh) for lineh in lines_holds):
         if level < _params.hold_bracket_level_threshold:
-          hold = 'jack'
+          hold = 'jackorfree'
         else:
           has_dp = lambda line: any(x in line for x in list('12'))
           dp_lines = [line for line in lines_holds if has_dp(line)]
           dp_count = lambda line: line.count('1') + line.count('2')
           num_dps = sum(dp_count(line) for line in dp_lines)
           if len(dp_lines) == 1 and num_dps == 1:
-            hold = 'jack'
+            hold = 'jackorfree'
           else:
             hold = 'jackoralternateorfree'
       

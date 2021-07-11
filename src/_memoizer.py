@@ -26,6 +26,10 @@ def get_edge_cost(mover, sa1, sa2, d1, d2, timedelta,
   cost_dict = copy.copy(cost_dict)
   cost_dict['multihit'] = mover.multihit_modifier(d1, d2, line_node2)
 
+  cost_dict['double_step_in_multi'] = 0
+  if 'multi' in line_node2 and cost_dict['double_step'] > 0:
+    cost_dict['double_step_in_multi'] = mover.costs['Double step in multi']
+
   # if 0.001 < timedelta < mover.params['Time threshold']:
   #   time_factor = max(1.0, mover.params['Time normalizer'] / timedelta)
   #   time_affected = (

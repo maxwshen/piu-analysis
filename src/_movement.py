@@ -532,6 +532,7 @@ class Movement():
     '''
       Apply multihit reward only if brackets are involved
       Remove jump penalty if applied
+      Penalize double steps with multihits
     '''
     cost = 0
     is_multi = bool('multi' in node_nm)

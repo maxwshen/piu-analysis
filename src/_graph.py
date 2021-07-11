@@ -263,7 +263,8 @@ class Graph():
     '''
     combos = {'jackorfootswitch': ['jack', 'footswitch'],
               'jumporbracket': ['jump', 'bracket'],
-              'jackoralternateorfree': ['jack', 'alternate', 'free']}
+              'jackoralternateorfree': ['jack', 'alternate', 'free'],
+              'jackorfree': ['jack', 'free']}
     get_combo = lambda motif: combos.get(motif, [motif])
 
     out_sas, ntags = [], []
@@ -360,14 +361,11 @@ class Graph():
 
 
   def filter_hold(self, prev_sa, sas, hold):
-    '''
-      TODO - Bigger problem is that I assumed implicitly that hold motifs would only start at the first downpress and end.
-      Right now, hold motifs are longer than assumed, which is why these bugs are happening.
-    '''
     prev_limbs = [limb for limb in self.stances.limbs_doing(prev_sa, list('13'))]
     holding_limb = [limb for limb in self.stances.limbs_doing(prev_sa, list('24'))]
     if hold == 'jack':
-      accept = lambda sa: self.stances.limbs_doing(sa, list('12')) != holding_limb
+      accept = lambda sa: all(x not in holding_limb 
+          for x in self.stances.limbs_doing(sa, list('12')))
     elif hold == 'alternate':
       accept = lambda sa: all(x not in prev_limbs
           for x in self.stances.limbs_doing(sa, list('12')))

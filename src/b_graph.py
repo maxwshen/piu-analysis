@@ -196,7 +196,7 @@ def form_graph(nm, subset_measures = None):
   return nodes, dict(edges_out), dict(edges_in), stance
 
 
-def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj'):
+def propose_multihits(nodes, edges_out, edges_in, stance, post_window):
   '''
     Add new nodes and edges when a player can hit multiple notes at different beats with a single hit.
     Augmenting graph after formation helps handle multihits that span measures
@@ -205,7 +205,6 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
 
     Consider at most 3 additional nodes (for 4 total). More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
   '''
-  [pre_window, post_window] = _params.perfect_windows[timing_judge]
   num_multihits_proposed = 0
   nms = list(nodes.keys())
   for idx in range(len(nodes)):
@@ -214,7 +213,7 @@ def propose_multihits(nodes, edges_out, edges_in, stance, timing_judge = 'piu nj
     time = node['Time']
 
     if nm == 'init':
-      node['Timing judge'] = timing_judge
+      node['Multi window'] = post_window
       continue
 
     if not _notelines.has_downpress(node['Line']):
@@ -652,8 +651,11 @@ def load_data(inp_dir, sc_nm):
   Run
 '''
 def run_single(sc_nm):
-  timing_judge = 'piu nj'
-  print(sc_nm, timing_judge)
+  post_window = _params.multi_window
+  # timing_judge = 'piu nj'
+  # [pre_window, post_window] = _params.perfect_windows[timing_judge]
+
+  print(sc_nm)
 
   nodes, edges_out, edges_in, stance = form_graph(sc_nm)
   nodes, edges_out, edges_in = filter_empty_nodes(nodes, edges_out, edges_in)
@@ -661,7 +663,7 @@ def run_single(sc_nm):
   # Faster than forming graph.
   # More efficient to just run this for each timing judge
   nodes, edges_out, edges_in = propose_multihits(nodes,
-      edges_out, edges_in, stance, timing_judge=timing_judge)
+      edges_out, edges_in, stance, post_window)
 
   print(f'Found {len(nodes)} nodes')
   with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
