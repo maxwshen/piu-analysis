@@ -144,7 +144,7 @@ class Movement():
   def foot_inversion_cost(self, d):
     '''
       Penalize if the right foot is left of left foot by a large distance
-      Inversion distance threshold = 185 mm (distance from center to corner). Basically only penalize 180 twists. Penalty should be less than a double step so that we prefer to do a 180 twist than double step once, but prefer to double step to avoid multiple 180 twists
+      Inversion distance threshold = 185 mm (distance from center to corner). Basically only penalize 180 twists - encourage feet to be closer
     '''
     cost = 0
     left_coord = self.pos_to_center[d['limb_to_pos']['Left foot']]
