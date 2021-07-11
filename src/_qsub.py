@@ -36,7 +36,7 @@ def gen_qsubs(NAME, chart_fnm):
       if 'highlevel' in chart_fnm:
         vmem = 'h_vmem=64G'
       else:
-        vmem = 'h_vmem=2G'
+        vmem = 'h_vmem=4G'
     else:
       vmem = 'h_vmem=1G'
 
@@ -88,7 +88,10 @@ def gen_qsubs_remainder(NAME, chart_fnm, extension):
 
     # Write qsub commands
     if NAME == 'c_dijkstra':
-      vmem = 'h_vmem=4G'
+      if 'highlevel' in chart_fnm:
+        vmem = 'h_vmem=64G'
+      else:
+        vmem = 'h_vmem=4G'
     else:
       vmem = 'h_vmem=1G'
 
