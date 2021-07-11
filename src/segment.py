@@ -499,7 +499,6 @@ def unify_disconnected_twohits(beats, unif_ds, motif_ds):
           break
         j += 1
       
-      # ensure that all twohits are within CONNECT_DIST
       annots = annots[:last_twohit_idx + 1]
       if len(annots) > 1:        
         start_beat, end_beat = beats[i], beats[i + last_twohit_idx]
@@ -846,7 +845,7 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  nm = 'Good Night - Dreamcatcher S20 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Fixed
@@ -876,6 +875,7 @@ def main():
   # nm = 'Anguished Unmaking - void D18 arcade'
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Ugly Dee - Banya Production D15 arcade'
+  nm = 'Destination - SHK D19 shortcut'
 
   run_single(nm)
   return

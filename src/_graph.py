@@ -95,7 +95,12 @@ class Graph():
     Graph functions
   '''
   def node_generator(self, prev_node, line_node):
-    # Input: previous graph node (specific stance-action) to next line
+    '''
+      Input: previous graph node (specific stance-action), current line node
+      Propose stance actions, and filter using: 
+      - Current tag path constraints
+      - Filter redundant hands
+    '''
     prev_line_node, prev_sa, prev_tag, prev_stance, prev_d = self.full_parse(prev_node)
     if prev_line_node != 'init':
       prev_line = self.line_nodes[prev_line_node]['Line with active holds']
@@ -382,6 +387,8 @@ class Graph():
     filters = [
       self.filter_edge_unnecessary_jump,
       self.filter_jump_jump_crossover,
+      self.filter_firstline_crossover,
+      self.filter_firstline_unnecessary_bracketpos,
     ]
     if not filters:
       return False
@@ -419,7 +426,40 @@ class Graph():
           return True
     return False
 
+
+  def filter_firstline_crossover(self, node1, node2):
+    # If first line is 'init', second line should not have a crossover.
+    if 'init' not in node1:
+      return False
+    line_node1, sa1, tag1, stance1, d1 = self.full_parse(node1)
+    line_node2, sa2, tag2, stance2, d2 = self.full_parse(node2)
+    if self.mover.foot_inversion_cost(d2) > 0:
+        return True
+    return False
   
+
+  def filter_firstline_unnecessary_bracketpos(self, node1, node2):
+    # If first line is 'init', second line should use brackets unless required
+    if 'init' not in node1:
+      return False
+    line_node1, sa1, tag1, stance1, d1 = self.full_parse(node1)
+    line_node2, sa2, tag2, stance2, d2 = self.full_parse(node2)
+    
+    # If three or more heels/toes are pressing, then bracket is required
+    actions = ''
+    for foot in self.mover.feet:
+      for key in ['limb_to_heel_action', 'limb_to_toe_action']:
+        actions += d2[key][foot]
+    if actions.count('1') + actions.count('2') > 2:
+      return False
+
+    # Otherwise, filter if using bracketpos
+    for foot in self.mover.feet:
+      if d2['limb_to_pos'][foot] in self.mover.bracket_pos:
+        return True
+    return False    
+
+
   '''
     Helper
   '''
