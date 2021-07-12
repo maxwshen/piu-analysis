@@ -108,12 +108,13 @@ def twist_angle(row1, row2) -> str:
   d1, d2 = get_ds(row1, row2)
   body_angle = row2['Body angle']
   angle = min(body_angle, 360 - body_angle)
-  leniency = 15
-  if angle < 90 - leniency:
+  leniency_90 = 15
+  leniency_180 = 5
+  if angle < 90 - leniency_90:
     return 'none'
-  elif 90 - leniency <= angle <= 90 + leniency:
+  elif 90 - leniency_90 <= angle <= 90 + leniency_90:
     return '90'
-  elif 90 + leniency < angle <= 180 - leniency:
+  elif 90 + leniency_90 < angle <= 180 - leniency_180:
     lpos = np.array(mover.pos_to_center[d2['limb_to_pos']['Left foot']])
     rpos = np.array(mover.pos_to_center[d2['limb_to_pos']['Right foot']])
     threshold_mm = 250

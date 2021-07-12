@@ -427,7 +427,8 @@ def main():
   # nm = 'Destination - SHK D19 shortcut'
   # nm = 'JANUS - MAX D14 arcade'
   # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
-  nm = 'She Likes Pizza - BanYa D16 arcade'
+  # nm = 'She Likes Pizza - BanYa D16 arcade'
+  nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
 
   run_single(nm)

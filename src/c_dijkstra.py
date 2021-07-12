@@ -235,7 +235,7 @@ def main():
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
   # nm = 'Club Night - Matduke S18 arcade'
-  nm = 'Good Night - Dreamcatcher S20 arcade'
+  # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
   # nm = 'Macaron Day - HyuN D18 arcade'
@@ -301,6 +301,7 @@ def main():
   # nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Destination - SHK D19 shortcut'
   # nm = 'JANUS - MAX D14 arcade'
+  nm = 'Mr. Larpus - BanYa D14 arcade'
 
   run_single(nm)
   return
