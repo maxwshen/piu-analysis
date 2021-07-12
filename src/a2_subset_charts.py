@@ -26,6 +26,8 @@ general_filters = [
   (df['METER'] != 99),
   (~df['Name (unique)'].isin(filter_charts)),
   (~df['Name (unique)'].str.contains('infinity')),
+  # Filter performance charts under level 6
+  ((~df['Steptype simple'].str.contains('P')) | (df['METER']>= 6)),
 ]
 
 subsets = {

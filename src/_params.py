@@ -10,7 +10,7 @@ perfect_windows = {
 }
 
 # Seconds
-# faep x2 d24's rolling brackets are 58.3 milliseconds apart, so do just above that
+# faep x2 d24's rolling brackets are 58.3 milliseconds apart, slightly above that
 multi_window = 0.060
 
 # min. level to propose brackets alongside jumps for two-hits (01100)
@@ -77,8 +77,8 @@ movement_costs = {
   'basic': {
     'costs': {
       'Double step': 2.5,
-      'Inverted feet small': 0.3,
-      'Inverted feet big': 0.5,
+      'Inverted feet small': 1.5,
+      'Inverted feet big': 2.25,
       'Inverted hands': 5,
       'Hold footslide': 0.2,
       'Hold footswitch': 5,

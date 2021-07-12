@@ -145,6 +145,11 @@ class Movement():
     '''
       Penalize if the right foot is left of left foot by a large distance
       Inversion distance threshold = 185 mm (distance from center to corner). Basically only penalize 180 twists - encourage feet to be closer
+      
+      Should cost less than a single double step, to capture slow rolling jumps
+        like She Likes Pizza D16, Emperor D17,
+      but should favor a single double step over many lines spent on a 180 twist 
+      In consistent rhythms, segment forces alternating, to hit intended 180s
     '''
     cost = 0
     left_coord = self.pos_to_center[d['limb_to_pos']['Left foot']]

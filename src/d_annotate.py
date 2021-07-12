@@ -405,12 +405,11 @@ def main():
   # nm = 'Beat of The War 2 - BanYa S21 arcade'
   # nm = 'Exceed2 Opening - Banya S15 shortcut'
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S9 arcade'
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
@@ -426,7 +425,10 @@ def main():
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Destination - SHK D19 shortcut'
-  nm = 'JANUS - MAX D14 arcade'
+  # nm = 'JANUS - MAX D14 arcade'
+  # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
+  # nm = 'She Likes Pizza - BanYa D16 arcade'
+  # nm = 'Break Out - Lunatic Sounds D22 arcade'
 
   run_single(nm)
   return

@@ -313,7 +313,10 @@ class Graph():
       else:
         return self.filter_jackfootswitch(prev_sa, sas, jfs)
     elif annot in ['jump', 'bracket', 'jumporbracket']:
-      return self.filter_twohits(sas, twohits)
+      if annot in ['jump', 'bracket']:
+        return self.filter_twohits(sas, annot)
+      else:
+        return self.filter_twohits(sas, twohits)
     elif annot == 'alternate':
       return self.filter_alternate(prev_sa, sas)
     elif annot == 'same':

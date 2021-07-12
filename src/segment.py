@@ -404,6 +404,18 @@ def struct_uniform(line_nodes, features, beats, uniform_sections, level):
         if line2.count('0') == line_len-1 and '2' in line2:
           ds[b2] = 'same'
 
+  # Remove alternate when 'beat since' gets longer
+  # For slow rolling jumps like Emperor D17, She Likes Pizza D16
+  bsi = feature_mapper['beat since']
+  prev_beat_since = features[0][bsi]
+  num_removed = 0
+  for beat, feature in zip(beats[1:], features[1:]):
+    if feature[bsi] > prev_beat_since:
+      if beat in ds and ds[beat] == 'alternate':
+        del ds[beat]
+        num_removed += 1
+    prev_beat_since = feature[bsi]
+  print(f'Removed {num_removed} alternates on pauses')
   return ds
 
 
@@ -832,7 +844,6 @@ def main():
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Wedding Crashers - SHORT CUT - - SHK S18 shortcut'
-  # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Fly high - Dreamcatcher S15 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'HANN (Alone) - (G)I-DLE D17 arcade'
@@ -845,7 +856,7 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Fixed
@@ -876,7 +887,10 @@ def main():
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Destination - SHK D19 shortcut'
-  nm = 'JANUS - MAX D14 arcade'
+  # nm = 'JANUS - MAX D14 arcade'
+  # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
+  # nm = 'She Likes Pizza - BanYa D16 arcade'
+  # nm = 'Break Out - Lunatic Sounds D22 arcade'
 
   run_single(nm)
   return

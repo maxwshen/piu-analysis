@@ -733,7 +733,6 @@ def main():
   # nm = 'Sarabande - MAX S20 arcade'
   # nm = 'Nihilism - Another Ver. - - Nato S21 arcade'
   # nm = 'Time for the moon night - GFRIEND S16 arcade'
-  # nm = 'Good Night - Dreamcatcher S17 arcade'
   # nm = 'Poseidon - Quree S20 arcade'
   # nm = 'Tales of Pumpnia - Applesoda S16 arcade'
   # nm = 'Acquaintance - Outsider S17 arcade'
@@ -746,7 +745,7 @@ def main():
 
   # Test: Fake notes
   # nm = 'Club Night - Matduke S18 arcade'
-  # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
 
   # Test: Failures
@@ -827,7 +826,10 @@ def main():
   # nm = 'Poseidon - SHORT CUT - - Quree D14 shortcut'
   # nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Destination - SHK D19 shortcut'
-  nm = 'JANUS - MAX D14 arcade'
+  # nm = 'JANUS - MAX D14 arcade'
+  # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
+  # nm = 'She Likes Pizza - BanYa D16 arcade'
+  # nm = 'Break Out - Lunatic Sounds D22 arcade'
 
   run_single(nm)
   return
