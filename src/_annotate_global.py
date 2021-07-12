@@ -160,6 +160,21 @@ def irregular_rhythm(df):
   return res
 
 
+def rhythm_change(df):
+  # Beat since changed since previous downpress
+  res = [False]
+  bs = list(df['Beat since downpress'])
+  has_dp = list(df['Has downpress'])
+  beat_since_dp_at_prev_dp = bs[0]
+  for i in range(1, len(bs)):
+    if has_dp[i]:
+      res.append(bs[i] != beat_since_dp_at_prev_dp)
+      beat_since_dp_at_prev_dp = bs[i]
+    else:
+      res.append(False)
+  return res  
+
+
 def bracket_jump_run(df):
   res = []
   lines = list(df['Line with active holds'])
@@ -508,6 +523,7 @@ funcs = {
   'Hold run':               hold_run,
   'Bracket drill':          bracket_drill,
   'Irregular rhythm':       irregular_rhythm,
+  'Rhythm change':          rhythm_change,
   'Bracket jump run':       bracket_jump_run,
   'Side3 singles':          side3_singles,
   'Mid4 doubles':           mid4_doubles,
