@@ -149,6 +149,10 @@ class Graph():
               jfs, twohits, hold)
           ntags = [f'{jfs}-{twohits}-{hold}']*len(sas)
 
+      # Require use of brackets in multihits
+      if 'multi' in line_node:
+        sas, ntags = self.filter_to_brackets(sas, ntags)
+
       for sa, ntag in zip(sas, ntags):
         yield get_node_name(line_node, sa, ntag)
 
@@ -156,11 +160,12 @@ class Graph():
   def edge_generator(self, node):
     line_node, sa, tag, stance, d = self.full_parse(node)
     for line_node2 in self.line_edges[line_node]:
-      if line_node2 == 'final':
-        yield self.final_node
-      else:
-        for node in self.node_generator(node, line_node2):
-          yield node
+      if line_node2 in self.line_nodes:
+        if line_node2 == 'final':
+          yield self.final_node
+        else:
+          for node in self.node_generator(node, line_node2):
+            yield node
 
 
   def edge_cost(self, node1, node2, verbose = False):
@@ -380,6 +385,14 @@ class Graph():
     else:
       accept = lambda sa: True
     return [sa for sa in sas if accept(sa)]
+
+
+  def filter_to_brackets(self, sas, ntags):
+    accept = lambda sa: len(self.stances.limbs_downpress(sa)) == 1
+    ok = [i for i, sa in enumerate(sas) if accept(sa)]
+    ok_sas = [sa for i, sa in enumerate(sas) if i in ok]
+    ok_ntags = [ntag for i, ntag in enumerate(ntags) if i in ok]
+    return ok_sas, ok_ntags
 
 
   '''

@@ -331,7 +331,7 @@ def run_single(nm):
   print(nm, move_skillset)
 
   move_skillset = _movement.nm_to_moveskillset(nm)
-  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
+  line_nodes, line_edges_out = b_graph.load_data(inp_dir_b, nm)
 
   steptype = line_nodes['init']['Steptype']
   global mover
@@ -428,8 +428,9 @@ def main():
   # nm = 'JANUS - MAX D14 arcade'
   # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
   # nm = 'She Likes Pizza - BanYa D16 arcade'
-  nm = 'Mr. Larpus - BanYa D14 arcade'
+  # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
+  nm = 'Windmill - Yak Won D23 arcade'
 
   run_single(nm)
   return

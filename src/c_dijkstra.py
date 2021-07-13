@@ -10,7 +10,7 @@ from collections import defaultdict, Counter
 from typing import List, Dict, Set, Tuple
 from heapq import heappush, heappop
 
-import _movement, _params, _memoizer, _stances, _qsub, _notelines
+import _movement, _params, _memoizer, _stances, _qsub, _notelines, _graph_edit
 import _graph, b_graph, segment, segment_edit, _stepcharts, _customcost
 
 # Default params
@@ -179,7 +179,7 @@ def run_single(nm):
   print(nm)
 
   move_skillset = _movement.nm_to_moveskillset(nm)
-  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir_b, nm)
+  line_nodes, line_edges_out = b_graph.load_data(inp_dir_b, nm)
   annots, motifs = segment.load_annotations(inp_dir_segment, nm)
 
   custom_costs = _customcost.get_custom_cost(nm)
@@ -187,6 +187,7 @@ def run_single(nm):
   steptype = line_nodes['init']['Steptype']
   mover = _movement.Movement(style=steptype, 
       move_skillset=move_skillset, custom_cost=custom_costs)
+
   graph = _graph.Graph(nm, mover, line_nodes, line_edges_out, annots, motifs)
 
   graph = dijkstra(graph)
@@ -301,7 +302,10 @@ def main():
   # nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Destination - SHK D19 shortcut'
   # nm = 'JANUS - MAX D14 arcade'
-  nm = 'Mr. Larpus - BanYa D14 arcade'
+  # nm = 'Mr. Larpus - BanYa D14 arcade'
+
+  # Rolling brackets
+  nm = 'Windmill - Yak Won D23 arcade'
 
   run_single(nm)
   return

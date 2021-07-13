@@ -10,8 +10,11 @@ perfect_windows = {
 }
 
 # Seconds
-# faep x2 d24's rolling brackets are 58.3 milliseconds apart, slightly above that
-multi_window = 0.060
+# want to include:
+# faep x2 d24's rolling brackets are 58.3 ms apart
+# some of windmill d23's rolling brackets are 61.0 ms apart
+# full window is 83.2 ms (piu nj perfect)
+multi_window = 0.062
 
 # min. level to propose brackets alongside jumps for two-hits (01100)
 bracket_level_threshold = 15
@@ -23,8 +26,8 @@ min_footswitch_level = 13
 # max lines in hold-taps to apply penalty on alternating
 hold_tap_line_threshold = 4
 
-# Consider at most 4 lines for multihit. More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
-max_lines_in_multihit = 4
+# Consider this many lines at most for multihit / rolling hits. 
+max_lines_in_multihit = 2
 
 init_stanceaction = {
   'singles': '14,36;--,--',
@@ -91,7 +94,7 @@ movement_costs = {
       'No movement reward': -.2,
       'Jacks': 0.0, 
       'Toe-heel alternate': 0.1,
-      'Multi reward': -0.05,
+      'Multi reward': -5.0,
       'Double step in multi': 5,
       'Bracket': 0.05,
       'Bracket on 1panel line': 0.1,

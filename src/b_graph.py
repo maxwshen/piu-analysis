@@ -14,7 +14,7 @@ from typing import List, Dict, Set, Tuple
 from more_itertools import unique_everseen
 from fractions import Fraction
 
-import _notelines, _qsub
+import _notelines, _qsub, _graph_edit
 
 # Default params
 inp_dir_a = _config.OUT_PLACE + f'a_format_data/'
@@ -203,9 +203,10 @@ def propose_multihits(nodes, edges_out, edges_in, stance, post_window):
 
     If there are more than 1, hit them in ascending inclusive order. [1, 2, 3] -> [1, 2] and [1, 2, 3]
 
-    Consider at most 3 additional nodes (for 4 total). More can be proposed for incorrectly annotated stepcharts with very high BPM with notes
+    Consider at most 3 additional nodes (for 4 total).
   '''
   num_multihits_proposed = 0
+  covered_nms = set()
   nms = list(nodes.keys())
   for idx in range(len(nodes)):
     nm = nms[idx]
@@ -220,10 +221,14 @@ def propose_multihits(nodes, edges_out, edges_in, stance, post_window):
       continue
 
     multi = [n for n in nms[idx+1:] if nodes[n]['Time'] - time <= post_window]
+    multi = multi[:_params.max_lines_in_multihit - 1]
     if not multi:
       continue
 
-    multi = multi[:_params.max_lines_in_multihit - 1]
+    # Only propose non-overlapping multihits. Implicitly keep earliest multihit.
+    if nm in covered_nms:
+      continue
+
     for jdx in range(len(multi)):
       hits = multi[:jdx + 1]
       last_node_nm = hits[-1]
@@ -251,6 +256,15 @@ def propose_multihits(nodes, edges_out, edges_in, stance, post_window):
                   [nodes[nm]['Line with active holds'] for nm in hits]
       joint_aug_line = stance.combine_lines(aug_lines)
 
+      # Require bracketability
+      norm_line = joint_aug_line.replace('2', '1').replace('4', '0').replace('3', '0')
+      if norm_line not in _params.bracketable_lines:
+        continue
+
+      # Disallow rolling hits that include 1 and 2
+      if '1' in joint_aug_line and '2' in joint_aug_line:
+        continue
+
       new_node_nm = f'{nm} multi v{jdx + 1}'
       nodes[new_node_nm] = {
         'Time': last_node['Time'],
@@ -272,6 +286,9 @@ def propose_multihits(nodes, edges_out, edges_in, stance, post_window):
 
       num_multihits_proposed += 1
 
+      for cnm in [nm] + multi[:jdx + 1]:
+        covered_nms.add(cnm)
+    
   print(f'Proposed {num_multihits_proposed} multihit nodes')
   return nodes, edges_out, edges_in
 
@@ -637,14 +654,23 @@ def summarize_graph(nm, nodes):
   return
 
 
+'''
+  IO
+'''
+def save_data(nodes, edges_out, sc_nm):
+  with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
+    pickle.dump((nodes, edges_out), f)
+  return
+
+
 def load_data(inp_dir, sc_nm):
   fn = inp_dir + f'{sc_nm}.pkl'
   if not os.path.isfile(fn):
     print(f'ERROR: File not found in b_graph')
     raise Exception(f'ERROR: File not found in b_graph')
   with open(fn, 'rb') as f:
-    line_nodes, line_edges_out, line_edges_in = pickle.load(f)
-  return line_nodes, line_edges_out, line_edges_in
+    line_nodes, line_edges_out = pickle.load(f)
+  return line_nodes, line_edges_out
 
 
 '''
@@ -660,15 +686,33 @@ def run_single(sc_nm):
   nodes, edges_out, edges_in, stance = form_graph(sc_nm)
   nodes, edges_out, edges_in = filter_empty_nodes(nodes, edges_out, edges_in)
 
-  # Faster than forming graph.
-  # More efficient to just run this for each timing judge
+  # Faster than forming graph. More efficient to just run this for each timing judge
   nodes, edges_out, edges_in = propose_multihits(nodes,
       edges_out, edges_in, stance, post_window)
 
-  print(f'Found {len(nodes)} nodes')
-  with open(out_dir + f'{sc_nm}.pkl', 'wb') as f:
-    pickle.dump((nodes, edges_out, edges_in), f)
+  # Ensure edges are unique
+  for node in edges_out:
+    edges_out[node] = list(set(edges_out[node]))
+  for node in edges_in:
+    edges_in[node] = list(set(edges_in[node]))
 
+  # Remove regular nodes covered by multis - force multi use
+  nodes, edges_out = _graph_edit.edit(nodes, edges_out, edges_in)
+
+  # Sort nodes by beat
+  beat_to_node = defaultdict(list)
+  for node in nodes:
+    beat = nodes[node]['Beat']
+    beat_to_node[beat].append(node)
+  sorted_beats = sorted(list(beat_to_node.keys()))
+  reordered_nodes = {}
+  for b in sorted_beats:
+    for node in beat_to_node[b]:
+      reordered_nodes[node] = nodes[node]
+  nodes = reordered_nodes
+
+  print(f'Found {len(nodes)} nodes')
+  save_data(nodes, edges_out, sc_nm)
   summarize_graph(sc_nm, nodes)
   return
 
@@ -830,7 +874,8 @@ def main():
   # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
   # nm = 'She Likes Pizza - BanYa D16 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
-  nm = 'Mr. Larpus - BanYa D14 arcade'
+  # nm = 'Mr. Larpus - BanYa D14 arcade'
+  nm = 'Windmill - Yak Won D23 arcade'
 
   run_single(nm)
   return

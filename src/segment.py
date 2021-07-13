@@ -45,12 +45,22 @@ def featurize(line_nodes, downpress_nodes):
     line = d['Line with active holds']
     beat = d['Beat']
 
-    if _notelines.num_downpress(line) == 1:
-      x[feature_mapper['hit 1']] = 1
-    elif _notelines.num_downpress(line) == 2:
-      x[feature_mapper['hit 2']] = 1
-    elif _notelines.num_downpress(line) >= 3:
-      x[feature_mapper['hit 3+']] = 1
+    if 'multi' not in dpn:
+      if _notelines.num_downpress(line) == 1:
+        x[feature_mapper['hit 1']] = 1
+      elif _notelines.num_downpress(line) == 2:
+        x[feature_mapper['hit 2']] = 1
+      elif _notelines.num_downpress(line) >= 3:
+        x[feature_mapper['hit 3+']] = 1
+    else:
+      # Treat multis as brackets / single hits
+      # Intention: Do not apply twohit motifs, instead apply alternating logic based on beat since
+      if _notelines.num_downpress(line) <= 2:
+        x[feature_mapper['hit 1']] = 1
+      elif _notelines.num_downpress(line) <= 4:
+        x[feature_mapper['hit 2']] = 1
+      else:
+        x[feature_mapper['hit 3+']] = 1
 
     if '3' in line or '4' in line:
       x[feature_mapper['active hold']] = 1
@@ -146,6 +156,7 @@ def find_motifs(line_nodes, features, beats):
   INIT_SEED_LEN = 16
   lines = [line_nodes[k]['Line with active holds'] for k in line_nodes
             if line_nodes[k]['Beat'] in beats]
+
   all_motifs = get_active_hold_motifs(lines, features, beats)
 
   for k, v in all_motifs.items():
@@ -472,6 +483,7 @@ def unify_disconnected_twohits(beats, unif_ds, motif_ds):
     Use uniform annotations on single twohits, connecting them, only if:
     - they are within CONNECT_DIST lines, and
     - they are separated only by blank or 'alternate' annotations
+    - they are not multis (TODO)
     Finds expanded context to call twohits as jumps or brackets
     If connected groups are found, overwrite existing (shorter) motifs
       Motivating example: Good Night S20
@@ -656,6 +668,7 @@ def save_annotations(sc_nm, line_nodes, unif_ds, motif_ds):
   dd = defaultdict(list)
   for line in line_nodes:
     if line not in ['init', 'final']:
+      dd['Node'].append(line)
       for k, v in line_nodes[line].items():
         dd[k].append(v)
     
@@ -733,19 +746,17 @@ def filter_annots(beats, unif_d, motifs):
 '''
 def run_single(nm):
   # Load lines
-  line_nodes, line_edges_out, line_edges_in = b_graph.load_data(inp_dir, nm)
+  line_nodes, line_edges_out = b_graph.load_data(inp_dir, nm)
 
-  # Remove multihit nodes
   ks = list(line_nodes.keys())
   for node in ks:
-    if any(x in node for x in ['multi', 'init', 'final']):
+    if any(x in node for x in ['init', 'final']):
       del line_nodes[node]
 
-  downpress_filter = lambda node: 'multi' not in node and \
-                             'init'  not in node and \
-                             'final' not in node and \
-                             _notelines.has_downpress(line_nodes[node]['Line'])
-  downpress_nodes = [node for node in line_nodes if downpress_filter(node)]
+  dp_filter = lambda node: 'init'  not in node and \
+                           'final' not in node and \
+                           _notelines.has_downpress(line_nodes[node]['Line'])
+  downpress_nodes = [node for node in line_nodes if dp_filter(node)]
 
   print(f'{nm}: {len(downpress_nodes)} nodes')
 
@@ -754,8 +765,7 @@ def run_single(nm):
   print('Coverage with uniform sections:')
   calc_coverage(dp_beats, uniform_sections, {})
 
-  filter = lambda node: 'multi' not in node and \
-                        'init'  not in node and \
+  filter = lambda node: 'init'  not in node and \
                         'final' not in node
   all_nodes = [node for node in line_nodes if filter(node)]
   features, beats = featurize(line_nodes, all_nodes)
@@ -891,7 +901,8 @@ def main():
   # nm = 'PICK ME - PRODUCE 101 DP3 arcade'
   # nm = 'She Likes Pizza - BanYa D16 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
-  nm = 'Mr. Larpus - BanYa D14 arcade'
+  # nm = 'Mr. Larpus - BanYa D14 arcade'
+  nm = 'Windmill - Yak Won D23 arcade'
 
   run_single(nm)
   return
