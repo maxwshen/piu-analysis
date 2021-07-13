@@ -210,12 +210,14 @@ def twistiness(row, context_df, tag, verbose):
 
 def travel(row, context_df, tag, verbose):
   PCT_THRESHOLD = 0.75
-  suffix_to_adjective = {
-    ' - mean travel (mm)': 'travel',
-    ' - 80% travel (mm)': 'travel',
-  }
+  high_adjective = 'large movements'
+  low_adjective = 'small movements'
+  suffixes = [
+    ' - mean travel (mm)',
+    ' - 80% travel (mm)',
+  ]
   adjs = dict()
-  for suffix, adjective in suffix_to_adjective.items():
+  for suffix in suffixes:
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
@@ -223,18 +225,22 @@ def travel(row, context_df, tag, verbose):
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
       if pct >= PCT_THRESHOLD:
-        adjs[adjective] = pct
+        adjs[high_adjective] = pct
+      if pct <= 1 - PCT_THRESHOLD:
+        adjs[low_adjective] = 1 - pct
   return adjs
 
 
 def rhythm(row, context_df, tag, verbose):
-  PCT_THRESHOLD = 0.75
-  suffix_to_adjective = {
-    ' - % irregular rhythm': 'Irregular rhythm',
-    ' - % rhythm change': 'Irregular rhythm',
-  }
+  PCT_THRESHOLD = 0.80
+  high_adjective = 'irregular rhythm'
+  low_adjective = 'consistent rhythm'
+  suffixes = [
+    # ' - % irregular rhythm',
+    ' - % rhythm change',
+  ]
   adjs = dict()
-  for suffix, adjective in suffix_to_adjective.items():
+  for suffix in suffixes:
     col = f'{tag}{suffix}'
     if col in row.index:
       val, context = row[col], context_df[col]
@@ -242,7 +248,9 @@ def rhythm(row, context_df, tag, verbose):
       if verbose:
         print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
       if pct >= PCT_THRESHOLD:
-        adjs[adjective] = pct
+        adjs[high_adjective] = pct
+      if pct <= 1 - PCT_THRESHOLD:
+        adjs[low_adjective] = 1 - pct
   return adjs
 
 

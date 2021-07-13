@@ -250,11 +250,11 @@ def get_enriched_motifs(lines, features, beats, motif_len, sections):
 
   # Extend seeds and prune
   extended_dd = extend_seeds_and_prune(lines, features, beats,
-      renamed_dd, motif_len)
+      renamed_dd, motif_len, sections)
   return extended_dd
 
 
-def extend_seeds_and_prune(lines, features, beats, motifs, motif_len):
+def extend_seeds_and_prune(lines, features, beats, motifs, motif_len, sections):
   '''
     When seeds are shorter than the true motif length, we get many overlapping seeds. Extend the first seed, and remove redundant overlapping seeds.
     Note: In the output, motif instances can overlap.
@@ -273,6 +273,8 @@ def extend_seeds_and_prune(lines, features, beats, motifs, motif_len):
         last_beat_idxs = next_beat_idxs
         next_beat_idxs = [b + 1 for b in last_beat_idxs]
         if len(beats) in next_beat_idxs:
+          break
+        if any(beat_in_any_section(beats[lbi], sections) for lbi in next_beat_idxs):
           break
         next_features = set([tuple(features[i]) for i in next_beat_idxs])
         add_len += 1
