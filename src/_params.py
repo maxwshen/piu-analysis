@@ -23,6 +23,9 @@ hold_bracket_level_threshold = 19
 
 min_footswitch_level = 13
 
+# Min. number of lines to keep a multi drill
+min_bracket_footswitch_drill_lines = 6
+
 # max lines in hold-taps to apply penalty on alternating
 hold_tap_line_threshold = 4
 

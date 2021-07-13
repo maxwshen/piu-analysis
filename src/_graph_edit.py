@@ -3,6 +3,7 @@ from collections import defaultdict
 from genericpath import isdir
 
 from pandas.core.indexes import multi
+import _params
 
 def edit(line_nodes, edges_out, edges_in):
   '''
@@ -15,13 +16,14 @@ def edit(line_nodes, edges_out, edges_in):
 
   beat_to_multi = get_beat_to_multi(line_nodes)
 
+  min_threshold = _params.min_bracket_footswitch_drill_lines
+
   # Remove short chains of multis that are drills
   chains = get_multi_chains(line_nodes, edges_out)
-  MIN_BRACKET_FOOTSWITCH_DRILL_LINES = 6
   num_drill_removed = 0
   for chain in chains:
     lines = [line_nodes[n]['Line with active holds'] for n in chain]
-    if len(set(lines)) == 1 and len(lines) < MIN_BRACKET_FOOTSWITCH_DRILL_LINES:
+    if len(set(lines)) == 1 and len(lines) < min_threshold:
       for n in chain:
         del line_nodes[n]
         num_drill_removed += 1
