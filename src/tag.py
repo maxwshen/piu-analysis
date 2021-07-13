@@ -41,6 +41,9 @@ def tag_chart(context_df, nm):
 
 
 def get_tags(df):
+  '''
+    Identify base tags -- everything with kw except exclude list
+  '''
   kw = ' - 50% nps'
   tags = [col.replace(kw, '') for col in df.columns if kw in col]
   exclude = {
@@ -50,6 +53,8 @@ def get_tags(df):
     'Twist angle - close diagonal',
     'Twist angle - far diagonal',
     'Twist angle - 180',
+    'Irregular rhythm',
+    'Rhythm change',
   }
   return [tag for tag in tags if tag not in exclude]
 
@@ -91,6 +96,7 @@ def get_adjectives(row, context_df, tag, verbose = True):
   adjs.update(travel(row, context_df, tag, verbose))
   adjs.update(speed(row, context_df, tag, verbose))
   adjs.update(length(row, context_df, tag, verbose))
+  adjs.update(rhythm(row, context_df, tag, verbose))
 
   adj_kws = sorted(adjs, key=adjs.get, reverse=True)
   return adj_kws
@@ -219,6 +225,26 @@ def travel(row, context_df, tag, verbose):
       if pct >= PCT_THRESHOLD:
         adjs[adjective] = pct
   return adjs
+
+
+def rhythm(row, context_df, tag, verbose):
+  PCT_THRESHOLD = 0.75
+  suffix_to_adjective = {
+    ' - % irregular rhythm': 'Irregular rhythm',
+    ' - % rhythm change': 'Irregular rhythm',
+  }
+  adjs = dict()
+  for suffix, adjective in suffix_to_adjective.items():
+    col = f'{tag}{suffix}'
+    if col in row.index:
+      val, context = row[col], context_df[col]
+      pct = sum(context < val) / len(context)
+      if verbose:
+        print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
+      if pct >= PCT_THRESHOLD:
+        adjs[adjective] = pct
+  return adjs
+
 
 '''
   Run

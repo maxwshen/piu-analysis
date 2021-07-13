@@ -253,18 +253,24 @@ def bool_featurize(df, col):
       pct_twist_diagfarp = sum(dfs['Twist angle'].isin(
           ['far diagonal', '180'])) / len(dfs)
       pct_twist_180p = sum(dfs['Twist angle'] == '180') / len(dfs)
+      pct_ir_rhythm = sum(dfs['Irregular rhythm']) / len(dfs)
+      pct_rhythm_ch = sum(dfs['Rhythm change']) / len(dfs)
     else:
       pct_twist_nop = 0
       pct_twist_90p = 0
       pct_twist_diagp = 0
       pct_twist_diagfarp = 0
       pct_twist_180p = 0
+      pct_ir_rhythm = 0
+      pct_rhythm_ch = 0
     add_stats = {
       f'{col} - % no twist':            pct_twist_nop, 
       f'{col} - % 90+ twist':           pct_twist_90p, 
       f'{col} - % diagonal+ twist':     pct_twist_diagp, 
       f'{col} - % far diagonal+ twist': pct_twist_diagfarp, 
       f'{col} - % 180 twist':           pct_twist_180p, 
+      f'{col} - % irregular rhythm':    pct_ir_rhythm, 
+      f'{col} - % rhythm change':       pct_rhythm_ch, 
     }
     stats.update(add_stats)
 
