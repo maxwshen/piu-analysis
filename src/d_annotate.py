@@ -101,12 +101,25 @@ def annotate_general(df):
   df['Notes per second since downpress'] = nps
   df['Has downpress adj.'] = has_dp_adj
 
+  '''
+    Angle between pads covered by feet
+  '''
   body_angles = []
   for i, row in df.iterrows():
     _, d = get_ds(None, row)
-    lpos = mover.pos_to_center[d['limb_to_pos']['Left foot']]
-    rpos = mover.pos_to_center[d['limb_to_pos']['Right foot']]
-    body_angles.append(body_angle_from_pos(lpos, rpos))
+    lpos = d['limb_to_pos']['Left foot']
+    left_pads = [mover.pos_to_heel_panel[lpos], mover.pos_to_toe_panel[lpos]]
+    left_pads = [p for p in left_pads if p in mover.panel_cols]
+    rpos = d['limb_to_pos']['Right foot']
+    right_pads = [mover.pos_to_heel_panel[rpos], mover.pos_to_toe_panel[rpos]]
+    right_pads = [p for p in right_pads if p in mover.panel_cols]
+
+    lcoord = np.mean([mover.panel_to_coord[p] for p in left_pads], axis=0)
+    rcoord = np.mean([mover.panel_to_coord[p] for p in right_pads], axis=0)
+
+    # lcoord = mover.pos_to_center[d['limb_to_pos']['Left foot']]
+    # rcoord = mover.pos_to_center[d['limb_to_pos']['Right foot']]
+    body_angles.append(body_angle_from_pos(lcoord, rcoord))
   df['Body angle'] = body_angles
 
   return df
@@ -412,7 +425,7 @@ def main():
   # nm = 'Good Night - Dreamcatcher S20 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
@@ -430,7 +443,7 @@ def main():
   # nm = 'She Likes Pizza - BanYa D16 arcade'
   # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
-  nm = 'Windmill - Yak Won D23 arcade'
+  # nm = 'Windmill - Yak Won D23 arcade'
 
   run_single(nm)
   return

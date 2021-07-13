@@ -36,12 +36,12 @@ class Movement():
 
     if style == 'singles':
       self.df = _positions.singles_pos_df
-      panel_cols = [
+      self.panel_cols = [
         'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
       ]
     elif style == 'doubles':
       self.df = _positions.doubles_pos_df
-      panel_cols = [
+      self.panel_cols = [
         'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
         'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
       ]
@@ -71,7 +71,7 @@ class Movement():
       self.pos_to_heel_panel[nm] = row['Panel - heel']
       self.pos_to_toe_panel[nm] = row['Panel - toe']
       self.pos_to_rotation[nm] = row['Rotation']
-      if sum(row[panel_cols]) > 1:
+      if sum(row[self.panel_cols]) > 1:
         self.bracket_pos.add(nm)
 
     self.all_limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
@@ -82,7 +82,22 @@ class Movement():
     self.prev_hold = set(list('24'))
     self.ok_hold = set(list('34'))
     self.verbose = False
+
+    self.panel_to_coord = self.get_panel_to_coord()
     pass
+
+
+  def get_panel_to_coord(self):
+    # Use air feet pos (includes a) at coordinate for panels
+    # Used for measring body angle in d_annotate
+    is_air = lambda nm: 'a' in nm
+    panel_to_coord = {}
+    for i, row in self.df.iterrows():
+      pos = row['Name']
+      if is_air(pos):
+        panel = self.pos_to_toe_panel[pos]
+        panel_to_coord[panel] = self.pos_to_toe_coord[pos]
+    return panel_to_coord
 
 
   '''

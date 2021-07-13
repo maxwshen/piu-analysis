@@ -104,6 +104,9 @@ def is_doublestep(row1, row2):
 
 
 def twist_angle(row1, row2) -> str:
+  '''
+    Angle between pads covered between legs
+  '''
   # ['none', '90', 'close diagonal', 'far diagonal', '180']
   d1, d2 = get_ds(row1, row2)
   body_angle = row2['Body angle']
