@@ -882,7 +882,7 @@ def main():
   # nm = 'V3 - Beautiful Day S17 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
@@ -905,6 +905,7 @@ def main():
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
   # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Windmill - Yak Won D23 arcade'
+  nm = 'Indestructible - Matduke D22 arcade'
 
   run_single(nm)
   return

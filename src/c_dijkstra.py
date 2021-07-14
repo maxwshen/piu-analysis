@@ -281,7 +281,7 @@ def main():
   # nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
@@ -303,6 +303,7 @@ def main():
   # nm = 'Destination - SHK D19 shortcut'
   # nm = 'JANUS - MAX D14 arcade'
   # nm = 'Mr. Larpus - BanYa D14 arcade'
+  nm = 'Indestructible - Matduke D22 arcade'
 
   # Rolling brackets
   # nm = 'Windmill - Yak Won D23 arcade'
