@@ -101,9 +101,7 @@ def annotate_general(df):
   df['Notes per second since downpress'] = nps
   df['Has downpress adj.'] = has_dp_adj
 
-  '''
-    Angle between pads covered by feet
-  '''
+  # Angle between pads covered by feet
   body_angles = []
   for i, row in df.iterrows():
     _, d = get_ds(None, row)
@@ -121,6 +119,42 @@ def annotate_general(df):
     # rcoord = mover.pos_to_center[d['limb_to_pos']['Right foot']]
     body_angles.append(body_angle_from_pos(lcoord, rcoord))
   df['Body angle'] = body_angles
+
+  '''
+    Visualization
+    - Foot to downpress pads
+    - Handle hands somehow
+  '''
+  dd = defaultdict(list)
+  suffix_to_set = {
+    '1': set('1'),
+    '2': set('2'),
+    '3': set('3'),
+    '4': set('4'),
+  }
+  for i, row in df.iterrows():
+    sa = row['Stance action']
+    d = parse_sa(sa)
+    for foot in ['Left foot', 'Right foot']:
+      pos = d['limb_to_pos'][foot]
+      hp = mover.pos_to_heel_panel[pos]
+      tp = mover.pos_to_toe_panel[pos]
+      ha = d['limb_to_heel_action'][foot]
+      ta = d['limb_to_toe_action'][foot]
+
+      for suffix, padset in suffix_to_set.items():
+        panels = []
+        for action, panel in [[ha, hp], [ta, tp]]:
+          if action in padset:
+            panels.append(panel)
+
+        col = f'{foot} {suffix}'
+        if panels:
+          dd[col].append(';'.join(panels))
+        else:
+          dd[col].append('')
+  for col in dd:
+    df[col] = dd[col]
 
   return df
 
@@ -192,7 +226,7 @@ def featurize(df):
 
   # General features
   from scipy.stats import mode
-  bpm_mode = float(mode(dfs['BPM']).mode)
+  bpm_mode = float(mode(df['BPM']).mode)
   while bpm_mode < 100:
     bpm_mode *= 2
   while bpm_mode > 225:
@@ -227,7 +261,7 @@ def bool_featurize(df, col):
     time_longest = 0
 
   stats = {
-    f'{col} - frequency':             sum(df[col]) / len(df),
+    f'{col} - frequency':             sum(df[col]) / len(df) if len(df) > 0 else 0,
     f'{col} - 50% nps':               nan_to_zero(np.nanmedian(nps)),
     f'{col} - 80% nps':               nan_to_zero(np.nanpercentile(nps, 80)), 
     f'{col} - 99% nps':               nan_to_zero(np.nanpercentile(nps, 99)), 
@@ -281,9 +315,9 @@ def bool_featurize(df, col):
     dfs = df[df[col] == True]
     dists = np.array(dfs['Travel (mm)'])
     add_stats = {
-      f'{col} - mean travel (mm)': np.nanmean(dists), 
-      f'{col} - 80% travel (mm)':  np.nanpercentile(dists, 80), 
-      f'{col} - 95% travel (mm)':  np.nanpercentile(dists, 95), 
+      f'{col} - mean travel (mm)': nan_to_zero(np.nanmean(dists)), 
+      f'{col} - 80% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 80)), 
+      f'{col} - 95% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 95)), 
     }
     stats.update(add_stats)
 
@@ -303,7 +337,7 @@ def float_featurize(df, col):
 
 
 def nan_to_zero(x):
-  return 0 if np.isnan(x) else x
+  return x if not np.isnan(x) else 0
 
 
 def get_true_segment_lens(vec):
@@ -382,8 +416,9 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
+  # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'Uranium - Memme S19 arcade'
   # nm = 'Gothique Resonance - P4Koo S20 arcade'
@@ -398,7 +433,7 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
-  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
@@ -450,7 +485,8 @@ def main():
   # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
   # nm = 'Windmill - Yak Won D23 arcade'
-  nm = 'Indestructible - Matduke D22 arcade'
+  # nm = 'Indestructible - Matduke D22 arcade'
+  # nm = 'Rock the house - Matduke D22 arcade'
 
   run_single(nm)
   return

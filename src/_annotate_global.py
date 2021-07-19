@@ -175,6 +175,21 @@ def rhythm_change(df):
   return res  
 
 
+def time_change(df):
+  # Time since changed since previous downpress
+  res = [False]
+  ts = list(df['Time since downpress'])
+  has_dp = list(df['Has downpress'])
+  time_since_dp_at_prev_dp = ts[0]
+  for i in range(1, len(ts)):
+    if has_dp[i]:
+      res.append(ts[i] != time_since_dp_at_prev_dp)
+      time_since_dp_at_prev_dp = ts[i]
+    else:
+      res.append(False)
+  return res  
+
+
 def bracket_jump_run(df):
   res = []
   lines = list(df['Line with active holds'])

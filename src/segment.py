@@ -792,12 +792,13 @@ def main():
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
+  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Xeroize - FE S24 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
-  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
@@ -905,7 +906,8 @@ def main():
   # nm = 'Break Out - Lunatic Sounds D22 arcade'
   # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Windmill - Yak Won D23 arcade'
-  nm = 'Indestructible - Matduke D22 arcade'
+  # nm = 'Indestructible - Matduke D22 arcade'
+  # nm = 'Rock the house - Matduke D22 arcade'
 
   run_single(nm)
   return

@@ -20,10 +20,13 @@ scinfo = _stepcharts.SCInfo()
 CONTEXT_LOWER = -3
 CONTEXT_UPPER = 0
 
-
 '''
+  Tagging
 '''
 def tag_chart(context_df, nm):
+  '''
+    Tags and adjectives are sorted by score
+  '''
   row = context_df[context_df['Name (unique)'] == nm].iloc[0]
   found_tags = {}
   for tag in get_tags(context_df):
@@ -32,7 +35,6 @@ def tag_chart(context_df, nm):
       found_tags[tag] = ranker
 
   tags = sorted(found_tags, key=found_tags.get, reverse=True)
-
   tag_to_adjs = dict()
   for tag in tags:
     tag_to_adjs[tag] = get_adjectives(row, context_df, tag)
@@ -61,7 +63,7 @@ def get_tags(df):
 
 MIN_INTERESTING_NPS = 5   # todo - level dependent
 
-def get_stats(row, context_df, tag, verbose = True):
+def get_stats(row, context_df, tag, verbose = False):
   '''
     Include tag if (OR)
     - Frequency is in top 80% percentile of context charts
@@ -87,15 +89,16 @@ def get_stats(row, context_df, tag, verbose = True):
   return keep, ranker
 
 
-def get_adjectives(row, context_df, tag, verbose = True):
+def get_adjectives(row, context_df, tag, verbose = False):
   '''
     Include these adjectives only for tags included for other reasons
+    Adjectives are sorted by score
   '''
   adjs = dict()
   adjs.update(twistiness(row, context_df, tag, verbose))
   adjs.update(travel(row, context_df, tag, verbose))
   adjs.update(speed(row, context_df, tag, verbose))
-  adjs.update(length(row, context_df, tag, verbose))
+  # adjs.update(length(row, context_df, tag, verbose))
   adjs.update(rhythm(row, context_df, tag, verbose))
 
   adj_kws = sorted(adjs, key=adjs.get, reverse=True)
@@ -187,9 +190,9 @@ def twistiness(row, context_df, tag, verbose):
   PCT_THRESHOLD = 0.65
   suffix_to_adjective = {
     ' - % 180 twist': '180 twists',
-    ' - % far diagonal+ twist': 'has hard diagonal twists',
-    ' - % diagonal+ twist': 'diagonal twisty',
-    ' - % 90+ twist': 'twisty',
+    ' - % far diagonal+ twist': 'hard diagonal twists',
+    ' - % diagonal+ twist': 'diagonal twists',
+    ' - % 90+ twist': 'twists',
     ' - % no twist': 'front-facing',
   }
 
@@ -232,7 +235,7 @@ def travel(row, context_df, tag, verbose):
 
 
 def rhythm(row, context_df, tag, verbose):
-  PCT_THRESHOLD = 0.80
+  PCT_THRESHOLD = 0.90
   high_adjective = 'irregular rhythm'
   low_adjective = 'consistent rhythm'
   suffixes = [
@@ -249,8 +252,8 @@ def rhythm(row, context_df, tag, verbose):
         print(col.ljust(30), f'{val:.2f} {pct:.0%}', )
       if pct >= PCT_THRESHOLD:
         adjs[high_adjective] = pct
-      if pct <= 1 - PCT_THRESHOLD:
-        adjs[low_adjective] = 1 - pct
+      # if pct <= 1 - PCT_THRESHOLD:
+        # adjs[low_adjective] = 1 - pct
   return adjs
 
 
@@ -304,6 +307,7 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
@@ -317,11 +321,11 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
-  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
 
   run_single(nm)
   return
