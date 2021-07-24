@@ -10,7 +10,7 @@ MAX_COMP = 4
 NUM_REPS = 25
 
 # smoothing - num. lines
-max_short_len = 16
+max_short_len = 12
 
 # muliplier on median time since to call breaks
 median_fold_break = 8

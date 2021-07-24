@@ -234,7 +234,8 @@ def plot_summary(nm, section_data, line_df, groups, comb_to_indiv, out_fn):
   interval_times = []
   for sec_num, section in enumerate(section_data):
     ds = section_data[section]
-    color = color_of(ds['Median nps'])
+    nps = float(ds['NPS annot'].replace(' nps', ''))
+    color = color_of(nps)
     start_time, end_time = ds['Start time'], ds['End time']
     
     y_start = ys[sec_num]
@@ -366,11 +367,13 @@ def run_single(nm):
   line_df = pd.read_csv(inp_dir_d + f'{nm}.csv', index_col=0)
 
   all_line_dfs, groups, comb_to_indiv = hmm_segment.segment(line_df)
+  print(f'Found groups:', groups)
 
-  print(groups)
+  stepchart_out_dir = out_dir + f'{nm}/'
+  util.ensure_dir_exists(stepchart_out_dir)
 
-  summary_fn = out_dir + f'{nm} card.png'
   print('Plotting stepchart card ...')
+  summary_fn = stepchart_out_dir + f'{nm} card.png'
   summary(nm, all_line_dfs, line_df, groups, comb_to_indiv, summary_fn)
 
   # Plot chart by section
@@ -380,10 +383,11 @@ def run_single(nm):
   total_lines_done = 0
   for i, group in enumerate(groups):
     sec_num = i+1
-    out_fn = out_dir + f'{nm} {sec_num}.png'
+    out_fn = stepchart_out_dir + f'{nm} {sec_num}.png'
     artist.plot_section(line_df, group, out_fn)
+
     total_lines_done += group[1] - group[0]
-    print(f'Group {i} done: {total_lines_done}/{len(line_df)}; {total_lines_done/len(line_df):.1%}')
+    print(f'Group {i+1} done: {total_lines_done}/{len(line_df)}; {total_lines_done/len(line_df):.1%}')
 
   return
 
@@ -404,12 +408,12 @@ def main():
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
-  nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
+  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

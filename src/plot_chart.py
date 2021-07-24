@@ -5,7 +5,6 @@ import matplotlib.image as mpimg
 from matplotlib.offsetbox import TextArea, OffsetImage, AnnotationBbox
 from PIL import Image, ImageEnhance
 from PIL import Image
-from adjustText import adjust_text
 import functools
 from collections import defaultdict
 
@@ -31,6 +30,7 @@ HOLD_WIDTH = 0.6 # relative to 1.0
 
 ARROW_ALPHA_TOE = 0.6
 ARROW_ALPHA_HEEL = 0.8
+ARROW_ALPHA_HAND = 0.9
 
 CHART_GRID_COLORS = ['blue', 'red', 'orange', 'red', 'blue']*2
 CHART_GRID_ALPHA = 0.3
@@ -40,18 +40,18 @@ class Artist():
   def __init__(self, singlesordoubles):
     self.singlesordoubles = singlesordoubles
     if singlesordoubles == 'singles':
-      self.figwidth = 6
+      self.figwidth = 7
       self.panels = ['p1,1', 'p1,7', 'p1,5', 'p1,9', 'p1,3']
     elif singlesordoubles == 'doubles':
-      self.figwidth = 12
+      self.figwidth = 14
       self.panels = ['p1,1', 'p1,7', 'p1,5', 'p1,9', 'p1,3',
                      'p2,1', 'p2,7', 'p2,5', 'p2,9', 'p2,3']
     self.arrow_to_img = self.init_arrows()
 
     # [text, arrows, choreo]
     self.width_ratios = {
-      'singles': [1, 1.5, 2],
-      'doubles': [1, 3, 4],
+      'singles': [1, 1.5, 1.5],
+      'doubles': [2, 3, 3],
     }
 
     self.panel_to_xloc = {p: i for i, p in enumerate(self.panels)}
@@ -59,6 +59,7 @@ class Artist():
 
     self.left_color = '#ec4339'
     self.right_color = '#00a0dc'
+    self.hand_color = '#595c5f'
 
     '''
       want to color every 4th line differently, but hmm segmentation and major grid make it challenging to guarantee landing on the downbeat
@@ -69,6 +70,12 @@ class Artist():
     self.minor_grid_color = '#b6b9bc'
     self.minor_grid_alpha = 0.5
 
+    self.limb_to_hold_color = {
+      'Left foot': self.left_color,
+      'Right foot': self.right_color,
+      'Left hand': self.hand_color,
+      'Right hand': self.hand_color,
+    }
 
 
   def init_arrows(self):
@@ -97,11 +104,8 @@ class Artist():
       'Right foot p2,9': f'{img_fold}/rightfoot-upright.png',
     }
 
-    brightnesses = {
-      'heel': 0.95,
-      'toe':  1.35,
-    }
-
+    # Modify brightnesses
+    brightnesses = {'heel': 0.95, 'toe':  1.35}
     arrow_to_img = {}
     for part, brightness in brightnesses.items():
       d = {}
@@ -111,15 +115,36 @@ class Artist():
         im_output = enhancer.enhance(brightness)
         d[arrow] = np.array(im_output) / 255
       arrow_to_img[part] = d
+
+    # Add grayscale images for hands
+    def rgba_to_gray(im):
+      # rgba image: (n, m, 4)
+      im = np.array(im)
+      [n, m, _] = im.shape
+      arr = np.array(im)
+      gs = np.mean(arr[:,:,:3], -1)
+      gsr = np.reshape(gs, (n, m, 1))
+      gs3 = np.tile(gsr, 3)
+      alpha = np.reshape(im[:,:,-1], (n, m, 1))
+      return np.concatenate([gs3, alpha], -1)
+
+    hand_arrow_to_img = dict()
+    for arrow, fn in arrow_to_img_fn.items():
+      im = Image.open(fn)
+      im_output = rgba_to_gray(im)
+      hand_arrow = arrow.replace('foot', 'hand')
+      hand_arrow_to_img[hand_arrow] = np.array(im_output) / 255
+    
+    arrow_to_img['hand'] = hand_arrow_to_img
     return arrow_to_img
 
 
   '''
     Drawing
   '''
-  def draw_hold(self, foot, panel, start_beat, end_beat, axes):
+  def draw_hold(self, limb, panel, start_beat, end_beat, axes):
     xloc = self.panel_to_xloc[panel]
-    color = self.left_color if foot == 'Left foot' else self.right_color
+    color = self.limb_to_hold_color[limb]
     for ax in axes:
       rect = mpl.patches.Rectangle(
           (xloc - HOLD_WIDTH/2, start_beat), 
@@ -129,28 +154,36 @@ class Artist():
     return
 
 
-  def draw_arrow_sa(self, foot, panel, beat, sa, axes):
+  def draw_arrow_sa(self, limb, panel, beat, sa, axes):
     d = parse_sa_to_text(sa)
 
     xloc = self.panel_to_xloc[panel]
     yloc = beat
-    text = 'L' if foot == 'Left foot' else 'R'
+    if limb == 'Left foot':
+      text = 'L'
+    elif limb == 'Right foot':
+      text = 'R'
 
-    test = ','.join(d[foot])
-    part = ''
-    if 'heel' in test:
-      text += 'H'
-      alpha = ARROW_ALPHA_HEEL
-      part = 'heel'
-      text_color = 'black'
-    elif 'toe' in test:
-      text += 'T'
-      alpha = ARROW_ALPHA_TOE
-      part = 'toe'
-      text_color = 'black'
+    # find among ['heel 5', 'toe 7'] which one belongs to panel 'p1,7'
+    action = [x for x in d[limb] if x[-1] == panel[-1]][0]
+    if 'foot' in limb:
+      part = ''
+      if 'heel' in action:
+        text += 'H'
+        alpha = ARROW_ALPHA_HEEL
+        part = 'heel'
+      elif 'toe' in action:
+        text += 'T'
+        alpha = ARROW_ALPHA_TOE
+        part = 'toe'
+    else:
+      part = 'hand'
+      text = ''
+      alpha = ARROW_ALPHA_HAND
     
-    im = self.arrow_to_img[part][f'{foot} {panel}']
+    im = self.arrow_to_img[part][f'{limb} {panel}']
     
+    text_color = 'black'
     for ax in axes:
       ax.plot(xloc, yloc)
       ax.add_artist(AnnotationBbox(OffsetImage(im, zoom=ZOOM, alpha=alpha),
@@ -173,9 +206,9 @@ class Artist():
     ytick_minor_interval = stats['Median time since downpress']
     ytick_major_interval = 4 * ytick_minor_interval
 
-    # 4 for buffer on bottom
     num_minor_yticks = round((max_time - min_time) / ytick_minor_interval)
-    num_lines = num_minor_yticks + 5
+    num_buffer_lines = 5
+    num_lines = num_minor_yticks + num_buffer_lines
     figheight = num_lines * HEIGHT_PER_LINE
     wr = self.width_ratios[self.singlesordoubles]
     fig, axes = plt.subplots(1, 3,
@@ -186,51 +219,52 @@ class Artist():
     arrow_axes = [axes[1]]
     choreo_axes = [axes[2]]
 
-    arrow_axes[0].set_ylim(min_time,
+    arrow_axes[0].set_ylim(min_time - ytick_minor_interval,
                            max_time + 4*ytick_minor_interval)
     arrow_axes[0].invert_yaxis()
 
 
     # Plot arrows
-    feet = ['Left foot', 'Right foot']
+    limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
     note_types = ['1', '2', '3', '4']
     active_holds = {}
     for i, row in dfs.iterrows():
       beat = row['Time']
-      for foot in feet:
+      for limb in limbs:
         for note in note_types:
-          col = f'{foot} {note}'
+          col = f'{limb} {note}'
           if type(row[col]) != str:
             continue
 
           panels = row[col].split(';')
           if note in ['1', '2']:
             for p in panels:
-              self.draw_arrow_sa(foot, p, beat, row['Stance action'], arrow_axes)
+              self.draw_arrow_sa(limb, p, beat, row['Stance action'], arrow_axes)
           if note == '2':
             for p in panels:
-              active_holds[p] = (foot, beat)
+              active_holds[p] = (limb, beat)
           if note == '3':
             for p in panels:
               if p in active_holds:
-                hold_foot, start_beat = active_holds[p]
-                self.draw_hold(foot, p, start_beat, beat, arrow_axes)
+                hold_limb, start_beat = active_holds[p]
+                self.draw_hold(limb, p, start_beat, beat, arrow_axes)
                 del active_holds[p]
           if note == '4':
             for p in panels:
               if p in active_holds:
-                hold_foot, start_beat = active_holds[p]
+                hold_limb, start_beat = active_holds[p]
                 # Handle hold footswitches
-                if hold_foot != foot:
-                  self.draw_hold(hold_foot, p, start_beat, beat, arrow_axes)
-                  active_holds[p] = (foot, beat)
+                if hold_limb != limb:
+                  self.draw_hold(hold_limb, p, start_beat, beat, arrow_axes)
+                  active_holds[p] = (limb, beat)
 
     # Plot choreo
     round_down = lambda x, p: int(x * 10**p) / 10**p
     rounded_yti = round_down(ytick_major_interval, 4)
     for t in np.arange(min_time, max_time, rounded_yti):
-      int_start = t
-      int_end = t + rounded_yti * 0.95
+      offset = ytick_minor_interval / 2
+      int_start = t - offset
+      int_end = t + rounded_yti * 0.95 - offset
       
       crit = (dfs['Time'] >= int_start) & (dfs['Time'] < int_end) & \
              (dfs['Has downpress'])
@@ -297,6 +331,7 @@ class Artist():
     
     sns.despine(bottom=True, left=True)
     fig.tight_layout()
+    # plt.subplots_adjust(wspace=0)
     fig.patch.set_facecolor('white')
     fig.savefig(f'{out_fn}', bbox_inches='tight')
     plt.close()
@@ -399,15 +434,19 @@ def get_top_annots_in_row(row, n):
   Testing
 '''
 def test():
-  df = pd.read_csv('../out/d_annotate/Super Fantasy - SHK S16 arcade.csv')
-  artist = Artist('singles')
+  # df = pd.read_csv('../out/d_annotate/Super Fantasy - SHK S16 arcade.csv')
+  # artist = Artist('singles')
   # artist.plot_section(df, (15, 32), 'test-superfantasy-1.png')
   # artist.plot_section(df, (15, 60), 'test-superfantasy-2.png')
 
-  df = pd.read_csv('../out/d_annotate/Mitotsudaira - ETIA. D19 arcade.csv')
-  artist = Artist('doubles')
-  artist.plot_section(df, (56, 80), 'test-mitotsu-1.png')
+  # df = pd.read_csv('../out/d_annotate/Mitotsudaira - ETIA. D19 arcade.csv')
+  # artist = Artist('doubles')
+  # artist.plot_section(df, (56, 80), 'test-mitotsu-1.png')
   # artist.plot_section(df, (56, 100), 'test-mitotsu-2.png')
+
+  df = pd.read_csv('../out/d_annotate/King of Sales - Norazo S21 arcade.csv')
+  artist = Artist('singles')
+  artist.plot_section(df, (100, 159), '../out/tag_sections/test-kos-hands.png')
   return
 
 if __name__ == '__main__':

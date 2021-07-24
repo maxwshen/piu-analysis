@@ -135,12 +135,18 @@ def annotate_general(df):
   for i, row in df.iterrows():
     sa = row['Stance action']
     d = parse_sa(sa)
-    for foot in ['Left foot', 'Right foot']:
-      pos = d['limb_to_pos'][foot]
+    for limb in ['Left foot', 'Right foot', 'Left hand', 'Right hand']:
+      if limb not in d['limb_to_pos']:
+        for suffix, padset in suffix_to_set.items():
+          col = f'{limb} {suffix}'
+          dd[col].append('')
+        continue
+
+      pos = d['limb_to_pos'][limb]
       hp = mover.pos_to_heel_panel[pos]
       tp = mover.pos_to_toe_panel[pos]
-      ha = d['limb_to_heel_action'][foot]
-      ta = d['limb_to_toe_action'][foot]
+      ha = d['limb_to_heel_action'][limb]
+      ta = d['limb_to_toe_action'][limb]
 
       for suffix, padset in suffix_to_set.items():
         panels = []
@@ -148,7 +154,7 @@ def annotate_general(df):
           if action in padset:
             panels.append(panel)
 
-        col = f'{foot} {suffix}'
+        col = f'{limb} {suffix}'
         if panels:
           dd[col].append(';'.join(panels))
         else:
@@ -456,7 +462,7 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
@@ -481,7 +487,7 @@ def main():
   # nm = 'Good Night - Dreamcatcher S20 arcade'
 
   # Doubles
-  nm = 'Mitotsudaira - ETIA. D19 arcade'
+  # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'

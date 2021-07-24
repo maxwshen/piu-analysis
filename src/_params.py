@@ -87,7 +87,7 @@ movement_costs = {
       'Inverted feet big': 2.25,
       'Inverted hands': 5,
       'Hold footslide': 0.2,
-      'Hold footswitch': 5,
+      'Hold footswitch': 10,
       'Angle too open': 0.1,
       'Angle duck': 0.1,
       'Angle extreme duck': 0.5,

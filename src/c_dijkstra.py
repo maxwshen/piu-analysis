@@ -204,7 +204,7 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
+  nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Xeroize - FE S24 arcade'
@@ -251,7 +251,7 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
-  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'

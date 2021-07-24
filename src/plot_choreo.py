@@ -53,9 +53,14 @@ class Artist():
     self.left_arrow_color = '#e50000'
     self.right_arrow_color = '#0000ff'
 
+    self.pos_names = set(self.pos_df['Name'])
+
 
   @functools.lru_cache(maxsize=None)
   def foot_pos_row(self, foot_pos):
+    if foot_pos not in self.pos_names:
+      print(f'Error: Failed to find {foot_pos}. Check singlesordoubles')
+      raise Exception(f'Error: Failed to find {foot_pos}')
     return self.pos_df[self.pos_df['Name'] == foot_pos].iloc[0]
 
 
@@ -195,10 +200,8 @@ class Artist():
     sns.despine(bottom=True, left=True)
     ax.axis('off')
     plt.tight_layout()
-    
-    text_locs = [t.get_position() for t in texts]
-    if len(set(text_locs)) < len(text_locs):
-      adjust_text(texts)
+
+    adjust_text(texts)
 
     return fig
 
