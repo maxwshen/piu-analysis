@@ -7,7 +7,11 @@ import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
 import d_annotate
+import plot_chart
 import _qsub, _stepcharts, hmm_segment, tag
+
+import warnings
+warnings.filterwarnings('ignore')
 
 # Default params
 inp_dir_a = _config.OUT_PLACE + 'a_format_data/'
@@ -91,8 +95,11 @@ def get_section_stats(dfs):
 
 
 def get_description(tags):
-  # Label section with a single "primary" high-level tag
-  highlevel = ['Run', 'Drill', 'Hold run', 'Hold taps', 'Jump', 'Jack', 'Footswitch', 'Hold', 'Bracket jump run', 'Jump run', 'None']
+  '''
+    Label section with a single "primary" high-level tag
+    Can modify or remove adjectives here
+  '''
+  highlevel = ['Bracket jump run', 'Jump run', 'Run', 'Drill', 'Bracket', 'Hold run', 'Hold taps', 'Jump', 'Jack', 'Footswitch', 'Hold', 'None']
   replace = {
     'Bracket jump run': 'Bracket jump',
     'Jump run': 'Jump',
@@ -123,16 +130,15 @@ def get_description(tags):
   adjs = tags[primary_annot] if primary_annot in tags else []
   adjs = adjs + [tag for tag in extra if tag in tags]
   adjs = reduce_adjs(adjs)
+  adjs = remove_adjs(adjs)
   adjs = relabel_adjs(adjs)
 
-  try:
-    bpm_annot = [a for a in adjs if 'bpm' in a][0]
-  except:
-    import code; code.interact(local=dict(globals(), **locals()))
+  bpm_annot = [a for a in adjs if 'bpm' in a][0]
   bpm_annot = '' if 'nan' in bpm_annot else bpm_annot
   nps_annot = [a for a in adjs if 'nps' in a][0]
   nps_annot = '' if 'nan' in nps_annot else nps_annot
   adjs = [a for a in adjs if 'nps' not in a and 'bpm' not in a]
+  adjs = [a.capitalize() for a in adjs]
 
   primary_annot = replace.get(primary_annot, primary_annot)
   return primary_annot, bpm_annot, nps_annot, adjs
@@ -148,6 +154,11 @@ def reduce_adjs(adjs):
     if sum(x in adjs for x in group) > 1:
       adjs.remove(group[-1])
   return adjs
+
+
+def remove_adjs(adjs):
+  remove = ['small movements', 'front-facing']
+  return [a for a in adjs if a not in remove]
 
 
 def relabel_adjs(adjs):
@@ -183,7 +194,7 @@ def ensure_min_rect_heights(min_height, section_data):
   return ys, heights
 
 
-def plot_summary(nm, section_data):
+def plot_summary(nm, section_data, line_df, groups, comb_to_indiv, out_fn):
   '''
     section_data
     summary_annots
@@ -194,7 +205,8 @@ def plot_summary(nm, section_data):
   import matplotlib.pyplot as plt
   import seaborn as sns
 
-  summary_width = 1.2
+  # summary_width = 1.2
+  summary_width = 10
   RECT_WIDTH = 2
   MIN_RECT_HEIGHT = 3
 
@@ -207,9 +219,19 @@ def plot_summary(nm, section_data):
   expanded_time_len = sum(heights)
   summary_height = expanded_time_len * 0.06
 
-  fig, ax = plt.subplots(figsize=(summary_width, summary_height))
-  interval_times = []
+  fig, axes = plt.subplots(1, 5,
+                            figsize=(summary_width, summary_height),
+                            gridspec_kw={'width_ratios': [1, 1, 0.1, 1, 2]},
+                            sharey=True)
+  [group_ax, main_ax, nps_ax, bpm_ax, annot_ax] = axes
+
+  start_time, end_time = ys[0], ys[-1] + heights[-1]
+  main_ax.set_ylim([start_time-0.1, end_time+0.1])
+  main_ax.invert_yaxis()
+
+  # Plot rectangles and adjectives
   yticklocs = []
+  interval_times = []
   for sec_num, section in enumerate(section_data):
     ds = section_data[section]
     color = color_of(ds['Median nps'])
@@ -218,12 +240,11 @@ def plot_summary(nm, section_data):
     y_start = ys[sec_num]
     y_end = ys[sec_num] + heights[sec_num]
 
-    plt.plot((0, 0), (y_start, y_end), '-', linewidth=1, color=color)
     rect = mpl.patches.Rectangle(
       (0 - RECT_WIDTH/2, y_start), 
       RECT_WIDTH, y_end,
       linewidth=0, facecolor=color)
-    ax.add_patch(rect)
+    main_ax.add_patch(rect)
     
     if sec_num == 0:
       yticklocs += [y_start, y_end]
@@ -235,55 +256,80 @@ def plot_summary(nm, section_data):
     primary_annot = ds['Primary annot']
     text_y_offset = 0.75
     y_annot = np.mean([y_start, y_end]) + text_y_offset
-    plt.text(0, y_annot, primary_annot, ha='center')
+    main_ax.text(0, y_annot, primary_annot, ha='center')
 
-    bpm_annot = ds['BPM annot'].replace(' at ', ', ')
-    plt.text(1.5, y_annot, bpm_annot, ha='left')
+    nps_ax.text(0, y_annot, ds['NPS annot'].replace(' nps', ''), ha='left')
+    bpm_ax.text(0, y_annot, ds['BPM annot'].replace(' at ', ', '), ha='left')
+    annot_ax.text(0, y_annot, ds['Adjectives annot'], ha='left')
 
-    adj_annots = ds['Adjectives annot']
-    plt.text(5.5, y_annot, adj_annots, ha='left')
+  # Plot groups (for chart details, less than 10)
+  palette = sns.color_palette()
+  for i, group in enumerate(groups):
+    indivs = comb_to_indiv[i]
+    start_i, end_i = indivs[0], indivs[-1]
+    y_start = ys[start_i]
+    y_end = ys[end_i] + heights[end_i]
+    
+    section_rect_width = 0.5
+    rect = mpl.patches.Rectangle(
+      (0 - section_rect_width/2, y_start), 
+      section_rect_width, y_end,
+      linewidth=0, color=palette[i])
+    group_ax.add_patch(rect)
+    group_ax.plot((-1, 1), (y_start, y_start),
+                  color='black', linewidth=1, linestyle='-')
+    group_ax.plot((-1, 1), (y_end, y_end),
+                  color='black', linewidth=1, linestyle='-')
+    group_ax.text(-1, np.mean([y_start, y_end]), f'{i+1}', ha='right', va='center')
 
+
+  # Formatting
   # y ticks
-  interval_times = sorted(list(set([round(t, 1) for t in interval_times])))
+  interval_times = sorted(list(set([round(t, 1) for t in interval_times])))  
+  main_ax.set_yticks(yticklocs)
+  main_ax.set_yticklabels([format_time(t) for t in interval_times])
+  main_ax.set_ylabel('Time')
+  main_ax.yaxis.set_tick_params(labelleft=True)
+  main_ax.tick_params('x', width=0)
+  main_ax.set_xticklabels([])
+  main_ax.set_xlim([-1, 1])
+  # right_ax.set_ylim([min(yticklocs)-0.1, max(yticklocs)+0.1])
+  main_ax.grid(axis='y')
   
-  ax.set_yticks(yticklocs)
-  ax.set_yticklabels([format_time(t) for t in interval_times])
-  ax.set_ylabel('Time')
-  ax.tick_params('x', width=0)
-  ax.set_xticklabels([])
-  plt.xlim([-1, 1])
-  plt.ylim([min(yticklocs)-0.1, max(yticklocs)+0.1])
-  plt.grid(axis='y')
-  ax.invert_yaxis()
-  
-  sns.despine(bottom=True, left=True)
-  plt.tight_layout()
-  plt.title(f'{nm}\n')
-  fig.patch.set_facecolor('white')
+  nps_ax.set_title('NPS');
+  nps_ax.set_xlim([0, 5])
+  nps_ax.axis('off')
 
-  plt.savefig(out_dir + f'{nm}.png', bbox_inches='tight')
+  group_ax.axis('off')
+  group_ax.set_xlim([-5, 1])
+  group_ax.set_title('Section')
+
+  bpm_ax.set_xlim([0, 3])
+  bpm_ax.axis('off')
+
+  annot_ax.axis('off')
+
+  sns.despine(bottom=True, left=True)
+  main_ax.set_title(f'{nm}\n')
+
+  fig.tight_layout()
+  fig.patch.set_facecolor('white')
+  fig.savefig(out_fn, bbox_inches='tight')
   plt.close()
   return
 
 
 '''
-  Run
+  Primary
 '''
-def run_single(nm):
-  '''
-    HMM segment a chart by 'time since downpress'
-    Tag section, comparing subchart to all charts in context (level-3 to level)
-  '''
-  line_df = pd.read_csv(inp_dir_d + f'{nm}.csv', index_col=0)
-
-  all_line_dfs = hmm_segment.segment(line_df)
-
+def summary(nm, all_line_dfs, line_df, groups, comb_to_indiv, out_fn):
+  # Tag section, comparing subchart to all charts in context (level-3 to level)
   section_stats = [get_section_stats(dfs) for dfs in all_line_dfs]
   ft_ds = [d_annotate.featurize(dfs) for dfs in all_line_dfs]
   ft_ds = edit_section_features(ft_ds)
   df_fts = [pd.DataFrame(fts, index=[nm]) for fts in ft_ds]
 
-  # # Annotate
+  # Annotate
   context_df = get_context_df(nm)
   context_df = context_df[~(context_df['Name (unique)'] == nm)]
 
@@ -305,14 +351,40 @@ def run_single(nm):
     section_data[i]['NPS annot'] = nps_annot
     section_data[i]['Adjectives annot'] = ', '.join(adjs)
 
-  plot_summary(nm, section_data)
+  plot_summary(nm, section_data, line_df, groups, comb_to_indiv, out_fn)
+  return
 
-  # print('\n', nm)
-  # for i, secd in section_data.items():
-  #   print(f'Section {i}', secd['Start time'], secd['End time'])
-  #   # for k, v in secd['Reduced tags'].items():
-  #   #   print('\t', k.ljust(20), v)
-  #   print(secd['Annotation'])
+
+'''
+  Run
+'''
+def run_single(nm):
+  '''
+    HMM segment a chart by 'time since downpress'
+    Tag section, comparing subchart to all charts in context (level-3 to level)
+  '''
+  line_df = pd.read_csv(inp_dir_d + f'{nm}.csv', index_col=0)
+
+  all_line_dfs, groups, comb_to_indiv = hmm_segment.segment(line_df)
+
+  print(groups)
+
+  summary_fn = out_dir + f'{nm} card.png'
+  print('Plotting stepchart card ...')
+  summary(nm, all_line_dfs, line_df, groups, comb_to_indiv, summary_fn)
+
+  # Plot chart by section
+  print('Plotting sections ...')
+  sord = scinfo.name_to_singleordouble(nm)
+  artist = plot_chart.Artist(sord)
+  total_lines_done = 0
+  for i, group in enumerate(groups):
+    sec_num = i+1
+    out_fn = out_dir + f'{nm} {sec_num}.png'
+    artist.plot_section(line_df, group, out_fn)
+    total_lines_done += group[1] - group[0]
+    print(f'Group {i} done: {total_lines_done}/{len(line_df)}; {total_lines_done/len(line_df):.1%}')
+
   return
 
 
@@ -335,9 +407,9 @@ def main():
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
-  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
-  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
+  nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

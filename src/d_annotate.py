@@ -314,11 +314,18 @@ def bool_featurize(df, col):
   if col in move_stats:
     dfs = df[df[col] == True]
     dists = np.array(dfs['Travel (mm)'])
-    add_stats = {
-      f'{col} - mean travel (mm)': nan_to_zero(np.nanmean(dists)), 
-      f'{col} - 80% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 80)), 
-      f'{col} - 95% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 95)), 
-    }
+    if len(dists) == 0 or all(np.isnan(x) for x in dists):
+      add_stats = {
+        f'{col} - mean travel (mm)': 0, 
+        f'{col} - 80% travel (mm)':  0,
+        f'{col} - 95% travel (mm)':  0,
+      }
+    else:
+      add_stats = {
+        f'{col} - mean travel (mm)': nan_to_zero(np.nanmean(dists)), 
+        f'{col} - 80% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 80)), 
+        f'{col} - 95% travel (mm)':  nan_to_zero(np.nanpercentile(dists, 95)), 
+      }
     stats.update(add_stats)
 
   return stats
@@ -327,12 +334,20 @@ def bool_featurize(df, col):
 def float_featurize(df, col):
   # ex: Travel (mm)
   data = np.array(df[col])
-  stats = {
-    f'{col} - mean': nan_to_zero(np.nanmean(data)),
-    f'{col} - 50%':  nan_to_zero(np.nanmedian(data)),
-    f'{col} - 80%':  nan_to_zero(np.nanpercentile(data, 80)), 
-    f'{col} - 99%':  nan_to_zero(np.nanpercentile(data, 99)), 
-  }
+  if len(data) == 0 or all(np.isnan(x) for x in data):
+    stats = {
+      f'{col} - mean': 0,
+      f'{col} - 50%':  0,
+      f'{col} - 80%':  0, 
+      f'{col} - 99%':  0, 
+    }
+  else:
+    stats = {
+      f'{col} - mean': nan_to_zero(np.nanmean(data)),
+      f'{col} - 50%':  nan_to_zero(np.nanmedian(data)),
+      f'{col} - 80%':  nan_to_zero(np.nanpercentile(data, 80)), 
+      f'{col} - 99%':  nan_to_zero(np.nanpercentile(data, 99)), 
+    }
   return stats
 
 
@@ -364,7 +379,7 @@ def one_hot_encode(df, ft, cats):
   cols = []
   for cat in cats:
     col = f'{ft} - {cat}'
-    df[col] = (df[ft] == cat)
+    df.loc[:, col] = (df[ft] == cat)
     cols.append(col)
   
   global annot_types
@@ -433,7 +448,7 @@ def main():
   # nm = 'HTTP - Quree S21 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Shub Sothoth - Nato & EXC S25 remix'
-  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'PARADOXX - NATO & SLAM S26 remix'
@@ -466,7 +481,7 @@ def main():
   # nm = 'Good Night - Dreamcatcher S20 arcade'
 
   # Doubles
-  # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
