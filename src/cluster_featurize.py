@@ -50,7 +50,7 @@ def merge_all():
     fn = out_dir + f'{nm}.csv'
     if os.path.isfile(fn):
       df = pd.read_csv(fn)
-      mdf = mdf.append(df, ignore_index=True)
+      mdf = mdf.append(df)
     timer.update()
   print(f'Merged {len(mdf)} files.')
   mdf.to_csv(out_dir + f'cluster_features.csv')
