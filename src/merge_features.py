@@ -1,6 +1,13 @@
+'''
+  Merge features
+  also predict difficulty
+'''
+
 import _config, util
 import sys, os, subprocess
 import pandas as pd
+
+import predict_difficulty
 
 inp_dir = _config.OUT_PLACE + 'd_annotate/'
 NAME = util.get_fn(__file__)
@@ -9,6 +16,12 @@ util.ensure_dir_exists(out_dir)
 
 fns = [fn for fn in os.listdir(inp_dir) if '_features' in fn]
 num_jobs = 20
+
+all_df = pd.read_csv(_config.OUT_PLACE + 'a_format_data/all_stepcharts.csv', index_col=0)
+all_df['Level'] = all_df['METER']
+all_df['Is singles'] = (all_df['Steptype simple'].str.contains('S'))
+all_df['Is doubles'] = (all_df['Steptype simple'].str.contains('D'))
+
 
 def merge(start, end):
   start, end = int(start), int(end)
@@ -30,11 +43,22 @@ def merge_all():
   mdf = pd.DataFrame()
   num_per_run = get_num_per_run()
   timer = util.Timer(total=num_jobs)
+  print('Merging ...')
   for start in range(0, len(fns), num_per_run):
     end = start + num_per_run
     df = pd.read_csv(out_dir + f'features-{start}-{end}.csv', index_col=0)
     mdf = mdf.append(df)
     timer.update()
+  
+  # exclude chart info from ML feature columns
+  ft_cols = [x for x in mdf.columns if x != 'Name (unique)']
+  mdf = mdf.merge(all_df, on='Name (unique)', how='left')
+
+  print('Training models to predict difficulty ...')
+  dfs = predict_difficulty.predict(mdf[mdf['Is singles']], ft_cols)
+  dfd = predict_difficulty.predict(mdf[mdf['Is doubles']], ft_cols)
+
+  mdf = dfs.append(dfd)
   mdf.to_csv(out_dir + 'features.csv')
   return
 

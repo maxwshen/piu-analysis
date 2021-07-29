@@ -30,6 +30,15 @@ def is_splits(row1, row2):
         return True
   return False
 
+
+def is_triple(row1, row2):
+  return row2['Num pressed'] == 3
+
+
+def is_quad(row1, row2):
+  return row2['Num pressed'] == 4
+
+
 '''
   Local - line + movement
   x Twist (90, diagonal, 180)
@@ -324,6 +333,8 @@ funcs = {
   'Hold':                 is_hold,
   'Hold taps':            is_hold_taps,
   'Splits':               is_splits,
+  'Triple':               is_triple,
+  'Quad':                 is_quad,
   # Movement required
   'Jump':                 is_jump,
   'Bracket':              is_bracket,

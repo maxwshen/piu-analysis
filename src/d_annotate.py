@@ -86,6 +86,7 @@ def annotate_general(df):
     df[col] = dd[col]
 
   df['Has downpress'] = [_notelines.has_downpress(line) for line in df['Line']]
+  df['Num pressed'] = [_notelines.num_pressed(line) for line in df['Line']]
 
   nps = [np.nan]
   has_dp_adj = [True]

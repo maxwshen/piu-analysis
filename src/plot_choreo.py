@@ -55,6 +55,17 @@ class Artist():
 
     self.pos_names = set(self.pos_df['Name'])
 
+    self.pad_img = mpimg.imread(graphics_dir + f'pad-{self.singlesordoubles}.PNG')
+    self.foot_imgs = {
+      'Left foot': self.load_foot_image('left-foot'),
+      'Right foot': self.load_foot_image('right-foot'),
+    }
+
+
+  def load_foot_image(self, foot):
+    im = Image.open(graphics_dir + f'{foot}.png')
+    return im
+
 
   @functools.lru_cache(maxsize=None)
   def foot_pos_row(self, foot_pos):
@@ -75,7 +86,8 @@ class Artist():
       Draws pad image, returning (fig, ax)
       Data coordinates are in mm, with negative y: upper left is (0, 0)
     '''
-    im = mpimg.imread(graphics_dir + f'pad-{self.singlesordoubles}.PNG')
+
+    im = self.pad_img
     
     if self.singlesordoubles == 'singles':
       fig_dim = (self.FIG_BASE_SIZE, self.FIG_BASE_SIZE)
@@ -98,7 +110,7 @@ class Artist():
     center = (row['Loc x - center'], -1 * row['Loc y - center'])
 
     if 'a' not in foot_pos:
-      im = Image.open(graphics_dir + f'{foot}.png')
+      im = self.foot_imgs[foot]
       im = im.rotate(-float(rotation), expand=True)
       im = np.array(im) / 255
 
@@ -161,9 +173,7 @@ class Artist():
     [poss, actions] = sa.split(';')
     feet = ['Left foot', 'Right foot']
     for foot, pos, action in zip(feet, poss.split(','), actions.split(',')):
-      parsed_foot = 'left-foot' if foot == 'Left foot' else 'right-foot'
-      
-      self.draw_foot_from_pos(parsed_foot, pos, ax)
+      self.draw_foot_from_pos(foot, pos, ax)
       
       pos_row = self.pos_df[self.pos_df['Name'] == pos].iloc[0]
       action_string = f'{i+1}'

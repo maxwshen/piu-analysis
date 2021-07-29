@@ -8,7 +8,7 @@ from collections import defaultdict, Counter
 
 import d_annotate
 import plot_chart
-import _qsub, _stepcharts, hmm_segment, tag
+import _qsub, _stepcharts, hmm_segment, chart_compare
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -22,31 +22,6 @@ util.ensure_dir_exists(out_dir)
 
 scinfo = _stepcharts.SCInfo()
 
-CONTEXT_LOWER = -3
-CONTEXT_UPPER = 0
-
-
-def get_context_df(nm):
-  level = scinfo.name_to_level[nm]
-
-  all_features = pd.read_csv(_config.OUT_PLACE + f'features.csv', index_col=0)
-  all_features['Name (unique)'] = all_features.index
-  all_features = all_features.drop_duplicates(subset = 'Name (unique)', keep='last')
-
-  all_df = pd.read_csv(inp_dir_a + 'all_stepcharts.csv', index_col=0)
-  all_df['Level'] = all_df['METER']
-  all_features = all_features.merge(all_df, on = 'Name (unique)', how = 'left')
-
-  steptype = all_features[all_features['Name (unique)'] == nm]['Steptype simple']
-  if 'S' in steptype:
-    all_features = _stepcharts.singles_subset(all_features)
-  elif 'D' in steptype:
-    all_features = _stepcharts.doubles_subset(all_features)
-
-  context_crit = (all_features['Level'] >= level + CONTEXT_LOWER) & \
-                 (all_features['Level'] <= level + CONTEXT_UPPER)
-  context_df = all_features[context_crit]
-  return context_df
 
 
 def edit_section_features(ft_ds):
@@ -331,7 +306,7 @@ def summary(nm, all_line_dfs, line_df, groups, comb_to_indiv, out_fn):
   df_fts = [pd.DataFrame(fts, index=[nm]) for fts in ft_ds]
 
   # Annotate
-  context_df = get_context_df(nm)
+  context_df = chart_compare.get_context_df(nm)
   context_df = context_df[~(context_df['Name (unique)'] == nm)]
 
   section_data = {}
@@ -340,7 +315,7 @@ def summary(nm, all_line_dfs, line_df, groups, comb_to_indiv, out_fn):
     df_ft['Name (unique)'] = nm
     aug_context = df_ft.append(context_df)
     aug_contexts.append(aug_context)
-    tags = tag.tag_chart(aug_context, nm)
+    tags = chart_compare.tag_chart(aug_context, nm)
     section_data[i] = {
       'Tags': tags,
     }
@@ -397,7 +372,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S16 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Native - SHK S20 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
@@ -408,7 +383,7 @@ def main():
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'

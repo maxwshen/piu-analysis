@@ -185,11 +185,11 @@ class Artist():
     
     text_color = 'black'
     for ax in axes:
-      ax.plot(xloc, yloc)
       ax.add_artist(AnnotationBbox(OffsetImage(im, zoom=ZOOM, alpha=alpha),
                                    (xloc, yloc), frameon=False))
       ax.add_artist(AnnotationBbox(TextArea(text, textprops=dict(color=text_color)),
                                    (xloc, yloc), frameon=False))
+      pass
     return
 
 
@@ -433,6 +433,7 @@ def get_top_annots_in_row(row, n):
 '''
   Testing
 '''
+@util.time_dec
 def test():
   # df = pd.read_csv('../out/d_annotate/Super Fantasy - SHK S16 arcade.csv')
   # artist = Artist('singles')
@@ -446,7 +447,8 @@ def test():
 
   df = pd.read_csv('../out/d_annotate/King of Sales - Norazo S21 arcade.csv')
   artist = Artist('singles')
-  artist.plot_section(df, (100, 159), '../out/tag_sections/test-kos-hands.png')
+  # artist.plot_section(df, (100, 159), '../out/tag_sections/test-kos-hands.png')
+  artist.plot_section(df, (100, 110), '../out/tag_sections/test-kos-hands-short.png')
   return
 
 if __name__ == '__main__':
