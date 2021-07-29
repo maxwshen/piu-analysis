@@ -7,7 +7,7 @@ import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
 import _qsub, _stepcharts
-import hmm_segment, e_struct_timelines, chart_compare
+import hmm_segment, e_struct_timelines, chart_compare, cluster_charts
 
 # Default params
 inp_dir_a = _config.OUT_PLACE + 'a_format_data/'
@@ -36,17 +36,6 @@ def chart_info(nm, compare_d):
     else:
       return 'Unknown'
 
-  # Convert pred. difficulty pctile to text
-  ranges = {
-    (0, 0.10): ('Easy', '#7cb82f'),
-    (0.10, 0.25): ('Easy-medium', '#efb920'),
-    (0.25, 0.75): ('Medium', '#f47b16'),
-    (0.75, 0.925): ('Hard', '#ec4339'),
-    (0.925, 1.0): ('Very hard', '#c11f1d'),
-  }
-  dp = d['Predicted level percentile']
-  dpkg = [pkg for r, pkg in ranges.items() if r[0] <= dp <= r[1]][0]
-
   chart_info_dict = {
     'name': nm,
     'song title': d['TITLE'],
@@ -56,11 +45,10 @@ def chart_info(nm, compare_d):
     'pack': d['Pack'], 
     'singles or doubles': expand_steptype(d['Steptype simple']),
     'description': compare_d['description'], 
-    # 'related_charts': compare_d['related_charts'],
+    'similar charts': cluster_charts.get_neighbors(nm),
     # 'tags': [''], 
     'predicted difficulty': f'{d["Predicted level"]:.2f}',
-    'difficulty string': dpkg[0],
-    'difficulty string color': dpkg[1],
+    'predicted difficulty percentile': f'{d["Predicted level percentile"]:.2f}',
   }
   return convert_dict_to_js_lists(chart_info_dict)
 
@@ -84,6 +72,7 @@ def chart_card(nm, line_df, groups, compare_d):
   ]
   add_cols = compare_d['timeline tags']
   add_names = [chart_compare.rename_tag(t) for t in add_cols]
+  print(add_names)
   add_timelines = [
     e_struct_timelines.binary_timeline(line_df, col, name)
     for col, name in zip(add_cols, add_names)

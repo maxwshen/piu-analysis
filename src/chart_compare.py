@@ -78,15 +78,12 @@ def get_custom_timelines(tag_percentiles, n = 3, verbose = True):
   return tags[:n]
 
 
-def get_tech_percentiles(context_df, nm):
+def get_tech_percentiles(context_df, nm, threshold=0):
   '''
     Used for picking custom timelines and finding similar charts
   '''
   kw = ' - 50% nps'
   broad_tags = [col.replace(kw, '') for col in context_df.columns if kw in col]
-
-  # Zero out percentiles when frequency is below threshold
-  LOW_FQ_THRESHOLD = 0.05
 
   row = context_df[context_df['Name (unique)'] == nm].iloc[0]
   tag_percentiles = {}
@@ -94,7 +91,7 @@ def get_tech_percentiles(context_df, nm):
     col = f'{tag} - frequency'
     fq, context = row[col], context_df[col]
     pct = sum(context < fq) / len(context)
-    if fq > LOW_FQ_THRESHOLD:
+    if fq > threshold:
       tag_percentiles[tag] = pct
     else:
       tag_percentiles[tag] = 0

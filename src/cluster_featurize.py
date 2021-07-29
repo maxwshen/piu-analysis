@@ -34,7 +34,9 @@ def run_multiple(start, end):
 
 def run_single(nm, save = True):
   context_df = chart_compare.get_context_df(nm)
-  tag_pcts = chart_compare.get_tech_percentiles(context_df, nm)
+
+  # For clustering, ignore features if below 5%
+  tag_pcts = chart_compare.get_tech_percentiles(context_df, nm, threshold=0.05)
 
   df = pd.DataFrame(tag_pcts, index=[nm])
   if save:
