@@ -49,7 +49,7 @@ def merge_all():
     nm = row['Name (unique)']
     fn = out_dir + f'{nm}.csv'
     if os.path.isfile(fn):
-      df = pd.read_csv(fn)
+      df = pd.read_csv(fn, index_col=0)
       mdf = mdf.append(df)
     timer.update()
   print(f'Merged {len(mdf)} files.')
