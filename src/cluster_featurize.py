@@ -53,6 +53,7 @@ def merge_all():
       mdf = mdf.append(df, ignore_index=True)
     timer.update()
   print(f'Merged {len(mdf)} files.')
+  mdf.to_csv(out_dir + f'cluster_features.csv')
   return
 
 
