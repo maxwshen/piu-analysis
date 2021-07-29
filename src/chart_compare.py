@@ -85,13 +85,19 @@ def get_tech_percentiles(context_df, nm):
   kw = ' - 50% nps'
   broad_tags = [col.replace(kw, '') for col in context_df.columns if kw in col]
 
+  # Zero out percentiles when frequency is below threshold
+  LOW_FQ_THRESHOLD = 0.05
+
   row = context_df[context_df['Name (unique)'] == nm].iloc[0]
   tag_percentiles = {}
   for tag in broad_tags:
     col = f'{tag} - frequency'
-    val, context = row[col], context_df[col]
-    pct = sum(context < val) / len(context)
-    tag_percentiles[tag] = pct
+    fq, context = row[col], context_df[col]
+    pct = sum(context < fq) / len(context)
+    if fq > LOW_FQ_THRESHOLD:
+      tag_percentiles[tag] = pct
+    else:
+      tag_percentiles[tag] = 0
   return tag_percentiles
 
 
