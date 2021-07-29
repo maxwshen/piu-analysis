@@ -48,7 +48,8 @@ def merge_all():
     end = start + num_per_run
     df = pd.read_csv(out_dir + f'features-{start}-{end}.csv', index_col=0)
     mdf = mdf.append(df)
-    timer.update()
+    timer.update()  
+  mdf['Name (unique)'] = mdf.index
   
   # exclude chart info from ML feature columns
   ft_cols = [x for x in mdf.columns if x != 'Name (unique)']
