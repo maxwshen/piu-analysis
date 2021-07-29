@@ -54,11 +54,9 @@ def merge_all():
     timer.update()
   print(f'Merged {len(mdf)} files.')
 
-  mdf.index = mdf['Unnamed: 0']
-  mdf = mdf.drop(columns=['Unnamed: 0'])
   mdf = mdf.rename(columns = {c: f'Feature - {c}' for c in mdf.columns})
-  mdf['Name (unique)'] = mdf.index
 
+  mdf['Name (unique)'] = mdf.index
   dfs = all_df[['Name (unique)', 'Level', 'Is singles', 'Is doubles']]
   mdf = mdf.merge(dfs, on='Name (unique)')
 
