@@ -101,7 +101,10 @@ def chart_details(nm, line_df, groups, chart_info_dict):
 
   # [preview, 1, 2, 3, ...]
   chart_details_struct = []
-  preview_start = groups[1][0]
+  if len(groups) > 1:
+    preview_start = groups[1][0]
+  else:
+    preview_start = groups[0][0]
   preview_end = preview_start + 16
   groups.insert(0, (preview_start, preview_end))
   section_names = []
