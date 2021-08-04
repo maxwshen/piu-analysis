@@ -277,13 +277,14 @@ def main():
   # nm = 'Elvis - AOA S15 arcade'
   # nm = 'PRIME - Tatsh S7 arcade'
   # nm = '%X (Percent X) - Pory S17 arcade'
+  nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  nm = 'King of Sales - Norazo D19 arcade'
+  # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'

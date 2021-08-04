@@ -30,7 +30,10 @@ def nps(df):
 def binary_timeline(df, col, name):
   dfs = df[df[col]]
   xs = list(dfs['Time'])
-  return [xs, [name]*len(xs)]
+  if xs:
+    return [xs, [name]*len(xs)]
+  else:
+    return [[0], [name]]
 
 
 def twist(df):

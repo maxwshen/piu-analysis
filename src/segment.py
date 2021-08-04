@@ -881,6 +881,7 @@ def main():
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
+  nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
@@ -909,7 +910,7 @@ def main():
   # nm = 'Windmill - Yak Won D23 arcade'
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
-  nm = 'Round and Round - Eskimo & Icebird D12 arcade'
+  # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
 
   run_single(nm)
   return

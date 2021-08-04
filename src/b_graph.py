@@ -851,6 +851,7 @@ def main():
   # nm = 'Final Audition Ep. 2-2 - YAHPP S22 arcade'
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
+  nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
@@ -879,7 +880,7 @@ def main():
   # nm = 'Windmill - Yak Won D23 arcade'
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
-  nm = 'Round and Round - Eskimo & Icebird D12 arcade'
+  # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
 
   run_single(nm)
   return

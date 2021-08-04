@@ -1,7 +1,7 @@
 '''
   Upload files to S3, to be downloaded by the app
 '''
-import _config, util
+import _config, util, string
 import os
 import boto3
 
@@ -19,13 +19,21 @@ for local_fn, filename in single_fns.items():
   s3.upload_file(local_fn, os.environ['S3_BUCKET_NAME'], filename)
 
 
+S3_SAFE_CHARS = string.letters + string.digits + list("!-_.*'()")
+REPLACE_CHAR = '_'
+def s3_safe(name):
+  convert_safe = lambda char: char if char in S3_SAFE_CHARS else REPLACE_CHAR
+  return ''.join(convert_safe(char) for char in name)
+
+
 # Upload e_struct files per stepchart
 e_struct_fold = _config.OUT_PLACE + 'e_struct/'
 files = [fn for fn in os.listdir(e_struct_fold) if '.pkl' in fn]
 print(f'Uploading {len(files)} e_struct files ...')
 timer = util.Timer(total=len(files))
 for fn in files:
-  s3.upload_file(e_struct_fold + fn, os.environ['S3_BUCKET_NAME'], fn)
-  timer.update()
+  print(s3_safe(fn))
+  s3.upload_file(e_struct_fold + fn, os.environ['S3_BUCKET_NAME'], s3_safe(fn))
+  # timer.update()
 
 print(f'Done')
