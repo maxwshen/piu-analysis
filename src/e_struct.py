@@ -188,9 +188,11 @@ def run_single(nm):
   with open(out_dir + f'{nm}.pkl', 'wb') as f:
     pickle.dump(struct, f)
 
-  app_dir = f'../../piu-app/data/'
-  with open(app_dir + f'{nm}.pkl', 'wb') as f:
-    pickle.dump(struct, f)
+  if os.environ.get('LOCAL_FRAMEWORK') == 'True':
+    print('Detected local laptop env: Saving to piu-app ...')
+    app_dir = f'../../piu-app/data/'
+    with open(app_dir + f'{nm}.pkl', 'wb') as f:
+      pickle.dump(struct, f)
   return
 
 
