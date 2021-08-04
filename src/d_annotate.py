@@ -424,6 +424,11 @@ def run_single(nm):
   df = annotate_global(df, _annotate_global.funcs)
   df = annotate_global(df, _annotate_post.funcs)
 
+  # Split 'twist' categorical into multiple binary columns
+  twist_vals = ['none', '90', 'close diagonal', 'far diagonal', '180']
+  for twist in twist_vals:
+    df[f'Twist angle - {twist}'] = (df['Twist angle'] == twist)
+
   df.to_csv(out_dir + f'{nm}.csv')
 
   # Featurize for chart tagging, clustering, and predicting difficulty
@@ -463,7 +468,7 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
@@ -489,6 +494,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'

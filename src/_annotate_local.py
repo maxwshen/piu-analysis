@@ -11,19 +11,19 @@ GLOBAL_MIN_LINES_LONG = 8
   Local - line only
 '''
 def is_hold(row1, row2):
-  line2 = row2['Line with active holds']
+  line2 = row2['Line with active holds'].replace('`', '')
   return any(x in line2 for x in list('24'))
 
 
 def is_hold_taps(row1, row2):
-  line2 = row2['Line with active holds']
+  line2 = row2['Line with active holds'].replace('`', '')
   active_hold = '4' in line2
   has_tap = any(x in line2 for x in list('12'))
   return active_hold and has_tap
 
 
 def is_splits(row1, row2):
-  line2 = row2['Line with active holds']
+  line2 = row2['Line with active holds'].replace('`', '')
   if len(line2) == 10:
     if any(x in line2[:2] for x in list('12')):
       if any(x in line2[-2:] for x in list('12')):

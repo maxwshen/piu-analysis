@@ -6,8 +6,9 @@ import sys, os, pickle, fnmatch, datetime, subprocess, functools, re
 import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
-import _qsub, _stepcharts
+import _qsub, _stepcharts, _stances
 import hmm_segment, e_struct_timelines, chart_compare, cluster_charts
+import plot_chart
 
 # Default params
 inp_dir_a = _config.OUT_PLACE + 'a_format_data/'
@@ -25,6 +26,7 @@ all_df = pd.read_csv(inp_dir_merge + 'features.csv', index_col=0)
 '''
   Build data struct
 '''
+# 1
 def chart_info(nm, compare_d):
   d = all_df[all_df['Name (unique)'] == nm].iloc[0]
 
@@ -36,6 +38,8 @@ def chart_info(nm, compare_d):
     else:
       return 'Unknown'
 
+  cluster_tags, neighbor_charts = cluster_charts.get_neighbors(nm)
+
   chart_info_dict = {
     'name': nm,
     'song title': d['TITLE'],
@@ -45,14 +49,15 @@ def chart_info(nm, compare_d):
     'pack': d['Pack'], 
     'singles or doubles': expand_steptype(d['Steptype simple']),
     'description': compare_d['description'], 
-    'similar charts': cluster_charts.get_neighbors(nm),
+    'cluster tags': cluster_tags,
+    'similar charts': neighbor_charts,
     # 'tags': [''], 
     'predicted difficulty': f'{d["Predicted level"]:.2f}',
     'predicted difficulty percentile': f'{d["Predicted level percentile"]:.2f}',
   }
-  return convert_dict_to_js_lists(chart_info_dict)
+  return chart_info_dict
 
-
+# 2
 def chart_card(nm, line_df, groups, compare_d):
   # Get xlabels based on group boundaries
   xticks = []
@@ -87,10 +92,54 @@ def chart_card(nm, line_df, groups, compare_d):
   }
   return convert_dict_to_js_lists(chart_card_dict)
 
+# 3
+def chart_details(nm, line_df, groups, chart_info_dict):
+  if chart_info_dict['singles or doubles'] == 'Singles':
+    num_panels = 5
+    stance = _stances.Stances(style='singles')
+  if chart_info_dict['singles or doubles'] == 'Doubles':
+    num_panels = 10
+    stance = _stances.Stances(style='doubles')
 
-def chart_details(nm):
-  chart_details_dict = {}
-  return convert_dict_to_js_lists(chart_details_dict)
+  # [preview, 1, 2, 3, ...]
+  chart_details_struct = []
+  preview_start = groups[1][0]
+  preview_end = preview_start + 16
+  groups.insert(0, (preview_start, preview_end))
+
+  for gidx, group in enumerate(groups):
+    dfs = line_df.iloc[group[0]:group[1]]
+ 
+    annot_times, annotations = plot_chart.js_line_annotations(dfs)
+    arrows, holds = plot_chart.js_arrows(dfs, stance)
+
+    stats = plot_chart.get_section_stats(group, line_df)
+    min_time = min(dfs['Time'])
+    max_time = max(dfs['Time'])
+    dt = stats['Median time since downpress']
+    times = [float(t) for t in np.arange(min_time, max_time + dt, dt)]
+    time_labels = [f'{t:.2f}' if i % 4 == 0 else '' for i, t in enumerate(times)]
+
+    chart_details_dict = {
+      'section_num': gidx,
+      'num_panels': num_panels,
+      'num_lines': len(times),
+      'times': times,
+      'time_labels': time_labels,
+      'plot_start_time': float(max_time + dt/2),
+      'plot_end_time': float(min_time - dt/2),
+      'arrows': arrows,
+      'holds': holds,
+      'annots': [annot_times, annotations],
+    }
+    chart_details_struct.append(convert_dict_to_js_lists(chart_details_dict))
+
+  # Update chart_info_dict, accessible in HTML/Jinja
+  new_info = {
+    'num_panels': num_panels,
+    'num_chart_sections': len(groups),
+  }
+  return chart_details_struct, new_info
 
 
 '''
@@ -115,10 +164,17 @@ def run_single(nm):
   # anything that requires comparing chart to other charts (level-3 to level)
   compare_d = chart_compare.run_single(nm)
 
+  chart_info_dict = chart_info(nm, compare_d)
+  chart_card_struct = chart_card(nm, line_df, groups, compare_d)
+  chart_details_struct, new_info = chart_details(nm, line_df, groups, chart_info_dict)
+
+  # Info parsed into python dict, usable in HTML, not just javascript
+  chart_info_dict.update(new_info)
+
   struct = [
-    chart_info(nm, compare_d),
-    chart_card(nm, line_df, groups, compare_d),
-    chart_details(nm),
+    convert_dict_to_js_lists(chart_info_dict),
+    chart_card_struct,
+    chart_details_struct,
   ]
 
   app_dir = f'../../piu-app/data/'

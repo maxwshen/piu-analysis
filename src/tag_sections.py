@@ -176,6 +176,8 @@ def plot_summary(nm, section_data, line_df, groups, comb_to_indiv, out_fn):
     bpm_annots
     adj_annots
   '''
+  import matplotlib
+  matplotlib.use('Agg')
   import matplotlib as mpl
   import matplotlib.pyplot as plt
   import seaborn as sns

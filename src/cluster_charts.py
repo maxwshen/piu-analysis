@@ -7,7 +7,7 @@ import numpy as np, pandas as pd
 from collections import defaultdict, Counter
 
 import _qsub
-import cluster_featurize
+import cluster_featurize, chart_compare
 
 # Default params
 inp_dir = _config.OUT_PLACE + 'cluster_featurize/'
@@ -54,6 +54,18 @@ def drop_redundant_features(ft_cols, jdxs):
   return new_jdxs
 
 
+def sanitize(query_ft_col):
+  # Reformat feature columns for front-end
+  replace = {
+    'Twist angle - none': 'No twists',
+  }
+  tag = query_ft_col.replace('Feature - ', '')
+  tag = chart_compare.rename_tag(tag)
+  for rk, rv in replace.items():
+    tag = tag.replace(rk, rv)
+  return tag
+
+
 def get_neighbors(nm, verbose = False):
   df = cluster_feature_df
   ft_mat, ft_cols = get_feature_mat()
@@ -66,6 +78,8 @@ def get_neighbors(nm, verbose = False):
   high_pct_jdxs = [i for i,v in enumerate(ft_mat[idx]) if v >= HIGH_PCT_THRESHOLD]
   high_pct_jdxs = drop_redundant_features(ft_cols, high_pct_jdxs)
   high_pct_ft_mat = ft_mat[:, high_pct_jdxs]
+
+  query_ft_cols = [sanitize(ft_cols[j]) for j in high_pct_jdxs]
   
   kdt = KDTree(high_pct_ft_mat)
   
@@ -95,15 +109,15 @@ def get_neighbors(nm, verbose = False):
   top3s = {k: top3s[k] for k in sorted_lvls}
   if verbose:
     print(nm)
-    print([ft_cols[j] for j in high_pct_jdxs])
+    print(query_ft_cols)
     for k, v in top3s.items():
       print(k, v)
-  return top3s
+  return query_ft_cols, top3s
 
 
 def test():
-  # nm = 'Super Fantasy - SHK S16 arcade'
-  nm = 'Trashy Innocence - Last Note. D15 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Trashy Innocence - Last Note. D15 arcade'
   get_neighbors(nm, verbose=True)
   return
 

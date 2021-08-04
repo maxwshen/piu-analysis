@@ -194,6 +194,9 @@ class SSCFile():
         atts['Name'] += f' {nm_mod}'
 
     atts['Steptype simple'] = st_short
+    atts['sord'] = 'S' if 'S' in st_short else 'D'
+
+    atts['Level'] = level
     return
 
 
@@ -207,6 +210,8 @@ class SSCFile():
     cols = [
       'Name',
       'Steptype simple',
+      'sord',
+      'Level',
       'Is UCS',
       'Is quest',
       'Is hidden',

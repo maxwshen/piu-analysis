@@ -105,16 +105,14 @@ def rename_tag(t):
   annots = {
     'Staggered hit': 'Rolling hit',
     'Hold tap single foot': 'Bracket hold tap',
-    'Hold footslide': 'Hold f.slide',
-    'Hold footswitch': 'Hold f.switch',
-    'Stairs, singles': '5 stair',
-    'Stairs, doubles': '10 stair',
-    'Broken stairs, doubles': '9 stair',
-    'Twist angle - 180': '180° twist',
-    'Twist angle - far diagonal': 'Diag. twist',
-    'Twist angle - close diagonal': 'Diag. twist',
-    'Twist solo diagonal': 'Diag. twist',
-    'Twist angle - 90': '90° twist',
+    'Stairs, singles': '5-panel stair',
+    'Stairs, doubles': '10-panel stair',
+    'Broken stairs, doubles': '9-panel stair',
+    'Twist angle - 180': '180 twist',
+    'Twist angle - far diagonal': 'Far diagonal twist',
+    'Twist angle - close diagonal': 'Close diagonal twist',
+    'Twist solo diagonal': 'Solo diagonal twist',
+    'Twist angle - 90': '90 twist',
   }
   return annots.get(t, t)
 

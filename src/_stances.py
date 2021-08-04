@@ -399,6 +399,33 @@ class Stances():
     return all(x != '--' for x in actions)
 
 
+  '''
+    for plot_chart, used by e_struct, for front end
+  '''
+  def get_limb_part_text(self, panel, sa, limb):
+    # returns ['LH', 'LT', 'RH', 'RT', 'HAND']
+    if limb in ['Left hand', 'Right hand']:
+      return 'HAND'
+    [stances, actions] = sa.split(';')
+    idx = self.all_limbs.index(limb)
+    stance, action = stances.split(',')[idx], actions.split(',')[idx]
+
+    heel_panel = self.nm_to_heel_panel[stance]
+    toe_panel = self.nm_to_toe_panel[stance]
+    heel_action, toe_action = action[0], action[1]
+
+    if limb == 'Left foot':
+      text = 'L'
+    elif limb == 'Right foot':
+      text = 'R'
+
+    if heel_panel == panel:
+      text += 'H'
+    elif toe_panel == panel:
+      text += 'T'
+    return text
+
+
 '''
   Testing
 '''

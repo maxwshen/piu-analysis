@@ -798,7 +798,7 @@ def main():
   # nm = 'Xeroize - FE S24 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = 'Last Rebirth - SHK S15 arcade'
-  nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
+  # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'Loki - Lotze S21 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
@@ -884,6 +884,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'

@@ -1,5 +1,11 @@
+'''
+  matplotlib-based plotting of chart
+  mostly deprecated - front-end uses javascript instead
+'''
+
 import _config, util
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, seaborn as sns
 import matplotlib.image as mpimg
 from matplotlib.offsetbox import TextArea, OffsetImage, AnnotationBbox
@@ -339,6 +345,73 @@ class Artist():
 
 
 '''
+  Plotting instructions for js
+'''
+def js_arrows(line_dfs, stance):
+  '''
+    arrows: list, elements: [x, y, 'LT/LH/RH/RT'],
+    holds: list, elements: [x, y_start, y_end, 'LT/LH/RH/RT'],
+    
+    js: draw arrows using x, color by LT/LH/RH/RT or x
+  '''
+  panels = ['p1,1', 'p1,7', 'p1,5', 'p1,9', 'p1,3',
+            'p2,1', 'p2,7', 'p2,5', 'p2,9', 'p2,3']
+  panel_to_xloc = {p: i for i, p in enumerate(panels)}
+
+  limbs = ['Left foot', 'Right foot', 'Left hand', 'Right hand']
+  note_types = ['1', '2', '3', '4']
+  active_holds = {}
+  arrows, holds = [], []
+  for i, row in line_dfs.iterrows():
+    time = row['Time']
+    for limb in limbs:
+      for note in note_types:
+        col = f'{limb} {note}'
+        if type(row[col]) != str:
+          continue
+
+        panels = row[col].split(';')
+        if note in ['1', '2']:
+          for p in panels:
+            x = panel_to_xloc[p]
+            arrow_text = stance.get_limb_part_text(p, row['Stance action'], limb)
+            arrows.append([x, float(time), arrow_text])
+        if note == '2':
+          for p in panels:
+            arrow_text = stance.get_limb_part_text(p, row['Stance action'], limb)
+            active_holds[p] = (arrow_text, time)
+        if note == '3':
+          for p in panels:
+            if p in active_holds:
+              arrow_text, start_time = active_holds[p]
+              x = panel_to_xloc[p]
+              holds.append([x, float(start_time), float(time), arrow_text])
+              del active_holds[p]
+        if note == '4':
+          for p in panels:
+            if p in active_holds:
+              prev_arrow_text, start_time = active_holds[p]
+              arrow_text = stance.get_limb_part_text(p, row['Stance action'], limb)
+              # Handle hold footswitches
+              if prev_arrow_text != arrow_text:
+                holds.append([x, float(start_time), float(time), prev_arrow_text])
+                active_holds[p] = (arrow_text, time)
+  return arrows, holds
+
+
+def js_line_annotations(line_dfs):
+  times, annotations = [], []
+  for i, row in line_dfs.iterrows():
+    if row['Has downpress']:
+      time = row['Time']
+      annots = get_top_annots_in_row(row, 2)
+      if annots:
+        annotations.append(', '.join(annots))
+        times.append(float(time))
+  return times, annotations
+
+
+'''
   Misc.
 '''
 def get_section_stats(section, df):
@@ -422,9 +495,9 @@ annot_score = lambda x: ordered_annots.index(x)
 def get_top_annots_in_row(row, n):
   res = [a for a in annots if a in row.index and row[a]]
 
-  twist_angle = row['Twist angle']
-  res.append(f'Twist angle - {twist_angle}')
-  res = [a for a in res if a in annots]
+  # twist_angle = row['Twist angle']
+  # res.append(f'Twist angle - {twist_angle}')
+  # res = [a for a in res if a in annots]
 
   top_annots = sorted(res, key=annot_score)[:n]
   return [annots[a] for a in top_annots]

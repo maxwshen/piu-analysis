@@ -204,7 +204,7 @@ def main():
   
   # Test: Single stepchart
   # nm = 'Super Fantasy - SHK S19 arcade'
-  nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
+  # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'London Bridge - SCI Guyz S11 arcade'
   # nm = 'Phalanx "RS2018 Edit" - Cranky S22 arcade'
   # nm = 'Xeroize - FE S24 arcade'
@@ -283,6 +283,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'

@@ -1,5 +1,11 @@
+'''
+  matplotlib-based plotting of chart
+  mostly deprecated - front-end uses javascript instead
+'''
+
 import _config, util
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt, pandas as pd, numpy as np, seaborn as sns
 import matplotlib.image as mpimg
 from matplotlib.offsetbox import TextArea, OffsetImage, AnnotationBbox

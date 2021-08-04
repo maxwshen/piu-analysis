@@ -11,7 +11,6 @@ import numpy as np
 from collections import defaultdict, Counter
 import pandas as pd
 from typing import List, Dict, Set, Tuple
-from more_itertools import unique_everseen
 from fractions import Fraction
 
 import _notelines, _qsub, _graph_edit
@@ -761,7 +760,7 @@ def main():
   # nm = 'CARMEN BUS - StaticSphere & FUGU SUISAN S12 arcade'
   # nm = 'Mr. Larpus - BanYa S22 arcade'
   # nm = 'Bad End Night - HitoshizukuP x yama S17 arcade'
-  nm = 'King of Sales - Norazo S21 arcade'
+  # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'Fresh - Aspektz S14 arcade infinity'
@@ -855,6 +854,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
+  nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
