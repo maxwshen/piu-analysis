@@ -19,7 +19,7 @@ for local_fn, filename in single_fns.items():
   s3.upload_file(local_fn, os.environ['S3_BUCKET_NAME'], filename)
 
 
-S3_SAFE_CHARS = string.letters + string.digits + list("!-_.*'()")
+S3_SAFE_CHARS = string.ascii_letters + string.digits + "!-_.*'()"
 REPLACE_CHAR = '_'
 def s3_safe(name):
   convert_safe = lambda char: char if char in S3_SAFE_CHARS else REPLACE_CHAR
@@ -32,8 +32,7 @@ files = [fn for fn in os.listdir(e_struct_fold) if '.pkl' in fn]
 print(f'Uploading {len(files)} e_struct files ...')
 timer = util.Timer(total=len(files))
 for fn in files:
-  print(s3_safe(fn))
   s3.upload_file(e_struct_fold + fn, os.environ['S3_BUCKET_NAME'], s3_safe(fn))
-  # timer.update()
+  timer.update()
 
 print(f'Done')
