@@ -110,8 +110,8 @@ def chart_details(nm, line_df, groups, chart_info_dict):
   for gidx, group in enumerate(groups):
     dfs = line_df.iloc[group[0]:group[1]]
  
-    annot_times, annotations = plot_chart.js_line_annotations(dfs)
     arrows, holds = plot_chart.js_arrows(dfs, stance)
+    annot_times, annotations = plot_chart.js_line_annotations(dfs)
 
     stats = plot_chart.get_section_stats(group, line_df)
     min_time = min(dfs['Time'])

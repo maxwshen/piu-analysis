@@ -135,6 +135,7 @@ def annotate_general(df):
   }
   for i, row in df.iterrows():
     sa = row['Stance action']
+    line = row['Line with active holds'].replace('`', '')
     d = parse_sa(sa)
     for limb in ['Left foot', 'Right foot', 'Left hand', 'Right hand']:
       if limb not in d['limb_to_pos']:
@@ -144,10 +145,43 @@ def annotate_general(df):
         continue
 
       pos = d['limb_to_pos'][limb]
-      hp = mover.pos_to_heel_panel[pos]
-      tp = mover.pos_to_toe_panel[pos]
-      ha = d['limb_to_heel_action'][limb]
-      ta = d['limb_to_toe_action'][limb]
+      if pos != '**':
+        hp = mover.pos_to_heel_panel[pos]
+        tp = mover.pos_to_toe_panel[pos]
+        ha = d['limb_to_heel_action'][limb]
+        ta = d['limb_to_toe_action'][limb]
+      else:
+        # When exact hand positions are ignored and ** is used, assign all panels not covered by feet to hands
+        active_panel_idxs = [i for i in range(len(line)) if line[i] != '0']
+        actions = [line[i] for i in active_panel_idxs]
+        active_panels = [mover.panel_cols[i] for i in active_panel_idxs]
+        covered_idxs = set()
+        for foot in ['Left foot', 'Right foot']:
+          pos = d['limb_to_pos'][foot]
+          for panel in [mover.pos_to_heel_panel[pos], mover.pos_to_toe_panel[pos]]:
+            if panel in active_panels:
+              covered_idxs.add(active_panels.index(panel))
+        uncovered_idxs = [i for i in range(len(actions)) if i not in covered_idxs]
+        # Assign [Left hand toe, Right hand toe, Left hand heel, Right hand heel]
+        hp, tp, ha, ta = '', '', '', ''
+        if limb == 'Left hand':
+          if len(uncovered_idxs) > 0:
+            ui = uncovered_idxs[0]
+            tp = active_panels[ui]
+            ta = actions[ui]
+          if len(uncovered_idxs) > 2:
+            ui = uncovered_idxs[2]
+            hp = active_panels[ui]
+            ha = actions[ui]
+        elif limb == 'Right hand':
+          if len(uncovered_idxs) > 1:
+            ui = uncovered_idxs[1]
+            tp = active_panels[ui]
+            ta = actions[ui]
+          if len(uncovered_idxs) > 3:
+            ui = uncovered_idxs[3]
+            hp = active_panels[ui]
+            ha = actions[ui]
 
       for suffix, padset in suffix_to_set.items():
         panels = []
@@ -160,6 +194,7 @@ def annotate_general(df):
           dd[col].append(';'.join(panels))
         else:
           dd[col].append('')
+
   for col in dd:
     df[col] = dd[col]
 
@@ -468,7 +503,7 @@ def main():
   # nm = 'HEART RABBIT COASTER - nato S23 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
-  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
@@ -494,7 +529,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  nm = 'King of Sales - Norazo D19 arcade'
+  # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Witch Doctor #1 - YAHPP HD19 arcade'
   # nm = 'Emperor - BanYa D17 arcade'
   # nm = 'Trashy Innocence - Last Note. D16 arcade'
@@ -515,6 +550,7 @@ def main():
   # nm = 'Windmill - Yak Won D23 arcade'
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
+  # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
 
   run_single(nm)
   return
