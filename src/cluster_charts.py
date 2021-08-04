@@ -80,6 +80,9 @@ def get_neighbors(nm, verbose = False):
   high_pct_ft_mat = ft_mat[:, high_pct_jdxs]
 
   query_ft_cols = [sanitize(ft_cols[j]) for j in high_pct_jdxs]
+
+  if len(query_ft_cols) == 0:
+    return [], {}
   
   kdt = KDTree(high_pct_ft_mat)
   
