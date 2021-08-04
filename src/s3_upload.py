@@ -21,12 +21,11 @@ for local_fn, filename in single_fns.items():
 
 # Upload e_struct files per stepchart
 e_struct_fold = _config.OUT_PLACE + 'e_struct/'
-files = [fn for fn in os.listdir(e_struct_fold) if '.csv' in fn]
+files = [fn for fn in os.listdir(e_struct_fold) if '.pkl' in fn]
 print(f'Uploading {len(files)} e_struct files ...')
 timer = util.Timer(total=len(files))
 for fn in files:
-  s3.upload_file(e_struct_fold + f'{nm}.csv',
-      os.environ['S3_BUCKET_NAME'], f'{nm}.csv')
+  s3.upload_file(e_struct_fold + fn, os.environ['S3_BUCKET_NAME'], fn)
   timer.update()
 
 print(f'Done')
