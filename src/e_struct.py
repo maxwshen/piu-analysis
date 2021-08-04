@@ -66,9 +66,7 @@ def chart_card(nm, line_df, groups, compare_d):
   for start, end in groups:
     t = times[end-1]
     xticks.append(t)
-    min = round(t) // 60
-    sec = round(t) % 60
-    xlabels.append(f'{min}:{sec:02d}')
+    xlabels.append(seconds_to_time_str(t))
 
   # Construct timelines. Ordered: hold, twist, then 1-2-3 custom
   base_timelines = [
@@ -106,8 +104,10 @@ def chart_details(nm, line_df, groups, chart_info_dict):
   preview_start = groups[1][0]
   preview_end = preview_start + 16
   groups.insert(0, (preview_start, preview_end))
+  section_names = []
+  names = ['preview'] + [x+1 for x in range(len(groups))]
 
-  for gidx, group in enumerate(groups):
+  for name, group in zip(names, groups):
     dfs = line_df.iloc[group[0]:group[1]]
  
     arrows, holds = plot_chart.js_arrows(dfs, stance)
@@ -121,7 +121,7 @@ def chart_details(nm, line_df, groups, chart_info_dict):
     time_labels = [f'{t:.2f}' if i % 4 == 0 else '' for i, t in enumerate(times)]
 
     chart_details_dict = {
-      'section_num': gidx,
+      'section_name': name,
       'num_panels': num_panels,
       'num_lines': len(times),
       'times': times,
@@ -134,10 +134,13 @@ def chart_details(nm, line_df, groups, chart_info_dict):
     }
     chart_details_struct.append(convert_dict_to_js_lists(chart_details_dict))
 
+    section_names.append(f'{name}, {seconds_to_time_str(min_time)}-{seconds_to_time_str(max_time)}')
+
   # Update chart_info_dict, accessible in HTML/Jinja
   new_info = {
     'num_panels': num_panels,
-    'num_chart_sections': len(groups),
+    'num_chart_sections': len(groups) - 1,  # -1 for preview
+    'section_names': section_names,
   }
   return chart_details_struct, new_info
 
@@ -153,6 +156,11 @@ def convert_dict_to_js_lists(d):
     raise Exception(f'Error: Found disallowed np.int64 type. Cast to int or str.')
   return [list(d.keys()), list(d.values())]
 
+
+def seconds_to_time_str(seconds):
+  mins = round(seconds) // 60
+  sec = round(seconds) % 60
+  return f'{mins}:{sec:02d}'
 
 '''
   Run
@@ -177,6 +185,9 @@ def run_single(nm):
     chart_details_struct,
   ]
 
+  with open(out_dir + f'{nm}.pkl', 'wb') as f:
+    pickle.dump(struct, f)
+
   app_dir = f'../../piu-app/data/'
   with open(app_dir + f'{nm}.pkl', 'wb') as f:
     pickle.dump(struct, f)
@@ -188,7 +199,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  nm = 'Super Fantasy - SHK S16 arcade'
+  # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Native - SHK S20 arcade'
@@ -200,7 +211,7 @@ def main():
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'

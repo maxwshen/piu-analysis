@@ -37,13 +37,13 @@ class Movement():
     if style == 'singles':
       self.df = _positions.singles_pos_df
       self.panel_cols = [
-        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
+        'p1,1', 'p1,7', 'p1,5', 'p1,9', 'p1,3',
       ]
     elif style == 'doubles':
       self.df = _positions.doubles_pos_df
       self.panel_cols = [
-        'p1,1', 'p1,3', 'p1,5', 'p1,7', 'p1,9',
-        'p2,1', 'p2,3', 'p2,5', 'p2,7', 'p2,9',
+        'p1,1', 'p1,7', 'p1,5', 'p1,9', 'p1,3',
+        'p2,1', 'p2,7', 'p2,5', 'p2,9', 'p2,3',
       ]
 
     self.params = _params.movement_costs[move_skillset]['parameters']
