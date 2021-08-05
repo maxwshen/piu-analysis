@@ -17,7 +17,7 @@ def nps(df):
     tdps = []
     while ts and ts[0] < t:
       ts.pop(0)
-      tdps = tdp.pop(0)
+      tdps.append(tdp.pop(0))
       num_popped += 1
     xs.append(t)
     # Filter time sinces that are lower than 30 ms, which can happen with 1->2, e.g., Conflict S17

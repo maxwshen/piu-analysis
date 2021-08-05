@@ -236,7 +236,7 @@ class Graph():
 
     hints = {}
     for beat, left_hint, right_hint in zip(beats, left_hints, right_hints):
-      hints[beat] = (left_hint, right_hint)
+      hints[round(beat, 3)] = (left_hint, right_hint)
     return hints
 
 
@@ -249,7 +249,7 @@ class Graph():
         return all(x in acts for x in hint)
 
     feet = ['Left foot', 'Right foot']
-    hints = self.hints[beat]
+    hints = self.hints[round(beat, 3)]
     new_sas = []
     for sa in sas:
       d = self.parse_sa(sa)

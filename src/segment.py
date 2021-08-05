@@ -881,7 +881,7 @@ def main():
   # nm = 'Full Moon - Dreamcatcher S22 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'V3 - Beautiful Day S17 arcade'
-  nm = 'Love is a Danger Zone - BanYa S7 arcade'
+  # nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Doubles
   nm = 'Headless Chicken - r300k D21 arcade'
