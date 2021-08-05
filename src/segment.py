@@ -68,7 +68,7 @@ def featurize(line_nodes, downpress_nodes):
     if prev_line == line:
       x[feature_mapper['repeated line']] = 1
     
-    x[feature_mapper['beat since']] = beat - prev_beat
+    x[feature_mapper['beat since']] = round(beat - prev_beat, 3)
 
     prev_line = line
     prev_beat = beat
@@ -884,6 +884,7 @@ def main():
   nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Doubles
+  nm = 'Headless Chicken - r300k D21 arcade'
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
