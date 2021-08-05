@@ -1,6 +1,8 @@
 # piu-analysis
 
-The backend for the website www.piucenter.com.
+Data-driven analysis of Pump it Up - drives www.piucenter.com.
+
+The git repo for the front-end web app is https://github.com/maxwshen/piu-app.
 
 ### About
 ---
