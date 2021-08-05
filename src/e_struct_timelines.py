@@ -20,8 +20,11 @@ def nps(df):
       tdps = tdp.pop(0)
       num_popped += 1
     xs.append(t)
-    if tdps:
-      ys.append(1/np.mean(tdps))
+    # Filter time sinces that are lower than 30 ms, which can happen with 1->2, e.g., Conflict S17
+    filt_tdps = [t for t in tdps if t > 0.03]
+    if filt_tdps:
+      mean_timesince = 1/np.mean(filt_tdps)
+      ys.append(mean_timesince)
     else:
       ys.append(0)
   return [xs, ys]
