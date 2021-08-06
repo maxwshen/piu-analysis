@@ -187,11 +187,10 @@ def run_single(nm):
   line_df = pd.read_csv(inp_dir_d + f'{nm}.csv', index_col=0)
   all_line_dfs, groups, comb_to_indiv = hmm_segment.segment(line_df)
 
-  chart_card_struct = chart_card(nm, line_df, groups, compare_d, chart_info_dict)
   compare_d = chart_compare.run_single(nm)
 
   chart_info_dict = chart_info(nm, compare_d)
-  chart_card_struct = chart_card(nm, line_df, groups, compare_d)
+  chart_card_struct = chart_card(nm, line_df, groups, compare_d, chart_info_dict)
   chart_details_struct, new_info = chart_details(nm, line_df, groups, chart_info_dict)
 
   # Info parsed into python dict, usable in HTML, not just javascript
@@ -231,14 +230,13 @@ def main():
   # nm = 'U Got 2 Know - MAX S20 arcade'
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
-  # nm = 'King of Sales - Norazo S21 arcade'
+  nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Imagination - SHK S17 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
-  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

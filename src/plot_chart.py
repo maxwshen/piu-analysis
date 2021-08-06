@@ -481,6 +481,8 @@ def parse_sa_to_text(sa):
 
 '''
   Single line annotations
+  Priority ordered
+  Annotations not in this dict will not appear
 '''
 annots = {
   'Hands': 'Hands',
@@ -493,6 +495,9 @@ annots = {
   'Footswitch': 'Footswitch',
   'Jack': 'Jack',
   'Double step': 'Double step',
+  'Triple': 'Triple',
+  'Quad': 'Quad',
+  'Bracket': 'Bracket',
   'Broken stairs, doubles': '9 stair',
   'Stairs, doubles': '10 stair',
   'Stairs, singles': '5 stair',
