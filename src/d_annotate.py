@@ -527,6 +527,7 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
   # nm = 'Good Night - Dreamcatcher S20 arcade'
+  nm = 'Scorpion King - r300k S8 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
@@ -552,7 +553,8 @@ def main():
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
   # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Conflict - Siromaru + Cranky D24 arcade'
 
   run_single(nm)
   return

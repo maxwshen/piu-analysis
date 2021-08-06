@@ -15,6 +15,8 @@ max_short_len = 12
 # muliplier on median time since to call breaks
 median_fold_break = 8
 
+MAX_SEGMENTS = 15
+
 '''
   HMM segmentation
 '''
@@ -155,7 +157,7 @@ def list_of_bounds_to_seg_list(bs):
 '''
   Primary
 '''
-def segment(df, num_segments=10):
+def segment(df, num_segments=MAX_SEGMENTS):
   '''
     Segments df by time since downpress
     Returns a list of sub dataframes

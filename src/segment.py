@@ -842,6 +842,7 @@ def main():
   # nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
+  nm = 'Scorpion King - r300k S8 arcade'
   
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
@@ -885,7 +886,8 @@ def main():
 
   # Doubles
   # nm = 'Headless Chicken - r300k D21 arcade'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Conflict - Siromaru + Cranky D24 arcade'
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'

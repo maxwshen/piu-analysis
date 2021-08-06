@@ -470,7 +470,7 @@ def spin(df):
   angles = list(df['Body angle'])
   i = 0
   while i < len(df) - 1:
-    if angles[i] >= 345 or angles[i] <= 15:
+    if angles[i] >= 315 or angles[i] <= 45:
       j = i + 1
       spin_orient = get_orientation(angles[i], angles[j])
       total_spin = relative_angle(angles[i], angles[j], spin_orient)

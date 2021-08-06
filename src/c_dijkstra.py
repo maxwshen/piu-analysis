@@ -278,6 +278,7 @@ def main():
   # nm = 'PRIME - Tatsh S7 arcade'
   # nm = '%X (Percent X) - Pory S17 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
+  nm = 'Scorpion King - r300k S8 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'
@@ -309,7 +310,8 @@ def main():
   # nm = 'Mr. Larpus - BanYa D14 arcade'
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Conflict - Siromaru + Cranky D24 arcade'
 
   # Rolling brackets
   # nm = 'Windmill - Yak Won D23 arcade'
