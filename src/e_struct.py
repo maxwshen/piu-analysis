@@ -143,6 +143,7 @@ def chart_details(nm, line_df, groups, chart_info_dict):
       'num_panels': num_panels,
       'num_lines': len(times),
       'times': times,
+      'time_labels': time_labels,
       'holds': holds + long_holds,
       'plot_start_time': float(max_time + dt/2),
       'plot_end_time': float(min_time - dt/2),
