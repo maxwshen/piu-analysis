@@ -527,7 +527,8 @@ def main():
   # nm = 'The Little Prince (Prod. Godic) - HAON, PULLIK S13 arcade'
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
   # nm = 'Good Night - Dreamcatcher S20 arcade'
-  nm = 'Scorpion King - r300k S8 arcade'
+  # nm = 'Scorpion King - r300k S8 arcade'
+  nm = 'Imagination - SHK S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

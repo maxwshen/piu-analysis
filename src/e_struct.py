@@ -110,6 +110,8 @@ def chart_details(nm, line_df, groups, chart_info_dict):
   section_names = []
   names = ['preview'] + [x+1 for x in range(len(groups))]
 
+  _, all_holds = plot_chart.js_arrows(line_df, stance)
+
   for name, group in zip(names, groups):
     dfs = line_df.iloc[group[0]:group[1]]
  
@@ -123,6 +125,8 @@ def chart_details(nm, line_df, groups, chart_info_dict):
     times = [float(t) for t in np.arange(min_time, max_time + dt, dt)]
     time_labels = [f'{t:.2f}' if i % 4 == 0 else '' for i, t in enumerate(times)]
 
+    long_holds = plot_chart.get_long_holds(min_time, max_time, all_holds)
+
     chart_details_dict = {
       'section_name': name,
       'num_panels': num_panels,
@@ -132,7 +136,7 @@ def chart_details(nm, line_df, groups, chart_info_dict):
       'plot_start_time': float(max_time + dt/2),
       'plot_end_time': float(min_time - dt/2),
       'arrows': arrows,
-      'holds': holds,
+      'holds': holds + long_holds,
       'annots': [annot_times, annotations],
     }
     chart_details_struct.append(convert_dict_to_js_lists(chart_details_dict))
@@ -222,11 +226,12 @@ def main():
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
+  nm = 'Imagination - SHK S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
-  nm = 'Ugly Dee - Banya Production D15 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

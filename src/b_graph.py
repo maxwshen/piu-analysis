@@ -852,7 +852,8 @@ def main():
   # nm = 'Achluoias - D_AAN S24 arcade'
   # nm = 'Awakening - typeMARS S16 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
-  nm = 'Scorpion King - r300k S8 arcade'
+  # nm = 'Scorpion King - r300k S8 arcade'
+  nm = 'Imagination - SHK S17 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

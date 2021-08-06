@@ -412,6 +412,17 @@ def js_line_annotations(line_dfs):
   return times, annotations
 
 
+def get_long_holds(min_time, max_time, all_holds):
+  # detect long holds that should be plotted in section, trim boundaries
+  long_holds = []
+  for hold in all_holds:
+    [x, start, end, text] = hold
+    if (start < min_time and end > min_time) or \
+       (start < max_time and end > max_time):
+      long_holds.append([x, max(start, min_time), min(end, max_time), text])
+  return long_holds
+
+
 '''
   Misc.
 '''
