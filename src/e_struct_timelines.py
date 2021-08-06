@@ -30,6 +30,14 @@ def nps(df):
   return [xs, ys]
 
 
+def hold_timeline(all_holds):
+  # Draw rectangles
+  res = []
+  for [x, start_time, end_time, text] in all_holds:
+    res.append([start_time, end_time])
+  return res
+
+
 def binary_timeline(df, col, name):
   dfs = df[df[col]]
   xs = list(dfs['Time'])

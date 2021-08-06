@@ -58,7 +58,7 @@ def chart_info(nm, compare_d):
   return chart_info_dict
 
 # 2
-def chart_card(nm, line_df, groups, compare_d):
+def chart_card(nm, line_df, groups, compare_d, chart_info_dict):
   # Get xlabels based on group boundaries
   xticks = []
   xlabels = []
@@ -67,6 +67,12 @@ def chart_card(nm, line_df, groups, compare_d):
     t = times[end-1]
     xticks.append(t)
     xlabels.append(seconds_to_time_str(t))
+
+  if chart_info_dict['singles or doubles'] == 'Singles':
+    stance = _stances.Stances(style='singles')
+  if chart_info_dict['singles or doubles'] == 'Doubles':
+    stance = _stances.Stances(style='doubles')
+  _, all_holds = plot_chart.js_arrows(line_df, stance)
 
   # Construct timelines. Ordered: hold, twist, then 1-2-3 custom
   base_timelines = [
@@ -86,6 +92,7 @@ def chart_card(nm, line_df, groups, compare_d):
     'xticks': xticks,
     'xlabels': xlabels,
     'nps': e_struct_timelines.nps(line_df),
+    # 'hold_timeline': e_struct_timelines.hold_timeline(all_holds),
     'timelines': base_timelines + add_timelines,
   }
   return convert_dict_to_js_lists(chart_card_dict)
@@ -112,6 +119,8 @@ def chart_details(nm, line_df, groups, chart_info_dict):
 
   _, all_holds = plot_chart.js_arrows(line_df, stance)
 
+  _, all_holds = plot_chart.js_arrows(line_df, stance)
+
   for name, group in zip(names, groups):
     dfs = line_df.iloc[group[0]:group[1]]
  
@@ -123,6 +132,8 @@ def chart_details(nm, line_df, groups, chart_info_dict):
     max_time = max(dfs['Time'])
     dt = stats['Median time since downpress']
     times = [float(t) for t in np.arange(min_time, max_time + dt, dt)]
+    long_holds = plot_chart.get_long_holds(min_time, max_time, all_holds)
+
     time_labels = [f'{t:.2f}' if i % 4 == 0 else '' for i, t in enumerate(times)]
 
     long_holds = plot_chart.get_long_holds(min_time, max_time, all_holds)
@@ -132,7 +143,7 @@ def chart_details(nm, line_df, groups, chart_info_dict):
       'num_panels': num_panels,
       'num_lines': len(times),
       'times': times,
-      'time_labels': time_labels,
+      'holds': holds + long_holds,
       'plot_start_time': float(max_time + dt/2),
       'plot_end_time': float(min_time - dt/2),
       'arrows': arrows,
@@ -176,7 +187,7 @@ def run_single(nm):
   line_df = pd.read_csv(inp_dir_d + f'{nm}.csv', index_col=0)
   all_line_dfs, groups, comb_to_indiv = hmm_segment.segment(line_df)
 
-  # anything that requires comparing chart to other charts (level-3 to level)
+  chart_card_struct = chart_card(nm, line_df, groups, compare_d, chart_info_dict)
   compare_d = chart_compare.run_single(nm)
 
   chart_info_dict = chart_info(nm, compare_d)
@@ -222,11 +233,12 @@ def main():
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
+  nm = 'Imagination - SHK S17 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Ugly Dee - Banya Production D15 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
