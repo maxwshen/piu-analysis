@@ -855,7 +855,7 @@ def main():
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
-  nm = 'Headless Chicken - r300k D21 arcade'
+  # nm = 'Headless Chicken - r300k D21 arcade'
   # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'
   # nm = 'Shock - BEAST D15 arcade'
@@ -882,6 +882,7 @@ def main():
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
   # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

@@ -391,6 +391,7 @@ def js_arrows(line_dfs, stance):
           for p in panels:
             if p in active_holds:
               prev_arrow_text, start_time = active_holds[p]
+              x = panel_to_xloc[p]
               arrow_text = stance.get_limb_part_text(p, row['Stance action'], limb)
               # Handle hold footswitches
               if prev_arrow_text != arrow_text:

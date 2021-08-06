@@ -884,7 +884,8 @@ def main():
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
 
   # Doubles
-  nm = 'Headless Chicken - r300k D21 arcade'
+  # nm = 'Headless Chicken - r300k D21 arcade'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'King of Sales - Norazo D19 arcade'
   # nm = 'Canon D - BanYa D17 arcade'

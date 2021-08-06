@@ -217,7 +217,7 @@ def main():
   # nm = 'YOU AND I - Dreamcatcher S21 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Love is a Danger Zone - BanYa S7 arcade'
+  # nm = 'Love is a Danger Zone - BanYa S7 arcade'
   # nm = 'Tepris - Doin S17 arcade'
   # nm = '8 6 - DASU S20 arcade'
   # nm = 'The End of the World ft. Skizzo - MonstDeath S20 arcade'
@@ -226,6 +226,7 @@ def main():
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return

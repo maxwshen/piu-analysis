@@ -504,7 +504,7 @@ def main():
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Pump me Amadeus - BanYa S11 arcade'
   # nm = 'King of Sales - Norazo S21 arcade'
-  nm = 'Love is a Danger Zone - BanYa S7 arcade'
+  # nm = 'Love is a Danger Zone - BanYa S7 arcade'
   # nm = 'Wedding Crashers - SHK S16 arcade'
   # nm = 'Follow me - SHK S9 arcade'
   # nm = 'Death Moon - SHK S22 shortcut'
@@ -552,6 +552,7 @@ def main():
   # nm = 'Indestructible - Matduke D22 arcade'
   # nm = 'Rock the house - Matduke D22 arcade'
   # nm = 'Round and Round - Eskimo & Icebird D12 arcade'
+  nm = 'Ugly Dee - Banya Production D15 arcade'
 
   run_single(nm)
   return
