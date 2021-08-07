@@ -843,7 +843,8 @@ def main():
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
   # nm = 'F(R)IEND - D_AAN S23 arcade'
   # nm = 'Scorpion King - r300k S8 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Imagination - SHK S17 arcade'
+  nm = 'Enhanced Reality - Matduke S16 arcade'
   
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'

@@ -279,7 +279,8 @@ def main():
   # nm = '%X (Percent X) - Pory S17 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
   # nm = 'Scorpion King - r300k S8 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Imagination - SHK S17 arcade'
+  nm = 'Enhanced Reality - Matduke S16 arcade'
 
   # Test: Many hands
   # nm = 'London Bridge - SCI Guyz S11 arcade'

@@ -27,7 +27,7 @@ def run(df):
   for i in range(1, len(df)):
     row1, row2 = df.iloc[i-1], df.iloc[i]
     if row2['Annotation'] == 'alternate' and '1' in row2['Line']:
-      if not row2['Drill']:
+      if not row2['Drill'] and row2['Time since'] == row1['Time since']:
         idxs.add(i-1)
         idxs.add(i)
   res = filter_short_runs(idxs, len(df), GLOBAL_MIN_LINES_LONG)  
@@ -41,12 +41,14 @@ def hold_run(df):
     row1, row2 = df.iloc[i-1], df.iloc[i]
     line1, line2 = row1['Line'], row2['Line']
     if row2['Annotation'] == 'alternate' and '2' in line2:
-      idxs.add(i-1)
-      idxs.add(i)
+      if row2['Time since'] == row1['Time since']:
+        idxs.add(i-1)
+        idxs.add(i)
     if line1.replace('1', '2') == line2 and '2' in line2:
-      idxs.add(i-2)
-      idxs.add(i-1)
-      idxs.add(i)
+      if row2['Time since'] == row1['Time since']:
+        idxs.add(i-2)
+        idxs.add(i-1)
+        idxs.add(i)
   res = filter_short_runs(idxs, len(df), 2*GLOBAL_MIN_LINES_LONG)  
   return res
 

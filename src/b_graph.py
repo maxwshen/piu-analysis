@@ -853,7 +853,8 @@ def main():
   # nm = 'Awakening - typeMARS S16 arcade'
   # nm = 'Love is a Danger Zone - BanYa S7 arcade'
   # nm = 'Scorpion King - r300k S8 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Imagination - SHK S17 arcade'
+  nm = 'Enhanced Reality - Matduke S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'

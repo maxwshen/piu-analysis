@@ -528,7 +528,8 @@ def main():
   # nm = 'God Mode feat. skizzo - Nato S18 arcade'
   # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'Scorpion King - r300k S8 arcade'
-  nm = 'Imagination - SHK S17 arcade'
+  # nm = 'Imagination - SHK S17 arcade'
+  nm = 'Enhanced Reality - Matduke S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
