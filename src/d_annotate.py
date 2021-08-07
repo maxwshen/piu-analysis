@@ -478,7 +478,7 @@ def main():
   print(NAME)
   
   # Test: Single stepchart
-  # nm = 'Super Fantasy - SHK S16 arcade'
+  nm = 'Super Fantasy - SHK S16 arcade'
   # nm = 'Nakakapagpabagabag - Dasu feat. Kagamine Len S18 arcade'
   # nm = 'Super Fantasy - SHK S19 arcade'
   # nm = 'Bad Apple!! feat. Nomico - Masayoshi Minoshima S17 arcade'
@@ -529,7 +529,7 @@ def main():
   # nm = 'Good Night - Dreamcatcher S20 arcade'
   # nm = 'Scorpion King - r300k S8 arcade'
   # nm = 'Imagination - SHK S17 arcade'
-  nm = 'Enhanced Reality - Matduke S16 arcade'
+  # nm = 'Enhanced Reality - Matduke S16 arcade'
 
   # Doubles
   # nm = 'Mitotsudaira - ETIA. D19 arcade'
