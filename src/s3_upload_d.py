@@ -27,7 +27,7 @@ def upload_all():
   print(f'Uploading {len(files)} d_annotate files ...')
   timer = util.Timer(total=len(files))
   for fn in files:
-    s3.upload_file(D_FOLD + fn, os.environ['S3_BUCKET_NAME'] + '/d_annotate/', s3_safe(fn))
+    s3.upload_file(D_FOLD + fn, os.environ['S3_BUCKET_NAME'], 'd_annotate/' + s3_safe(fn))
     timer.update()
 
   print(f'Done')
